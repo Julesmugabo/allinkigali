@@ -19,6 +19,18 @@
       "adaptiveIcon": {
         "backgroundColor": "#042C53"
       }
+    },
+    "extra": {
+      "eas": {
+        "projectId": "61115194-175a-48b1-8b3f-13f19aa03ade"
+      }
+    },
+    "owner": "mufaxas-team",
+    "runtimeVersion": {
+      "policy": "appVersion"
+    },
+    "updates": {
+      "url": "https://u.expo.dev/61115194-175a-48b1-8b3f-13f19aa03ade"
     }
   }
 }
