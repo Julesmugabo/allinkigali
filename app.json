@@ -1,0 +1,24 @@
+{
+  "expo": {
+    "name": "allinkigali",
+    "slug": "allinkigali",
+    "version": "1.0.0",
+    "orientation": "portrait",
+    "userInterfaceStyle": "light",
+    "backgroundColor": "#042C53",
+    "splash": {
+      "resizeMode": "contain",
+      "backgroundColor": "#042C53"
+    },
+    "ios": {
+      "supportsTablet": false,
+      "bundleIdentifier": "rw.allinkigali.app"
+    },
+    "android": {
+      "package": "rw.allinkigali.app",
+      "adaptiveIcon": {
+        "backgroundColor": "#042C53"
+      }
+    }
+  }
+}

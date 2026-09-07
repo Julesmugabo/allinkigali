@@ -1,0 +1,322 @@
+/**
+ * AccountScreen.js — Ecran ya "Jyewe".
+ *
+ * Two states in one screen:
+ *   signed out -> the sign-up form (name, email, or Google)
+ *   signed in  -> profile summary, order shortcuts, settings, sign out
+ */
+import React, { useCallback, useState } from 'react';
+import {
+  View,
+  Text,
+  ScrollView,
+  Alert,
+  Pressable,
+  KeyboardAvoidingView,
+  Platform,
+  StyleSheet,
+} from 'react-native';
+import { useSafeAreaInsets } from 'react-native-safe-area-context';
+
+import GradientBackground from '../components/common/GradientBackground';
+import BrandLogo from '../components/news/BrandLogo';
+import AuthForm from '../components/account/AuthForm';
+import RoleChoice from '../components/account/RoleChoice';
+import ProfileHeader from '../components/account/ProfileHeader';
+import MenuRow from '../components/account/MenuRow';
+
+import { useUser } from '../context/UserContext';
+import { useOrders } from '../context/OrdersContext';
+import { useBusinesses } from '../context/BusinessContext';
+import { colors, typography, spacing, radius, gutter } from '../theme';
+
+const ROLE_COPY = {
+  customer: { title: 'Fungura konti y\'Umukiriya', subtitle: 'Konti ituma ukurikirana ibyo watumije kandi ugahita ubona amakuru wakunze.' },
+  seller: { title: 'Iyandikishe nk\'Umufatanyabikorwa', subtitle: 'Fungura konti ubanze, hanyuma wandikishe ubucuruzi bwawe.' },
+};
+
+export default function AccountScreen({ navigation }) {
+  const insets = useSafeAreaInsets();
+  const { user, isSignedIn, isLoading, error, signUp, signInWithGoogle, signOut, updateProfile } = useUser();
+  const { activeOrders, pastOrders } = useOrders();
+  const { getBusinessesByOwner } = useBusinesses();
+
+  const [pendingRole, setPendingRole] = useState(null);
+
+  const routeAfterAuth = useCallback(
+    (newUser, role) => {
+      if (role === 'seller') {
+        updateProfile({ role: 'seller' });
+        navigation.navigate('SalesPartner');
+      }
+    },
+    [updateProfile, navigation]
+  );
+
+  const handleSignUp = useCallback(
+    async (values) => {
+      try {
+        const newUser = await signUp(values);
+        routeAfterAuth(newUser, pendingRole);
+      } catch (e) {
+        // The message is already shown under the form via `error`.
+      }
+    },
+    [signUp, pendingRole, routeAfterAuth]
+  );
+
+  const handleGoogle = useCallback(async () => {
+    try {
+      const newUser = await signInWithGoogle();
+      routeAfterAuth(newUser, pendingRole);
+    } catch (e) {
+      Alert.alert('Ntibyakunze', 'Kwinjira na Google ntibyakunze. Gerageza nanone.');
+    }
+  }, [signInWithGoogle, pendingRole, routeAfterAuth]);
+
+  const confirmSignOut = useCallback(() => {
+    Alert.alert('Sohoka', 'Uremeza ko usohoka muri konti yawe?', [
+      { text: 'Oya', style: 'cancel' },
+      { text: 'Yego, sohoka', style: 'destructive', onPress: signOut },
+    ]);
+  }, [signOut]);
+
+  const myBusinesses = user ? getBusinessesByOwner(user.id) : [];
+
+  // The tab bar is laid out below the screen, so only breathing room is needed.
+  const bottomPadding = spacing.xl;
+
+  // ---------------------------------------------------------------- signed out
+  if (!isSignedIn) {
+    const roleCopy = pendingRole ? ROLE_COPY[pendingRole] : null;
+
+    return (
+      <GradientBackground>
+        <KeyboardAvoidingView
+          style={styles.flex}
+          behavior={Platform.OS === 'ios' ? 'padding' : undefined}
+        >
+          <ScrollView
+            contentContainerStyle={[
+              styles.authContent,
+              { paddingTop: insets.top + spacing.xxl, paddingBottom: bottomPadding },
+            ]}
+            keyboardShouldPersistTaps="handled"
+            showsVerticalScrollIndicator={false}
+          >
+            <View style={styles.authHeader}>
+              <BrandLogo size={52} showMeridians />
+              <Text style={styles.authTitle}>{roleCopy ? roleCopy.title : 'Uri nde?'}</Text>
+              <Text style={styles.authSubtitle}>
+                {roleCopy ? roleCopy.subtitle : 'Hitamo uko ushaka gukoresha allinkigali.'}
+              </Text>
+            </View>
+
+            {!pendingRole ? (
+              <RoleChoice onChoose={setPendingRole} />
+            ) : (
+              <>
+                <AuthForm
+                  onSubmit={handleSignUp}
+                  onGooglePress={handleGoogle}
+                  isLoading={isLoading}
+                  serverError={error}
+                />
+                <Pressable onPress={() => setPendingRole(null)} style={styles.changeRoleLink} hitSlop={8}>
+                  <Text style={styles.changeRoleText}>Hindura uko winjira</Text>
+                </Pressable>
+              </>
+            )}
+
+            {/* Staff-only entry. Deliberately quiet, and it leads to its own
+                password screen — never the customer sign-up above. */}
+            <Pressable
+              onPress={() => navigation.navigate('Admin')}
+              style={styles.adminLink}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel="Ubuyobozi"
+            >
+              <Text style={styles.adminLinkText}>Ubuyobozi</Text>
+            </Pressable>
+          </ScrollView>
+        </KeyboardAvoidingView>
+      </GradientBackground>
+    );
+  }
+
+  // ----------------------------------------------------------------- signed in
+  return (
+    <GradientBackground>
+      <ScrollView
+        contentContainerStyle={{ paddingBottom: bottomPadding }}
+        showsVerticalScrollIndicator={false}
+      >
+        <View style={[styles.profileArea, { paddingTop: insets.top + spacing.lg }]}>
+          <Text style={styles.screenTitle}>Jyewe</Text>
+          <ProfileHeader
+            user={user}
+            activeCount={activeOrders.length}
+            completedCount={pastOrders.length}
+          />
+        </View>
+
+        {/* White sheet: everything below the profile lives on light ground so
+            long menus stay easy to read. */}
+        <View style={styles.sheet}>
+          <Text style={styles.groupLabel}>Ibyo natumije</Text>
+          <View style={styles.group}>
+            <MenuRow
+              icon="clipboard-text-clock-outline"
+              label="Ibyo natumije byose"
+              badgeCount={activeOrders.length || null}
+              onPress={() => navigation.navigate('Orders')}
+            />
+            <MenuRow
+              icon="moped"
+              label="Biri mu nzira"
+              value={String(activeOrders.length)}
+              onPress={() => navigation.navigate('Orders', { filter: 'active' })}
+              isLast
+            />
+          </View>
+
+          <Text style={styles.groupLabel}>Ubucuruzi</Text>
+          <View style={styles.group}>
+            {myBusinesses.length ? (
+              <MenuRow
+                icon="view-dashboard-outline"
+                label="Dashboard y'ubucuruzi"
+                value={myBusinesses[0].name}
+                onPress={() => navigation.navigate('SellerDashboard', { businessId: myBusinesses[0].id })}
+                isLast
+              />
+            ) : (
+              <MenuRow
+                icon="storefront-outline"
+                label="Ba umufatanyabikorwa"
+                value="Andikisha ubucuruzi"
+                onPress={() => navigation.navigate('SalesPartner')}
+                isLast
+              />
+            )}
+          </View>
+
+          <Text style={styles.groupLabel}>Konti</Text>
+          <View style={styles.group}>
+            <MenuRow
+              icon="account-edit-outline"
+              label="Hindura amakuru yanjye"
+              onPress={() => Alert.alert('Biraza vuba', 'Guhindura amakuru bizaboneka vuba.')}
+            />
+            <MenuRow
+              icon="map-marker-outline"
+              label="Aderesi zanjye"
+              onPress={() => Alert.alert('Biraza vuba', 'Kubika aderesi bizaboneka vuba.')}
+            />
+            <MenuRow
+              icon="bell-outline"
+              label="Amatangazo"
+              onPress={() => Alert.alert('Biraza vuba', 'Igenamiterere ry\'amatangazo rizaboneka vuba.')}
+              isLast
+            />
+          </View>
+
+          <Text style={styles.groupLabel}>Ubufasha</Text>
+          <View style={styles.group}>
+            <MenuRow
+              icon="help-circle-outline"
+              label="Ibibazo bikunze kubazwa"
+              onPress={() => Alert.alert('Biraza vuba', 'Ubufasha buzaboneka vuba.')}
+            />
+            <MenuRow
+              icon="shield-check-outline"
+              label="Amabwiriza n'ibanga ry'amakuru"
+              onPress={() => Alert.alert('Biraza vuba', 'Amabwiriza azaboneka vuba.')}
+              isLast
+            />
+          </View>
+
+          <View style={styles.group}>
+            <MenuRow icon="logout" label="Sohoka" destructive onPress={confirmSignOut} isLast />
+          </View>
+
+          <Text style={styles.version}>allinkigali · verisiyo 1.0.0</Text>
+        </View>
+      </ScrollView>
+    </GradientBackground>
+  );
+}
+
+const styles = StyleSheet.create({
+  flex: { flex: 1 },
+  authContent: {
+    paddingHorizontal: gutter,
+  },
+  authHeader: { alignItems: 'center', marginBottom: spacing.xxl },
+  authTitle: {
+    ...typography.screenTitle,
+    color: colors.white,
+    marginTop: spacing.lg,
+  },
+  authSubtitle: {
+    ...typography.body,
+    color: colors.textOnNavyFaint,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+    maxWidth: 300,
+    lineHeight: 20,
+  },
+  changeRoleLink: { alignSelf: 'center', marginTop: spacing.lg },
+  changeRoleText: {
+    ...typography.caption,
+    color: colors.blue300,
+    fontWeight: '600',
+  },
+  adminLink: { alignSelf: 'center', marginTop: spacing.xxxl, padding: spacing.sm },
+  adminLinkText: {
+    ...typography.meta,
+    color: 'rgba(133,183,235,0.45)',
+    letterSpacing: 0.5,
+  },
+  profileArea: {
+    paddingHorizontal: gutter,
+    paddingBottom: spacing.xxl,
+  },
+  screenTitle: {
+    ...typography.screenTitle,
+    color: colors.white,
+    marginBottom: spacing.lg,
+  },
+  sheet: {
+    backgroundColor: colors.background,
+    borderTopLeftRadius: radius.xl + 6,
+    borderTopRightRadius: radius.xl + 6,
+    paddingHorizontal: gutter,
+    paddingTop: spacing.xl,
+    minHeight: 400,
+  },
+  groupLabel: {
+    ...typography.caption,
+    fontWeight: '700',
+    color: colors.blue600,
+    letterSpacing: 0.5,
+    marginBottom: spacing.sm,
+    marginLeft: spacing.xs,
+  },
+  group: {
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    overflow: 'hidden',
+    marginBottom: spacing.xl,
+  },
+  version: {
+    ...typography.meta,
+    color: colors.textMuted,
+    textAlign: 'center',
+    marginTop: spacing.sm,
+    marginBottom: spacing.xl,
+  },
+});
