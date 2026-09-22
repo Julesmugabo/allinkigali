@@ -7,11 +7,13 @@
  * those stores.
  */
 import React from 'react';
+import { View } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
 
 import AppNavigator from './src/navigation/AppNavigator';
+import InstallAppBanner from './src/components/common/InstallAppBanner';
 import { UserProvider } from './src/context/UserContext';
 import { OrdersProvider } from './src/context/OrdersContext';
 import { CartProvider } from './src/context/CartContext';
@@ -33,10 +35,13 @@ export default function App() {
                 <FliersProvider>
                   <NewsProvider>
                     <AdsProvider>
-                      <NavigationContainer theme={navTheme}>
+                      <View style={{ flex: 1 }}>
                         <StatusBar style="light" />
-                        <AppNavigator />
-                      </NavigationContainer>
+                        <InstallAppBanner />
+                        <NavigationContainer theme={navTheme}>
+                          <AppNavigator />
+                        </NavigationContainer>
+                      </View>
                     </AdsProvider>
                   </NewsProvider>
                 </FliersProvider>
