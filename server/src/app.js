@@ -8,10 +8,19 @@
  */
 require('dotenv').config();
 const express = require('express');
+// Must be required right after express, before any routes: patches Express
+// so a rejected async route handler reaches the error middleware below
+// instead of escaping as an unhandled rejection — which, on Node 24+,
+// crashes the whole process (this is a real bug we hit: a single bad
+// request took the entire server down for every user, not just that one
+// request). Express 4 doesn't catch async errors on its own; Express 5
+// does, but we're not on it.
+require('express-async-errors');
 const cors = require('cors');
 
 const authRoutes = require('./routes/auth');
 const newsRoutes = require('./routes/news');
+const businessesRoutes = require('./routes/businesses');
 
 const app = express();
 app.use(cors());
@@ -21,6 +30,7 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 
 app.use('/auth', authRoutes);
 app.use('/news', newsRoutes);
+app.use('/businesses', businessesRoutes);
 
 // Last-resort handler so a route bug returns JSON, not an HTML stack trace,
 // to a client that only ever expects JSON.

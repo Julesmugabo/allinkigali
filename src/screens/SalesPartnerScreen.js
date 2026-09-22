@@ -34,20 +34,30 @@ export default function SalesPartnerScreen({ route, navigation }) {
 
   const [isSubmitting, setIsSubmitting] = useState(false);
   const [result, setResult] = useState(null);
+  const [error, setError] = useState(null);
 
   const handleSubmit = useCallback(
-    (values) => {
+    async (values) => {
       setIsSubmitting(true);
-      setTimeout(() => {
-        if (editingId) {
-          updateBusiness(editingId, values);
-          setResult({ name: values.name, edited: true });
-        } else {
-          const business = addBusiness({ ...values, ownerId: user?.id || null });
-          setResult({ ...business, edited: false });
-        }
+      setError(null);
+
+      // addBusiness/updateBusiness now write to our own backend and
+      // resolve to null on failure rather than throwing — must be awaited
+      // and checked, or a failed save would silently show a fake success
+      // screen (this was a real bug: the old code did `const business =
+      // addBusiness(...)` without awaiting, then spread the *Promise*
+      // itself into the result instead of the actual business data).
+      if (editingId) {
+        const updated = await updateBusiness(editingId, values);
         setIsSubmitting(false);
-      }, 600);
+        if (!updated) { setError('Ntibyashobotse kubika. Gerageza nanone.'); return; }
+        setResult({ name: values.name, edited: true });
+      } else {
+        const business = await addBusiness({ ...values, ownerId: user?.id || null });
+        setIsSubmitting(false);
+        if (!business) { setError('Ntibyashobotse kwiyandikisha. Gerageza nanone.'); return; }
+        setResult({ ...business, edited: false });
+      }
     },
     [editingId, updateBusiness, addBusiness, user]
   );
@@ -111,6 +121,8 @@ export default function SalesPartnerScreen({ route, navigation }) {
               : "Andikisha ubucuruzi bwawe kugira ngo bugaragare ku bantu bashakisha serivisi nk'iyo utanga."}
           </Text>
 
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
           <SalesPartnerForm
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
@@ -144,4 +156,5 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
     lineHeight: 20,
   },
+  errorText: { ...typography.caption, color: colors.breaking, marginBottom: spacing.md },
 });

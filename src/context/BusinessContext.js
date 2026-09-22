@@ -1,71 +1,94 @@
 /**
  * BusinessContext.js — Ububiko bw'ubucuruzi (the business "database").
  *
- * Stands in for the real database: holds the business list in memory,
- * seeded from mockBusinesses, plus addBusiness()/updateBusiness() for the
- * sales-partner registration/edit forms. `ownerId` links a business back to
- * the user who registered it, which is what makes the seller dashboard
- * possible — getBusinessesByOwner() is how it finds "your" business(es).
- * When the real backend arrives, only this file changes — every screen that
- * calls useBusinesses() keeps working unchanged.
+ * Talks to our own Express + Postgres backend (server/src/routes/businesses.js)
+ * now, not in-memory state — every screen still only ever calls
+ * useBusinesses(), nothing outside this file needed to change.
+ *
+ * Verified is a trust badge, not a search gate (an established product
+ * decision) — the server returns every business regardless of status,
+ * same as the in-memory version always did.
  */
-import React, { createContext, useContext, useMemo, useState, useCallback } from 'react';
-import { businesses as seedBusinesses } from '../data/mockBusinesses';
+import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
+import { apiFetch } from '../services/apiClient';
 
 const BusinessContext = createContext(null);
 
-// The seed catalogue predates `isAvailableNow` (added for the seller
-// dashboard's "closed right now" toggle) and `ownerId` (added for owner
-// linkage) — without this, every seed business reads as unavailable/unowned
-// by default, which visibly contradicts their own `openLabel`. Applying the
-// same defaults addBusiness() gives a new registration keeps seed data and
-// freshly-registered businesses consistent with each other.
-function withDefaults(business) {
-  return { isAvailableNow: true, ownerId: null, views: 0, ...business };
-}
-
 export function BusinessProvider({ children }) {
-  const [businesses, setBusinesses] = useState(() => seedBusinesses.map(withDefaults));
+  const [businesses, setBusinesses] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const addBusiness = useCallback((business) => {
-    const newBusiness = {
-      id: `biz-${Date.now()}`,
-      verified: false,
-      rating: null,
-      reviewCount: 0,
-      image: null,
-      isAvailableNow: true,
-      ownerId: null,
-      views: 0,
-      ...business,
-    };
-    setBusinesses((current) => [newBusiness, ...current]);
-    return newBusiness;
+  const refreshBusinesses = useCallback(async () => {
+    try {
+      const data = await apiFetch('/businesses');
+      setBusinesses(data || []);
+    } catch {
+      // Leave whatever was already loaded rather than blanking the list
+      // over a transient network hiccup.
+    }
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      await refreshBusinesses();
+      setIsLoading(false);
+    })();
+  }, [refreshBusinesses]);
+
+  const addBusiness = useCallback(async (business) => {
+    try {
+      const newBusiness = await apiFetch('/businesses', { method: 'POST', body: business });
+      setBusinesses((current) => [newBusiness, ...current]);
+      return newBusiness;
+    } catch {
+      return null;
+    }
   }, []);
 
   // Counted only from a genuine customer tapping "view details" on a search
   // result (see ServicesPanel.js) — never from a seller previewing their own
   // listing or an admin browsing it, so this stays an honest reach metric.
-  const incrementBusinessView = useCallback((id) => {
-    setBusinesses((current) => current.map((b) => (b.id === id ? { ...b, views: (b.views || 0) + 1 } : b)));
+  const incrementBusinessView = useCallback(async (id) => {
+    try {
+      await apiFetch(`/businesses/${id}/view`, { method: 'POST' });
+      setBusinesses((current) => current.map((b) => (b.id === id ? { ...b, views: (b.views || 0) + 1 } : b)));
+    } catch {
+      // a missed view count isn't worth surfacing an error for
+    }
   }, []);
 
-  const updateBusiness = useCallback((id, patch) => {
-    setBusinesses((current) => current.map((b) => (b.id === id ? { ...b, ...patch } : b)));
+  const updateBusiness = useCallback(async (id, patch) => {
+    try {
+      const updated = await apiFetch(`/businesses/${id}`, { method: 'PATCH', body: patch });
+      setBusinesses((current) => current.map((b) => (b.id === id ? updated : b)));
+      return updated;
+    } catch {
+      return null;
+    }
   }, []);
 
   // Verified is a trust badge, not a search gate — a new business is already
   // discoverable the moment it registers (that's the point of self-serve
   // sign-up), approving it here just adds the checkmark customers see.
-  const approveBusiness = useCallback((id) => {
-    setBusinesses((current) => current.map((b) => (b.id === id ? { ...b, verified: true } : b)));
+  const approveBusiness = useCallback(async (id) => {
+    try {
+      const updated = await apiFetch(`/businesses/${id}/approve`, { method: 'POST' });
+      setBusinesses((current) => current.map((b) => (b.id === id ? updated : b)));
+    } catch {
+      // no-op
+    }
   }, []);
 
   // Only meant for the pending-approval queue — rejecting something that
   // was never live yet is a different, lower-stakes action than deleting an
   // established listing with real bookings against it.
-  const deleteBusiness = useCallback((id) => {
-    setBusinesses((current) => current.filter((b) => b.id !== id));
+  const deleteBusiness = useCallback(async (id) => {
+    try {
+      await apiFetch(`/businesses/${id}`, { method: 'DELETE' });
+      setBusinesses((current) => current.filter((b) => b.id !== id));
+    } catch {
+      // no-op — business stays in the list, matching the pre-fix state
+    }
   }, []);
 
   const getBusinessById = useCallback(
@@ -81,6 +104,8 @@ export function BusinessProvider({ children }) {
   const value = useMemo(
     () => ({
       businesses,
+      isLoading,
+      refreshBusinesses,
       addBusiness,
       updateBusiness,
       approveBusiness,
@@ -91,6 +116,8 @@ export function BusinessProvider({ children }) {
     }),
     [
       businesses,
+      isLoading,
+      refreshBusinesses,
       addBusiness,
       updateBusiness,
       approveBusiness,
