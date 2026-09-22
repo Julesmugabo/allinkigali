@@ -84,7 +84,7 @@ export default function NewsAdminEditorScreen({ route, navigation }) {
     return Object.keys(next).length === 0;
   }, [title, category, source, body]);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!validate()) return;
     setIsSaving(true);
 
@@ -100,15 +100,19 @@ export default function NewsAdminEditorScreen({ route, navigation }) {
       icon: CATEGORY_ICONS[category] || 'newspaper-variant-outline',
     };
 
-    setTimeout(() => {
-      if (editingId) {
-        updateArticle(editingId, payload);
-      } else {
-        addArticle(payload);
-      }
-      setIsSaving(false);
-      navigation.goBack();
-    }, 500);
+    // addArticle/updateArticle now write to our own backend and resolve to
+    // null on failure (a rejected request, a dropped connection, ...)
+    // rather than throwing — must be awaited and checked, or a failed save
+    // would silently navigate back as if it had worked.
+    const result = editingId ? await updateArticle(editingId, payload) : await addArticle(payload);
+    setIsSaving(false);
+
+    if (!result) {
+      setErrors({ title: 'Ntibyashobotse kubika. Gerageza nanone.' });
+      return;
+    }
+
+    navigation.goBack();
   }, [validate, title, category, source, sourceUrl, body, imageUrl, isBreaking, destination, editingId, updateArticle, addArticle, navigation]);
 
   if (editingId && !existing) {

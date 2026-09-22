@@ -29,7 +29,7 @@ import AdminSidebar, { SIDEBAR_BREAKPOINT } from '../components/admin/AdminSideb
 import { useBusinesses } from '../context/BusinessContext';
 import { useBookings } from '../context/BookingContext';
 import { useFliers } from '../context/FliersContext';
-import { supabase } from '../services/supabaseClient';
+import { setToken } from '../services/apiClient';
 import { categoryLabel, getCategoryCounts } from '../services/businessSearch';
 import { normalise } from '../utils/format';
 import { colors, typography, spacing, radius, gutter, shadows } from '../theme';
@@ -60,7 +60,7 @@ export default function SellersAdminDashboardScreen({ navigation, route }) {
 
   // Only a real exit (not "back to Director") ends the actual session.
   const handleExit = useCallback(async () => {
-    if (!viaDirector) await supabase.auth.signOut();
+    if (!viaDirector) await setToken(null);
     navigation.navigate(exitTarget);
   }, [viaDirector, exitTarget, navigation]);
 
@@ -86,9 +86,16 @@ export default function SellersAdminDashboardScreen({ navigation, route }) {
     return { total: businesses.length, verified, pending, totalRequests: bookings.length, avgResponseLabel };
   }, [businesses, bookings]);
 
+  // Counted once per bookings-change rather than a fresh filter over every
+  // booking for every seller row rendered.
+  const requestCountByBusiness = useMemo(() => {
+    const counts = new Map();
+    bookings.forEach((b) => counts.set(b.businessId, (counts.get(b.businessId) || 0) + 1));
+    return counts;
+  }, [bookings]);
   const requestCountFor = useCallback(
-    (businessId) => bookings.filter((b) => b.businessId === businessId).length,
-    [bookings]
+    (businessId) => requestCountByBusiness.get(businessId) || 0,
+    [requestCountByBusiness]
   );
 
   const selectSegment = useCallback(
@@ -194,9 +201,13 @@ export default function SellersAdminDashboardScreen({ navigation, route }) {
     [navigation]
   );
 
+  // A Map built once per businesses-change, rather than a fresh linear scan
+  // for every flier row rendered — matters once there are real numbers of
+  // both businesses and fliers, not just the handful seeded today.
+  const businessNameById = useMemo(() => new Map(businesses.map((b) => [b.id, b.name])), [businesses]);
   const businessNameFor = useCallback(
-    (id) => businesses.find((b) => b.id === id)?.name || 'Ubucuruzi bwasibwe',
-    [businesses]
+    (id) => businessNameById.get(id) || 'Ubucuruzi bwasibwe',
+    [businessNameById]
   );
 
   const handleDeleteFlier = useCallback(

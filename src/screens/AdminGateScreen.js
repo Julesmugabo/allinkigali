@@ -1,11 +1,11 @@
 /**
  * AdminGateScreen.js — Kwinjira mu buyobozi (admin sign-in).
  *
- * Real Supabase Auth now: sign in with email + password, then look up the
- * signed-in account's role in `admin_roles` (see supabase/001_admin_roles.sql)
- * to decide which dashboard opens. Deliberately kept separate from the
- * customer sign-up form so admin access is never something a customer can
- * stumble into.
+ * Real sign-in against our own Express + Postgres backend now (see
+ * server/src/routes/auth.js) — POST /auth/login returns a JWT plus the
+ * account's role in one call, which decides which dashboard opens.
+ * Deliberately kept separate from the customer sign-up form so admin access
+ * is never something a customer can stumble into.
  */
 import React, { useCallback, useState } from 'react';
 import { View, Text, Pressable, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
@@ -16,7 +16,8 @@ import GradientBackground from '../components/common/GradientBackground';
 import TextField from '../components/common/TextField';
 import PrimaryButton from '../components/common/PrimaryButton';
 
-import { supabase } from '../services/supabaseClient';
+import { apiFetch, setToken } from '../services/apiClient';
+import { useNews } from '../context/NewsContext';
 import { ROLE_META } from '../admin/adminAuth';
 import { colors, typography, spacing, radius, gutter } from '../theme';
 
@@ -26,6 +27,7 @@ export default function AdminGateScreen({ navigation }) {
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const { refreshArticles } = useNews();
 
   const handleEnter = useCallback(async () => {
     if (!email.trim() || !password) {
@@ -35,43 +37,24 @@ export default function AdminGateScreen({ navigation }) {
     setError(null);
     setIsSigningIn(true);
 
-    // Wrapped defensively: a thrown/rejected call here (network hiccup, a
-    // client-library error rather than the usual {data, error} return) must
-    // never leave the button stuck in its loading state forever.
+    // try/finally so a network hiccup never leaves the button stuck in its
+    // loading state forever — a real bug hit and fixed during the earlier
+    // Supabase version, kept here on purpose.
     try {
-      const { data: signInData, error: signInError } = await supabase.auth.signInWithPassword({
-        email: email.trim(),
-        password,
+      const { token, role } = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: { email: email.trim(), password },
       });
-
-      if (signInError || !signInData?.user) {
-        setError("Email cyangwa ijambo ry'ibanga sibyo.");
-        return;
-      }
-
-      const { data: roleRow, error: roleError } = await supabase
-        .from('admin_roles')
-        .select('role')
-        .eq('user_id', signInData.user.id)
-        .maybeSingle();
-
-      if (roleError || !roleRow) {
-        // Signed in successfully but has no admin role assigned — don't
-        // leave a real, unrelated account logged in just because it failed
-        // the gate.
-        await supabase.auth.signOut();
-        setError('Iyi konti ntabwo ifite uburenganzira bwo kwinjira mu buyobozi.');
-        return;
-      }
-
+      await setToken(token);
+      await refreshArticles(); // this login just widened what news/director admins can see
       setPassword('');
-      navigation.replace(ROLE_META[roleRow.role].route);
+      navigation.replace(ROLE_META[role].route);
     } catch (e) {
-      setError('Ntibyakunze kwinjira. Gerageza nanone.');
+      setError(e.message || "Email cyangwa ijambo ry'ibanga sibyo.");
     } finally {
       setIsSigningIn(false);
     }
-  }, [email, password, navigation]);
+  }, [email, password, navigation, refreshArticles]);
 
   return (
     <GradientBackground>

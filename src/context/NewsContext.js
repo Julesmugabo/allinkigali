@@ -1,22 +1,19 @@
 /**
  * NewsContext.js — Ububiko bw'amakuru (the news "database").
  *
- * Promotes the news feed from static mockNews.js constants into an editable
- * store, the same way BusinessContext promoted the shop. This is what makes
- * the News admin dashboard's Add/Edit/Approve actions actually do something
- * instead of being a UI that draws on data nothing can change.
+ * Talks to our own Express + Postgres backend (server/src/routes/news.js)
+ * now, not Supabase — every screen still only ever calls useNews(),
+ * nothing outside this file needed to change, same as the plan intended.
  *
- * Every seed article starts as `status: 'published'` (they were already
- * being shown before this existed) with `views: 0` — views only grow from
- * real taps in NewsScreen from here on, they are not backfilled/faked.
+ * The server enforces who sees what (a signed-in 'news'/'director' admin
+ * gets every article — drafts, pending, rejected, archived; anyone else
+ * only gets published, non-archived rows) — this context just calls
+ * `refreshArticles()` right after a sign-in or sign-out so that scope
+ * updates immediately, since (unlike Supabase) there's no built-in
+ * auth-state-change event to listen for here.
  */
-import React, { createContext, useContext, useMemo, useState, useCallback } from 'react';
-import {
-  allArticles as seedArticles,
-  heroArticle as seedHero,
-  trendingArticles as seedTrending,
-  CATEGORIES as seedCategoriesWithAll,
-} from '../data/mockNews';
+import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
+import { apiFetch } from '../services/apiClient';
 
 const NewsContext = createContext(null);
 
@@ -28,21 +25,6 @@ function slugify(label) {
     .trim()
     .replace(/[^a-z0-9]+/g, '-')
     .replace(/(^-|-$)/g, '');
-}
-
-function seedArticleState() {
-  const trendingIds = new Set(seedTrending.map((a) => a.id));
-  return seedArticles.map((a) => ({
-    sourceUrl: null,
-    body: '',
-    imageUrl: null,
-    ...a,
-    status: 'published',
-    isFeatured: a.id === seedHero.id,
-    isTrending: trendingIds.has(a.id),
-    isArchived: false,
-    views: 0,
-  }));
 }
 
 function computeFeed(articles, categoryKey = 'all') {
@@ -71,86 +53,137 @@ function computeFeed(articles, categoryKey = 'all') {
 }
 
 export function NewsProvider({ children }) {
-  const [articles, setArticles] = useState(seedArticleState);
-  // Real content categories only — "Byose" (All) is a UI-only pseudo-category
-  // added back for the customer tab strip, not something an editor manages.
-  const [categories, setCategories] = useState(() => seedCategoriesWithAll.filter((c) => c.key !== 'all'));
+  const [articles, setArticles] = useState([]);
+  const [categories, setCategories] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const addArticle = useCallback((data) => {
-    const newArticle = {
-      id: `news-${Date.now()}`,
-      publishedAt: new Date().toISOString(),
-      isFeatured: false,
-      isTrending: false,
-      isArchived: false,
-      views: 0,
-      sourceUrl: null,
-      body: '',
-      imageUrl: null,
-      ...data,
-    };
-    setArticles((current) => [newArticle, ...current]);
-    return newArticle;
+  const refreshArticles = useCallback(async () => {
+    try {
+      const data = await apiFetch('/news/articles');
+      setArticles(data || []);
+    } catch {
+      // Leave whatever was already loaded rather than blanking the feed
+      // over a transient network hiccup.
+    }
   }, []);
 
-  const updateArticle = useCallback((id, patch) => {
-    setArticles((current) => current.map((a) => (a.id === id ? { ...a, ...patch } : a)));
+  const fetchCategories = useCallback(async () => {
+    try {
+      const data = await apiFetch('/news/categories');
+      setCategories(data || []);
+    } catch {
+      // same reasoning as refreshArticles
+    }
   }, []);
 
-  const deleteArticle = useCallback((id) => {
-    setArticles((current) => current.filter((a) => a.id !== id));
+  useEffect(() => {
+    (async () => {
+      await Promise.all([refreshArticles(), fetchCategories()]);
+      setIsLoading(false);
+    })();
+  }, [refreshArticles, fetchCategories]);
+
+  const addArticle = useCallback(async (data) => {
+    try {
+      const newArticle = await apiFetch('/news/articles', { method: 'POST', body: data });
+      setArticles((current) => [newArticle, ...current]);
+      return newArticle;
+    } catch {
+      return null;
+    }
   }, []);
 
-  const approveArticle = useCallback((id) => {
-    setArticles((current) =>
-      current.map((a) =>
-        a.id === id ? { ...a, status: 'published', publishedAt: new Date().toISOString() } : a
-      )
-    );
+  const updateArticle = useCallback(async (id, patch) => {
+    try {
+      const updated = await apiFetch(`/news/articles/${id}`, { method: 'PATCH', body: patch });
+      setArticles((current) => current.map((a) => (a.id === id ? updated : a)));
+      return updated;
+    } catch {
+      return null;
+    }
   }, []);
 
-  const rejectArticle = useCallback((id) => {
-    setArticles((current) => current.map((a) => (a.id === id ? { ...a, status: 'rejected' } : a)));
+  const deleteArticle = useCallback(async (id) => {
+    try {
+      await apiFetch(`/news/articles/${id}`, { method: 'DELETE' });
+      setArticles((current) => current.filter((a) => a.id !== id));
+    } catch {
+      // no-op — article stays in the list, matching the pre-fix state
+    }
   }, []);
+
+  const approveArticle = useCallback(
+    (id) => updateArticle(id, { status: 'published', publishedAt: new Date().toISOString() }),
+    [updateArticle]
+  );
+
+  const rejectArticle = useCallback((id) => updateArticle(id, { status: 'rejected' }), [updateArticle]);
 
   /**
-   * Archive one or many articles at once — takes an array so a multi-select
-   * "archive these" action is a single state update, not N of them.
+   * Archive one or many articles at once — the server only has a per-id
+   * PATCH endpoint, so this fires them in parallel rather than adding a
+   * bulk endpoint for what's still a small, checkbox-driven selection.
    */
-  const archiveArticles = useCallback((ids) => {
-    const idSet = new Set(ids);
-    setArticles((current) => current.map((a) => (idSet.has(a.id) ? { ...a, isArchived: true } : a)));
-  }, []);
+  const archiveArticles = useCallback(async (ids) => {
+    await Promise.all(ids.map((id) => updateArticle(id, { isArchived: true })));
+  }, [updateArticle]);
 
-  const unarchiveArticle = useCallback((id) => {
-    setArticles((current) => current.map((a) => (a.id === id ? { ...a, isArchived: false } : a)));
-  }, []);
+  const unarchiveArticle = useCallback((id) => updateArticle(id, { isArchived: false }), [updateArticle]);
 
-  const incrementArticleView = useCallback((id) => {
-    setArticles((current) => current.map((a) => (a.id === id ? { ...a, views: (a.views || 0) + 1 } : a)));
+  const incrementArticleView = useCallback(async (id) => {
+    try {
+      await apiFetch(`/news/articles/${id}/view`, { method: 'POST' });
+      setArticles((current) => current.map((a) => (a.id === id ? { ...a, views: (a.views || 0) + 1 } : a)));
+    } catch {
+      // a missed view count isn't worth surfacing an error for
+    }
   }, []);
 
   const getArticleById = useCallback((id) => articles.find((a) => a.id === id) || null, [articles]);
 
   const getFeed = useCallback((categoryKey) => computeFeed(articles, categoryKey), [articles]);
 
-  const addCategory = useCallback((label) => {
-    const key = slugify(label);
-    const newCategory = { key, label };
-    setCategories((current) => (current.some((c) => c.key === key) ? current : [...current, newCategory]));
-    return newCategory;
-  }, []);
+  const addCategory = useCallback(
+    async (label) => {
+      const key = slugify(label);
+      const existing = categories.find((c) => c.key === key);
+      if (existing) return existing;
 
-  const updateCategory = useCallback((key, patch) => {
-    setCategories((current) => current.map((c) => (c.key === key ? { ...c, ...patch } : c)));
+      try {
+        const row = await apiFetch('/news/categories', { method: 'POST', body: { key, label } });
+        setCategories((current) => [...current, row]);
+        return row;
+      } catch {
+        return null;
+      }
+    },
+    [categories]
+  );
+
+  const updateCategory = useCallback(async (key, patch) => {
+    try {
+      const row = await apiFetch(`/news/categories/${key}`, { method: 'PATCH', body: patch });
+      setCategories((current) => current.map((c) => (c.key === key ? row : c)));
+    } catch {
+      // no-op
+    }
   }, []);
 
   const deleteCategory = useCallback(
-    (key) => {
+    async (key) => {
+      // Fast local check first (matches the old in-memory behaviour); the
+      // FK `on delete restrict` on news_articles.category is the real
+      // enforcement even if this client-side check were ever stale.
       const inUse = articles.some((a) => a.category === key);
       if (inUse) return false;
-      setCategories((current) => current.filter((c) => c.key !== key));
-      return true;
+
+      try {
+        await apiFetch(`/news/categories/${key}`, { method: 'DELETE' });
+        setCategories((current) => current.filter((c) => c.key !== key));
+        return true;
+      } catch {
+        return false;
+      }
     },
     [articles]
   );
@@ -162,6 +195,8 @@ export function NewsProvider({ children }) {
       articles,
       categories,
       categoriesWithAll,
+      isLoading,
+      refreshArticles,
       addArticle,
       updateArticle,
       deleteArticle,
@@ -180,6 +215,8 @@ export function NewsProvider({ children }) {
       articles,
       categories,
       categoriesWithAll,
+      isLoading,
+      refreshArticles,
       addArticle,
       updateArticle,
       deleteArticle,

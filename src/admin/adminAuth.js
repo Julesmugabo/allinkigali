@@ -1,11 +1,12 @@
 /**
  * adminAuth.js — Kwinjira mu buyobozi (admin access).
  *
- * Real accounts now: AdminGateScreen.js signs a person in against Supabase
- * Auth, then looks up their role in the `admin_roles` table (see
- * supabase/001_admin_roles.sql) to decide which dashboard opens. Nobody can
- * grant themselves a role through the app — that table has no insert policy,
- * roles are only ever assigned directly in the Supabase SQL Editor.
+ * Real accounts: AdminGateScreen.js signs a person in against our own
+ * Express + Postgres backend (server/src/routes/auth.js), which returns
+ * their role from the `users` table to decide which dashboard opens.
+ * Nobody can grant themselves a role through the app — there's no sign-up
+ * endpoint at all; admin accounts are only ever created directly against
+ * the database (see server/src/createAdmin.js).
  */
 
 export const ADMIN_ROLES = {

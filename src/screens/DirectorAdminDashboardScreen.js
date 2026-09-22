@@ -29,7 +29,7 @@ import AdminSidebar, { SIDEBAR_BREAKPOINT } from '../components/admin/AdminSideb
 import { useBusinesses } from '../context/BusinessContext';
 import { useBookings } from '../context/BookingContext';
 import { useNews } from '../context/NewsContext';
-import { supabase } from '../services/supabaseClient';
+import { setToken } from '../services/apiClient';
 import { getCategoryCounts } from '../services/businessSearch';
 import { colors, typography, spacing, radius, gutter, shadows } from '../theme';
 
@@ -58,7 +58,7 @@ export default function DirectorAdminDashboardScreen({ navigation }) {
 
   const { businesses } = useBusinesses();
   const { bookings } = useBookings();
-  const { articles, categories: newsCategories } = useNews();
+  const { articles, categories: newsCategories, refreshArticles } = useNews();
 
   const [segment, setSegment] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(isWide);
@@ -156,9 +156,10 @@ export default function DirectorAdminDashboardScreen({ navigation }) {
   // reached via this screen), so someone else on the device can't reopen
   // the dashboard without signing in again.
   const handleExit = useCallback(async () => {
-    await supabase.auth.signOut();
+    await setToken(null);
+    await refreshArticles(); // scope shrinks back to public-only now
     navigation.navigate('Main');
-  }, [navigation]);
+  }, [navigation, refreshArticles]);
 
   const attentionItems = useMemo(() => {
     const items = [];

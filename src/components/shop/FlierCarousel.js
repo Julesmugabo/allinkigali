@@ -9,7 +9,7 @@
  * Still tappable mid-animation (Animated transforms don't block touch),
  * so tapping a flier opens the business it promotes.
  */
-import React, { useCallback, useEffect, useRef, useState } from 'react';
+import React, { useCallback, useEffect, useMemo, useRef, useState } from 'react';
 import { View, Image, Pressable, Animated, Easing, useWindowDimensions, StyleSheet } from 'react-native';
 import { radius, gutter } from '../../theme';
 
@@ -27,6 +27,11 @@ export default function FlierCarousel({ fliers, businesses, onPressFlier, style 
   // screen (matching the search bar above it) rather than peeking the next
   // card — capped on a wide desktop browser so it doesn't stretch absurdly.
   const cardWidth = Math.min(width - gutter * 2, 640);
+
+  // Built once per businesses-change rather than a fresh linear scan per
+  // flier, per row — renderRow below runs twice a render (the marquee's two
+  // back-to-back copies), so this is a real repeated cost as both lists grow.
+  const businessById = useMemo(() => new Map(businesses.map((b) => [b.id, b])), [businesses]);
 
   const startLoop = useCallback(
     (measuredWidth) => {
@@ -64,7 +69,7 @@ export default function FlierCarousel({ fliers, businesses, onPressFlier, style 
   const renderRow = (keyPrefix, onLayout) => (
     <View style={styles.row} onLayout={onLayout}>
       {fliers.map((flier) => {
-        const business = businesses.find((b) => b.id === flier.businessId);
+        const business = businessById.get(flier.businessId);
         return (
           <Pressable
             key={`${keyPrefix}-${flier.id}`}

@@ -27,7 +27,7 @@ import AdminSidebar, { SIDEBAR_BREAKPOINT } from '../components/admin/AdminSideb
 
 import { useNews } from '../context/NewsContext';
 import { useAds } from '../context/AdsContext';
-import { supabase } from '../services/supabaseClient';
+import { setToken } from '../services/apiClient';
 import { normalise } from '../utils/format';
 import { colors, typography, spacing, radius, gutter, shadows } from '../theme';
 
@@ -49,14 +49,6 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
   const viaDirector = Boolean(route?.params?.viaDirector);
   const exitTarget = viaDirector ? 'DirectorAdminDashboard' : 'Main';
 
-  // Only a real exit (not "back to Director") ends the actual session —
-  // going back up to Director just navigates, since that admin is still
-  // signed in and hasn't asked to leave the admin area at all.
-  const handleExit = useCallback(async () => {
-    if (!viaDirector) await supabase.auth.signOut();
-    navigation.navigate(exitTarget);
-  }, [viaDirector, exitTarget, navigation]);
-
   const {
     articles,
     categories,
@@ -68,8 +60,20 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
     addCategory,
     updateCategory,
     deleteCategory,
+    refreshArticles,
   } = useNews();
   const { ads, deleteAd } = useAds();
+
+  // Only a real exit (not "back to Director") ends the actual session —
+  // going back up to Director just navigates, since that admin is still
+  // signed in and hasn't asked to leave the admin area at all.
+  const handleExit = useCallback(async () => {
+    if (!viaDirector) {
+      await setToken(null);
+      await refreshArticles(); // scope shrinks back to public-only now
+    }
+    navigation.navigate(exitTarget);
+  }, [viaDirector, exitTarget, navigation, refreshArticles]);
 
   const [segment, setSegment] = useState(route?.params?.segment || 'all');
   const [search, setSearch] = useState('');
@@ -132,14 +136,13 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
     setSelectMode(false);
   }, [selectedIds, archiveArticles]);
 
-  const categoryCounts = useMemo(
-    () =>
-      categories.map((c) => ({
-        ...c,
-        count: articles.filter((a) => a.category === c.key).length,
-      })),
-    [categories, articles]
-  );
+  // One pass over articles to count-by-category, instead of re-scanning the
+  // full articles list once per category.
+  const categoryCounts = useMemo(() => {
+    const counts = new Map();
+    articles.forEach((a) => counts.set(a.category, (counts.get(a.category) || 0) + 1));
+    return categories.map((c) => ({ ...c, count: counts.get(c.key) || 0 }));
+  }, [categories, articles]);
 
   const selectSegment = useCallback(
     (key) => {
@@ -222,8 +225,8 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
   }, [newCategory, addCategory]);
 
   const handleDeleteCategory = useCallback(
-    (category) => {
-      const removed = deleteCategory(category.key);
+    async (category) => {
+      const removed = await deleteCategory(category.key);
       if (!removed) {
         Alert.alert(
           'Category in use',
@@ -251,9 +254,13 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
     setRenameText('');
   }, [renamingKey, renameText, updateCategory]);
 
+  // A Map built once per articles-change, rather than a fresh linear scan
+  // for every ad row rendered — matters once there are real numbers of both
+  // articles and ads, not just the handful seeded today.
+  const articleTitleById = useMemo(() => new Map(articles.map((a) => [a.id, a.title])), [articles]);
   const articleTitleFor = useCallback(
-    (id) => articles.find((a) => a.id === id)?.title || 'Inkuru yasibwe',
-    [articles]
+    (id) => articleTitleById.get(id) || 'Inkuru yasibwe',
+    [articleTitleById]
   );
 
   const handleDeleteAd = useCallback(
