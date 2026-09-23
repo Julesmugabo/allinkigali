@@ -59,7 +59,7 @@ export default function FlierEditorScreen({ route, navigation }) {
     }
   }, []);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!imageUri) {
       setError('Hitamo ifoto.');
       return;
@@ -73,15 +73,16 @@ export default function FlierEditorScreen({ route, navigation }) {
 
     const payload = { imageUri, businessId };
 
-    setTimeout(() => {
-      if (editingId) {
-        updateFlier(editingId, payload);
-      } else {
-        addFlier(payload);
+    try {
+      const result = editingId ? await updateFlier(editingId, payload) : await addFlier(payload);
+      if (!result) {
+        setError('Ntibyashobotse kubika ifliyeri. Gerageza nanone.');
+        return;
       }
-      setIsSaving(false);
       navigation.goBack();
-    }, 400);
+    } finally {
+      setIsSaving(false);
+    }
   }, [imageUri, businessId, editingId, updateFlier, addFlier, navigation]);
 
   return (

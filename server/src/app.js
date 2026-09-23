@@ -23,6 +23,8 @@ const newsRoutes = require('./routes/news');
 const businessesRoutes = require('./routes/businesses');
 const bookingsRoutes = require('./routes/bookings');
 const ordersRoutes = require('./routes/orders');
+const adsRoutes = require('./routes/ads');
+const fliersRoutes = require('./routes/fliers');
 const adminRoutes = require('./routes/admin');
 
 const app = express();
@@ -36,6 +38,8 @@ app.use('/news', newsRoutes);
 app.use('/businesses', businessesRoutes);
 app.use('/bookings', bookingsRoutes);
 app.use('/orders', ordersRoutes);
+app.use('/ads', adsRoutes);
+app.use('/fliers', fliersRoutes);
 app.use('/admin', adminRoutes);
 
 // Last-resort handler so a route bug returns JSON, not an HTML stack trace,

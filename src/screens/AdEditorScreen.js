@@ -66,7 +66,7 @@ export default function AdEditorScreen({ route, navigation }) {
     }
   }, [type]);
 
-  const handleSave = useCallback(() => {
+  const handleSave = useCallback(async () => {
     if (!mediaUri) {
       setError(type === 'video' ? 'Hitamo videwo.' : 'Hitamo ifoto.');
       return;
@@ -80,15 +80,16 @@ export default function AdEditorScreen({ route, navigation }) {
 
     const payload = { type, mediaUri, afterArticleId };
 
-    setTimeout(() => {
-      if (editingId) {
-        updateAd(editingId, payload);
-      } else {
-        addAd(payload);
+    try {
+      const result = editingId ? await updateAd(editingId, payload) : await addAd(payload);
+      if (!result) {
+        setError('Ntibyashobotse kubika itangazo. Gerageza nanone.');
+        return;
       }
-      setIsSaving(false);
       navigation.goBack();
-    }, 400);
+    } finally {
+      setIsSaving(false);
+    }
   }, [mediaUri, afterArticleId, type, editingId, updateAd, addAd, navigation]);
 
   return (
