@@ -1,35 +1,49 @@
 /**
  * OrdersContext.js — Ibyifuzo n'aho bigeze (orders + tracking).
  *
- * placeOrder() turns the cart into an order. advanceStatus() is a development
- * helper that walks an order forward one step so you can see the tracking
- * timeline without a backend — delete it once real status updates arrive.
+ * Talks to our own Express + Postgres backend now (server/src/routes/orders.js),
+ * not in-memory state — every screen still only ever calls useOrders().
+ *
+ * advanceStatus() is a development helper that walks an order forward one
+ * step so you can see the tracking timeline without a real dispatch system —
+ * delete it once real status updates arrive from wherever those come from.
  */
-import React, { createContext, useContext, useMemo, useState, useCallback } from 'react';
-import mockOrders from '../data/mockOrders';
+import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
+import { apiFetch } from '../services/apiClient';
 import { ORDER_STATUS, STATUS_FLOW, statusIndex, canCancel } from '../data/orderStatus';
 import { makeOrderRef } from '../utils/format';
 
 const OrdersContext = createContext(null);
 
 export function OrdersProvider({ children }) {
-  const [orders, setOrders] = useState(mockOrders);
+  const [orders, setOrders] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
+
+  const refreshOrders = useCallback(async () => {
+    try {
+      const data = await apiFetch('/orders');
+      setOrders(data || []);
+    } catch {
+      // Leave whatever was already loaded rather than blanking the list
+      // over a transient network hiccup.
+    }
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      await refreshOrders();
+      setIsLoading(false);
+    })();
+  }, [refreshOrders]);
 
   /**
    * Create an order from cart items. Returns the new order object so the
-   * checkout screen can navigate straight to its tracking page.
+   * checkout screen can navigate straight to its tracking page, or null on
+   * failure so the screen can show a real error instead of faking success.
    */
-  const placeOrder = useCallback(({ items, subtotal, deliveryFee, total, deliveryAddress, phone, note }) => {
-    const now = new Date().toISOString();
-    const order = {
-      id: `order-${Date.now()}`,
+  const placeOrder = useCallback(async ({ items, subtotal, deliveryFee, total, deliveryAddress, phone, note }) => {
+    const payload = {
       ref: makeOrderRef(),
-      createdAt: now,
-      status: ORDER_STATUS.PENDING,
-      deliveryAddress: deliveryAddress || '',
-      phone: phone || '',
-      note: note || '',
-      paymentMethod: null, // filled in once the payment step is built
       items: items.map((i) => ({
         productId: i.productId,
         name: i.name,
@@ -42,11 +56,18 @@ export function OrdersProvider({ children }) {
       subtotal,
       deliveryFee,
       total,
-      history: [{ status: ORDER_STATUS.PENDING, at: now }],
+      deliveryAddress: deliveryAddress || '',
+      phone: phone || '',
+      note: note || '',
     };
 
-    setOrders((current) => [order, ...current]);
-    return order;
+    try {
+      const order = await apiFetch('/orders', { method: 'POST', body: payload });
+      setOrders((current) => [order, ...current]);
+      return order;
+    } catch {
+      return null;
+    }
   }, []);
 
   const getOrderById = useCallback(
@@ -54,37 +75,34 @@ export function OrdersProvider({ children }) {
     [orders]
   );
 
-  const cancelOrder = useCallback((id) => {
-    setOrders((current) =>
-      current.map((o) =>
-        o.id === id && canCancel(o.status)
-          ? {
-              ...o,
-              status: ORDER_STATUS.CANCELLED,
-              history: [...o.history, { status: ORDER_STATUS.CANCELLED, at: new Date().toISOString() }],
-            }
-          : o
-      )
-    );
+  const cancelOrder = useCallback(async (id) => {
+    try {
+      const updated = await apiFetch(`/orders/${id}/status`, {
+        method: 'PATCH',
+        body: { status: ORDER_STATUS.CANCELLED },
+      });
+      setOrders((current) => current.map((o) => (o.id === id ? updated : o)));
+    } catch {
+      // no-op — status stays as it was
+    }
   }, []);
 
   /**
    * DEV ONLY — push an order to the next step in the flow.
    */
-  const advanceStatus = useCallback((id) => {
-    setOrders((current) =>
-      current.map((o) => {
-        if (o.id !== id) return o;
-        const next = STATUS_FLOW[statusIndex(o.status) + 1];
-        if (!next) return o;
-        return {
-          ...o,
-          status: next,
-          history: [...o.history, { status: next, at: new Date().toISOString() }],
-        };
-      })
-    );
-  }, []);
+  const advanceStatus = useCallback(async (id) => {
+    const order = orders.find((o) => o.id === id);
+    if (!order) return;
+    const next = STATUS_FLOW[statusIndex(order.status) + 1];
+    if (!next) return;
+
+    try {
+      const updated = await apiFetch(`/orders/${id}/status`, { method: 'PATCH', body: { status: next } });
+      setOrders((current) => current.map((o) => (o.id === id ? updated : o)));
+    } catch {
+      // no-op
+    }
+  }, [orders]);
 
   const activeOrders = useMemo(
     () =>
@@ -105,14 +123,16 @@ export function OrdersProvider({ children }) {
   const value = useMemo(
     () => ({
       orders,
+      isLoading,
       activeOrders,
       pastOrders,
+      refreshOrders,
       placeOrder,
       getOrderById,
       cancelOrder,
       advanceStatus,
     }),
-    [orders, activeOrders, pastOrders, placeOrder, getOrderById, cancelOrder, advanceStatus]
+    [orders, isLoading, activeOrders, pastOrders, refreshOrders, placeOrder, getOrderById, cancelOrder, advanceStatus]
   );
 
   return <OrdersContext.Provider value={value}>{children}</OrdersContext.Provider>;

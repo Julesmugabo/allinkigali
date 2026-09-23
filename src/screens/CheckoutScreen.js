@@ -69,6 +69,7 @@ export default function CheckoutScreen({ navigation }) {
   const [note, setNote] = useState('');
   const [errors, setErrors] = useState({});
   const [isPlacing, setIsPlacing] = useState(false);
+  const [placeError, setPlaceError] = useState(null);
 
   const validate = useCallback(() => {
     const next = {};
@@ -79,17 +80,18 @@ export default function CheckoutScreen({ navigation }) {
     return Object.keys(next).length === 0;
   }, [address, phone]);
 
-  const handlePlaceOrder = useCallback(() => {
+  const handlePlaceOrder = useCallback(async () => {
     if (!validate()) return;
 
+    setPlaceError(null);
     setIsPlacing(true);
 
     // >>> PAYMENT STEP GOES HERE <<<
     // e.g. const payment = await startMomoPayment({ phone, amount: total });
     // and then pass payment.reference into placeOrder below.
 
-    setTimeout(() => {
-      const order = placeOrder({
+    try {
+      const order = await placeOrder({
         items,
         subtotal,
         deliveryFee,
@@ -99,15 +101,21 @@ export default function CheckoutScreen({ navigation }) {
         note: note.trim(),
       });
 
+      if (!order) {
+        setPlaceError('Ntibyashobotse kohereza icyifuzo. Gerageza nanone.');
+        return;
+      }
+
       clearCart();
-      setIsPlacing(false);
 
       // Jump to the tracking page inside the "Jyewe" tab.
       navigation.navigate('AccountTab', {
         screen: 'OrderDetail',
         params: { orderId: order.id, justPlaced: true },
       });
-    }, 600);
+    } finally {
+      setIsPlacing(false);
+    }
   }, [validate, placeOrder, items, subtotal, deliveryFee, total, address, phone, note, clearCart, navigation]);
 
   if (!count) {
@@ -226,6 +234,8 @@ export default function CheckoutScreen({ navigation }) {
             </Text>
           </View>
 
+          {placeError ? <Text style={styles.errorText}>{placeError}</Text> : null}
+
           <PrimaryButton
             label="Ohereza icyifuzo"
             icon="check"
@@ -331,4 +341,5 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   submit: { marginBottom: spacing.xl },
+  errorText: { ...typography.caption, color: colors.breaking, marginBottom: spacing.md },
 });
