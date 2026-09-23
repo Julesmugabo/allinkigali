@@ -21,13 +21,35 @@ import { useNews } from '../context/NewsContext';
 import { ROLE_META } from '../admin/adminAuth';
 import { colors, typography, spacing, radius, gutter } from '../theme';
 
+// TEMPORARY, per explicit request (2026-09-23): quick-access buttons that
+// sign in behind the scenes with the director account, so nobody has to
+// type a password to open the admin dashboards while accounts/passwords
+// are still being finalized. Still a real login (a real JWT is issued),
+// just not typed by hand. Remove once real per-role passwords are ready.
+const QUICK_ACCESS_EMAIL = 'mugaboinfo@gmail.com';
+const QUICK_ACCESS_PASSWORD = 'allinkigali-director';
+
 export default function AdminGateScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [error, setError] = useState(null);
   const [isSigningIn, setIsSigningIn] = useState(false);
+  const [quickAccessLoading, setQuickAccessLoading] = useState(null);
   const { refreshArticles } = useNews();
+
+  const signInAndGo = useCallback(
+    async (loginEmail, loginPassword, route) => {
+      const { token, role } = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: { email: loginEmail, password: loginPassword },
+      });
+      await setToken(token);
+      await refreshArticles();
+      navigation.replace(route || ROLE_META[role].route);
+    },
+    [navigation, refreshArticles]
+  );
 
   const handleEnter = useCallback(async () => {
     if (!email.trim() || !password) {
@@ -41,20 +63,29 @@ export default function AdminGateScreen({ navigation }) {
     // loading state forever — a real bug hit and fixed during the earlier
     // Supabase version, kept here on purpose.
     try {
-      const { token, role } = await apiFetch('/auth/login', {
-        method: 'POST',
-        body: { email: email.trim(), password },
-      });
-      await setToken(token);
-      await refreshArticles(); // this login just widened what news/director admins can see
+      await signInAndGo(email.trim(), password);
       setPassword('');
-      navigation.replace(ROLE_META[role].route);
     } catch (e) {
       setError(e.message || "Email cyangwa ijambo ry'ibanga sibyo.");
     } finally {
       setIsSigningIn(false);
     }
-  }, [email, password, navigation, refreshArticles]);
+  }, [email, password, signInAndGo]);
+
+  const handleQuickAccess = useCallback(
+    async (route, key) => {
+      setError(null);
+      setQuickAccessLoading(key);
+      try {
+        await signInAndGo(QUICK_ACCESS_EMAIL, QUICK_ACCESS_PASSWORD, route);
+      } catch (e) {
+        setError(e.message || 'Ntibyashobotse kwinjira.');
+      } finally {
+        setQuickAccessLoading(null);
+      }
+    },
+    [signInAndGo]
+  );
 
   return (
     <GradientBackground>
@@ -80,6 +111,45 @@ export default function AdminGateScreen({ navigation }) {
 
             <Text style={styles.title}>Ubuyobozi</Text>
             <Text style={styles.subtitle}>Injira ukoresheje konti yawe y'ubuyobozi.</Text>
+
+            <View style={styles.quickAccessGroup}>
+              <PrimaryButton
+                label="Injira nk'Ubuyobozi"
+                icon="shield-account-outline"
+                onPress={() => handleQuickAccess('DirectorAdminDashboard', 'director')}
+                loading={quickAccessLoading === 'director'}
+              />
+              <Pressable
+                onPress={() => handleQuickAccess('SellersAdminDashboard', 'sellers')}
+                style={styles.quickAccessRow}
+                disabled={Boolean(quickAccessLoading)}
+                accessibilityRole="button"
+                accessibilityLabel="Injira muri Sales Partners Dashboard"
+              >
+                <MaterialCommunityIcons name="storefront-outline" size={18} color={colors.blue300} />
+                <Text style={styles.quickAccessText}>
+                  {quickAccessLoading === 'sellers' ? 'Kwinjira...' : 'Injira muri Sales Partners Dashboard'}
+                </Text>
+              </Pressable>
+              <Pressable
+                onPress={() => handleQuickAccess('NewsAdminDashboard', 'news')}
+                style={styles.quickAccessRow}
+                disabled={Boolean(quickAccessLoading)}
+                accessibilityRole="button"
+                accessibilityLabel="Injira muri News Dashboard"
+              >
+                <MaterialCommunityIcons name="newspaper-variant-outline" size={18} color={colors.blue300} />
+                <Text style={styles.quickAccessText}>
+                  {quickAccessLoading === 'news' ? 'Kwinjira...' : 'Injira muri News Dashboard'}
+                </Text>
+              </Pressable>
+            </View>
+
+            <View style={styles.divider}>
+              <View style={styles.dividerLine} />
+              <Text style={styles.dividerText}>cyangwa ukoreshe email n'ijambo ry'ibanga</Text>
+              <View style={styles.dividerLine} />
+            </View>
 
             <TextField
               label="Email"
@@ -157,4 +227,32 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   field: { marginBottom: spacing.lg },
+  quickAccessGroup: { marginBottom: spacing.lg },
+  quickAccessRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'center',
+    gap: spacing.sm,
+    paddingVertical: spacing.md,
+  },
+  quickAccessText: {
+    ...typography.body,
+    color: colors.blue300,
+    fontWeight: '600',
+  },
+  divider: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginBottom: spacing.lg,
+    gap: spacing.sm,
+  },
+  dividerLine: {
+    flex: 1,
+    height: StyleSheet.hairlineWidth,
+    backgroundColor: 'rgba(255,255,255,0.15)',
+  },
+  dividerText: {
+    ...typography.meta,
+    color: colors.textOnNavyFaint,
+  },
 });
