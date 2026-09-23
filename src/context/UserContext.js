@@ -1,35 +1,56 @@
 /**
  * UserContext.js — Konti y'umukoresha (account state).
  *
- * Holds the signed-in user and the sign-up / sign-in actions. Everything is
- * in memory for now; when you add a backend, only the three async functions
- * below need to change — no screen has to be touched.
+ * Talks to our own Express + Postgres backend now (server/src/routes/auth.js:
+ * POST /signup, POST /login, GET /me), not in-memory state — every screen
+ * still only ever calls useUser().
+ *
+ * On mount, if a token from a previous session is already stored
+ * (AsyncStorage, via apiClient), GET /me rehydrates the signed-in user so a
+ * reload doesn't silently sign someone out while their token is still
+ * valid. `isLoading` covers both that bootstrap check and every sign-in/
+ * sign-up call — screens that need to tell "still checking" from "signed
+ * out" apart can rely on it being true during the bootstrap.
  */
-import React, { createContext, useContext, useMemo, useState, useCallback } from 'react';
+import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
+import { apiFetch, getToken, setToken } from '../services/apiClient';
 import { isValidEmail } from '../utils/format';
 
 const UserContext = createContext(null);
 
-// Simulates network latency so the loading states are actually visible while
-// you're building. Set to 0 when you wire the real API.
-const FAKE_DELAY = 700;
-
-function wait(ms) {
-  return new Promise((resolve) => setTimeout(resolve, ms));
-}
-
 export function UserProvider({ children }) {
   const [user, setUser] = useState(null);
   const [isLoading, setIsLoading] = useState(false);
+  const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [error, setError] = useState(null);
 
   const clearError = useCallback(() => setError(null), []);
 
+  useEffect(() => {
+    (async () => {
+      const token = await getToken();
+      if (!token) {
+        setIsBootstrapping(false);
+        return;
+      }
+      try {
+        const { user: me } = await apiFetch('/auth/me');
+        setUser(me);
+      } catch {
+        // Token is stale/invalid — drop it rather than staying stuck
+        // "signed in" with a session the server no longer recognizes.
+        await setToken(null);
+      } finally {
+        setIsBootstrapping(false);
+      }
+    })();
+  }, []);
+
   /**
-   * Create an account with first name, last name and email.
+   * Create an account with first name, last name, email and password.
    * Returns the new user, or throws with a Kinyarwanda message.
    */
-  const signUp = useCallback(async ({ firstName, lastName, email, phone }) => {
+  const signUp = useCallback(async ({ firstName, lastName, email, phone, password }) => {
     setError(null);
 
     if (!firstName || !firstName.trim()) {
@@ -47,62 +68,73 @@ export function UserProvider({ children }) {
       setError(message);
       throw new Error(message);
     }
+    if (!password || password.length < 6) {
+      const message = "Ijambo ry'ibanga rigomba kuba nibura inyuguti 6.";
+      setError(message);
+      throw new Error(message);
+    }
 
     setIsLoading(true);
     try {
-      await wait(FAKE_DELAY);
-      const newUser = {
-        id: `user-${Date.now()}`,
-        firstName: firstName.trim(),
-        lastName: lastName.trim(),
-        email: email.trim().toLowerCase(),
-        phone: (phone || '').trim(),
-        provider: 'email',
-        avatarUrl: null,
-        createdAt: new Date().toISOString(),
-      };
+      const { token, user: newUser } = await apiFetch('/auth/signup', {
+        method: 'POST',
+        body: { firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), phone, password },
+      });
+      await setToken(token);
       setUser(newUser);
       return newUser;
+    } catch (e) {
+      setError(e.message);
+      throw e;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
   /**
-   * Google sign-in placeholder.
-   *
-   * TO MAKE THIS REAL:
-   *   npx expo install expo-auth-session expo-web-browser
-   * then swap the body for a Google.useAuthRequest() flow and map the profile
-   * response onto the same user shape returned below.
+   * Sign in to an existing account.
    */
-  const signInWithGoogle = useCallback(async () => {
+  const signIn = useCallback(async ({ email, password }) => {
     setError(null);
+
+    if (!isValidEmail(email)) {
+      const message = 'Imeyili ntabwo yujuje ibisabwa.';
+      setError(message);
+      throw new Error(message);
+    }
+    if (!password) {
+      const message = "Andika ijambo ry'ibanga.";
+      setError(message);
+      throw new Error(message);
+    }
+
     setIsLoading(true);
     try {
-      await wait(FAKE_DELAY);
-      const googleUser = {
-        id: `google-${Date.now()}`,
-        firstName: 'Umukoresha',
-        lastName: 'Google',
-        email: 'umukoresha@gmail.com',
-        phone: '',
-        provider: 'google',
-        avatarUrl: null,
-        createdAt: new Date().toISOString(),
-      };
-      setUser(googleUser);
-      return googleUser;
+      const { token, user: signedInUser } = await apiFetch('/auth/login', {
+        method: 'POST',
+        body: { email: email.trim(), password },
+      });
+      await setToken(token);
+      setUser(signedInUser);
+      return signedInUser;
+    } catch (e) {
+      setError(e.message);
+      throw e;
     } finally {
       setIsLoading(false);
     }
   }, []);
 
+  // Local-only: a UI hint for routing straight into business registration
+  // right after sign-up, not a real account attribute stored on the
+  // backend — a person's actual "seller" status is just whether they own
+  // any businesses (see BusinessContext.getBusinessesByOwner).
   const updateProfile = useCallback((patch) => {
     setUser((current) => (current ? { ...current, ...patch } : current));
   }, []);
 
-  const signOut = useCallback(() => {
+  const signOut = useCallback(async () => {
+    await setToken(null);
     setUser(null);
     setError(null);
   }, []);
@@ -112,14 +144,15 @@ export function UserProvider({ children }) {
       user,
       isSignedIn: Boolean(user),
       isLoading,
+      isBootstrapping,
       error,
       clearError,
       signUp,
-      signInWithGoogle,
+      signIn,
       updateProfile,
       signOut,
     }),
-    [user, isLoading, error, clearError, signUp, signInWithGoogle, updateProfile, signOut]
+    [user, isLoading, isBootstrapping, error, clearError, signUp, signIn, updateProfile, signOut]
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

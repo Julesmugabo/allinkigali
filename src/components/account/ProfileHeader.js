@@ -1,7 +1,6 @@
 /**
  * ProfileHeader.js — Umutwe werekana konti y'umukoresha.
- * Avatar (initials, or the Google photo when there is one), name, email, and
- * a compact summary of the user's orders.
+ * Avatar (initials), name, email, and a compact summary of the user's orders.
  */
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
@@ -41,13 +40,6 @@ export default function ProfileHeader({ user, activeCount = 0, completedCount = 
           <Text style={styles.email} numberOfLines={1}>
             {user.email}
           </Text>
-
-          {user.provider === 'google' ? (
-            <View style={styles.providerRow}>
-              <MaterialCommunityIcons name="google" size={11} color={colors.blue300} />
-              <Text style={styles.providerText}>Konti ya Google</Text>
-            </View>
-          ) : null}
         </View>
       </View>
 
@@ -97,12 +89,6 @@ const styles = StyleSheet.create({
     fontSize: 12,
     color: colors.textOnNavyFaint,
     marginTop: 2,
-  },
-  providerRow: { flexDirection: 'row', alignItems: 'center', marginTop: spacing.xs },
-  providerText: {
-    fontSize: 10.5,
-    color: colors.blue300,
-    marginLeft: 4,
   },
   stats: {
     flexDirection: 'row',

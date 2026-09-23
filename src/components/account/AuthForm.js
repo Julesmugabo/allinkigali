@@ -1,6 +1,6 @@
 /**
  * AuthForm.js — Ifishi yo kwiyandikisha.
- * First name, last name, email, optional phone, plus the Google shortcut.
+ * First name, last name, email, password, optional phone.
  * Validation lives here; the actual account creation lives in UserContext.
  */
 import React, { useState, useRef, useCallback } from 'react';
@@ -8,19 +8,20 @@ import { View, Text, StyleSheet } from 'react-native';
 
 import TextField from '../common/TextField';
 import PrimaryButton from '../common/PrimaryButton';
-import GoogleButton from './GoogleButton';
 import { isValidEmail, isValidPhone } from '../../utils/format';
 import { colors, typography, spacing } from '../../theme';
 
-export default function AuthForm({ onSubmit, onGooglePress, isLoading = false, serverError }) {
+export default function AuthForm({ onSubmit, isLoading = false, serverError }) {
   const [firstName, setFirstName] = useState('');
   const [lastName, setLastName] = useState('');
   const [email, setEmail] = useState('');
+  const [password, setPassword] = useState('');
   const [phone, setPhone] = useState('');
   const [errors, setErrors] = useState({});
 
   const lastNameRef = useRef(null);
   const emailRef = useRef(null);
+  const passwordRef = useRef(null);
   const phoneRef = useRef(null);
 
   const validate = useCallback(() => {
@@ -30,11 +31,13 @@ export default function AuthForm({ onSubmit, onGooglePress, isLoading = false, s
     if (!lastName.trim()) next.lastName = 'Andika izina rya nyuma.';
     if (!email.trim()) next.email = 'Andika imeyili yawe.';
     else if (!isValidEmail(email)) next.email = 'Imeyili ntabwo ari yo.';
+    if (!password) next.password = "Andika ijambo ry'ibanga.";
+    else if (password.length < 6) next.password = "Rigomba kuba nibura inyuguti 6.";
     if (phone.trim() && !isValidPhone(phone)) next.phone = 'Nomero igomba gutangira na 07.';
 
     setErrors(next);
     return Object.keys(next).length === 0;
-  }, [firstName, lastName, email, phone]);
+  }, [firstName, lastName, email, password, phone]);
 
   const handleSubmit = useCallback(() => {
     if (!validate()) return;
@@ -42,9 +45,10 @@ export default function AuthForm({ onSubmit, onGooglePress, isLoading = false, s
       firstName: firstName.trim(),
       lastName: lastName.trim(),
       email: email.trim(),
+      password,
       phone: phone.trim(),
     });
-  }, [validate, onSubmit, firstName, lastName, email, phone]);
+  }, [validate, onSubmit, firstName, lastName, email, password, phone]);
 
   return (
     <View style={styles.container}>
@@ -84,6 +88,21 @@ export default function AuthForm({ onSubmit, onGooglePress, isLoading = false, s
         keyboardType="email-address"
         autoCapitalize="none"
         autoComplete="email"
+        onSubmitEditing={() => passwordRef.current && passwordRef.current.focus()}
+      />
+
+      <TextField
+        ref={passwordRef}
+        label="Ijambo ry'ibanga"
+        value={password}
+        onChangeText={setPassword}
+        placeholder="••••••••"
+        icon="key-outline"
+        error={errors.password}
+        secureTextEntry
+        autoCapitalize="none"
+        autoComplete="password-new"
+        returnKeyType="next"
         onSubmitEditing={() => phoneRef.current && phoneRef.current.focus()}
       />
 
@@ -110,14 +129,6 @@ export default function AuthForm({ onSubmit, onGooglePress, isLoading = false, s
         style={styles.submit}
       />
 
-      <View style={styles.dividerRow}>
-        <View style={styles.dividerLine} />
-        <Text style={styles.dividerLabel}>cyangwa</Text>
-        <View style={styles.dividerLine} />
-      </View>
-
-      <GoogleButton onPress={onGooglePress} loading={isLoading} />
-
       <Text style={styles.terms}>
         Ukomeje, wemera amabwiriza yo gukoresha allinkigali n'uburyo amakuru yawe abikwa.
       </Text>
@@ -132,21 +143,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.breaking,
     marginBottom: spacing.md,
-  },
-  dividerRow: {
-    flexDirection: 'row',
-    alignItems: 'center',
-    marginVertical: spacing.xl,
-  },
-  dividerLine: {
-    flex: 1,
-    height: StyleSheet.hairlineWidth,
-    backgroundColor: 'rgba(133,183,235,0.3)',
-  },
-  dividerLabel: {
-    ...typography.caption,
-    color: colors.textOnNavyFaint,
-    marginHorizontal: spacing.md,
   },
   terms: {
     ...typography.caption,

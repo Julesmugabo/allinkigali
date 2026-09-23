@@ -2,7 +2,7 @@
  * AccountScreen.js — Ecran ya "Jyewe".
  *
  * Two states in one screen:
- *   signed out -> the sign-up form (name, email, or Google)
+ *   signed out -> sign-up (role choice + name/email/password) or sign-in
  *   signed in  -> profile summary, order shortcuts, settings, sign out
  */
 import React, { useCallback, useState } from 'react';
@@ -21,6 +21,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import GradientBackground from '../components/common/GradientBackground';
 import BrandLogo from '../components/news/BrandLogo';
 import AuthForm from '../components/account/AuthForm';
+import SignInForm from '../components/account/SignInForm';
 import RoleChoice from '../components/account/RoleChoice';
 import ProfileHeader from '../components/account/ProfileHeader';
 import MenuRow from '../components/account/MenuRow';
@@ -37,11 +38,12 @@ const ROLE_COPY = {
 
 export default function AccountScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { user, isSignedIn, isLoading, error, signUp, signInWithGoogle, signOut, updateProfile } = useUser();
+  const { user, isSignedIn, isLoading, isBootstrapping, error, clearError, signUp, signIn, signOut, updateProfile } = useUser();
   const { activeOrders, pastOrders } = useOrders();
   const { getBusinessesByOwner } = useBusinesses();
 
   const [pendingRole, setPendingRole] = useState(null);
+  const [authMode, setAuthMode] = useState('signup'); // 'signup' | 'signin'
 
   const routeAfterAuth = useCallback(
     (newUser, role) => {
@@ -65,14 +67,25 @@ export default function AccountScreen({ navigation }) {
     [signUp, pendingRole, routeAfterAuth]
   );
 
-  const handleGoogle = useCallback(async () => {
-    try {
-      const newUser = await signInWithGoogle();
-      routeAfterAuth(newUser, pendingRole);
-    } catch (e) {
-      Alert.alert('Ntibyakunze', 'Kwinjira na Google ntibyakunze. Gerageza nanone.');
-    }
-  }, [signInWithGoogle, pendingRole, routeAfterAuth]);
+  const handleSignIn = useCallback(
+    async (values) => {
+      try {
+        await signIn(values);
+      } catch (e) {
+        // The message is already shown under the form via `error`.
+      }
+    },
+    [signIn]
+  );
+
+  const switchAuthMode = useCallback(
+    (mode) => {
+      setAuthMode(mode);
+      setPendingRole(null);
+      clearError();
+    },
+    [clearError]
+  );
 
   const confirmSignOut = useCallback(() => {
     Alert.alert('Sohoka', 'Uremeza ko usohoka muri konti yawe?', [
@@ -85,6 +98,13 @@ export default function AccountScreen({ navigation }) {
 
   // The tab bar is laid out below the screen, so only breathing room is needed.
   const bottomPadding = spacing.xl;
+
+  // ------------------------------------------------------------- bootstrapping
+  // Rehydrating a stored session (GET /auth/me) — avoid flashing the sign-up
+  // screen for a split second before that resolves.
+  if (isBootstrapping) {
+    return <GradientBackground><View style={styles.flex} /></GradientBackground>;
+  }
 
   // ---------------------------------------------------------------- signed out
   if (!isSignedIn) {
@@ -106,27 +126,42 @@ export default function AccountScreen({ navigation }) {
           >
             <View style={styles.authHeader}>
               <BrandLogo size={52} showMeridians />
-              <Text style={styles.authTitle}>{roleCopy ? roleCopy.title : 'Uri nde?'}</Text>
+              <Text style={styles.authTitle}>
+                {authMode === 'signin' ? 'Injira muri konti yawe' : roleCopy ? roleCopy.title : 'Uri nde?'}
+              </Text>
               <Text style={styles.authSubtitle}>
-                {roleCopy ? roleCopy.subtitle : 'Hitamo uko ushaka gukoresha allinkigali.'}
+                {authMode === 'signin'
+                  ? 'Koresha email n\'ijambo ry\'ibanga byawe.'
+                  : roleCopy
+                  ? roleCopy.subtitle
+                  : 'Hitamo uko ushaka gukoresha allinkigali.'}
               </Text>
             </View>
 
-            {!pendingRole ? (
+            {authMode === 'signin' ? (
+              <SignInForm onSubmit={handleSignIn} isLoading={isLoading} serverError={error} />
+            ) : !pendingRole ? (
               <RoleChoice onChoose={setPendingRole} />
             ) : (
               <>
-                <AuthForm
-                  onSubmit={handleSignUp}
-                  onGooglePress={handleGoogle}
-                  isLoading={isLoading}
-                  serverError={error}
-                />
+                <AuthForm onSubmit={handleSignUp} isLoading={isLoading} serverError={error} />
                 <Pressable onPress={() => setPendingRole(null)} style={styles.changeRoleLink} hitSlop={8}>
                   <Text style={styles.changeRoleText}>Hindura uko winjira</Text>
                 </Pressable>
               </>
             )}
+
+            <Pressable
+              onPress={() => switchAuthMode(authMode === 'signin' ? 'signup' : 'signin')}
+              style={styles.changeRoleLink}
+              hitSlop={8}
+              accessibilityRole="button"
+              accessibilityLabel={authMode === 'signin' ? 'Nta konti mfite? Fungura imwe' : 'Nasanzwe mfite konti? Injira'}
+            >
+              <Text style={styles.changeRoleText}>
+                {authMode === 'signin' ? 'Nta konti mfite? Fungura imwe' : 'Nasanzwe mfite konti? Injira'}
+              </Text>
+            </Pressable>
 
             {/* Staff-only entry. Deliberately quiet, and it leads to its own
                 password screen — never the customer sign-up above. */}
