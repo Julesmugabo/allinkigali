@@ -19,10 +19,11 @@ import { colors, typography, spacing, radius, gutter } from '../theme';
 
 export default function ArticleDetailScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
-  const { getArticleById, categories } = useNews();
+  const { getArticleById, categories, getStoryById } = useNews();
   const article = getArticleById(route.params?.id);
 
   const categoryLabel = article ? categories.find((c) => c.key === article.category)?.label || '' : '';
+  const story = article?.storyId ? getStoryById(article.storyId) : null;
 
   if (!article) {
     return (
@@ -80,6 +81,21 @@ export default function ArticleDetailScreen({ route, navigation }) {
           ) : (
             <Text style={styles.bodyMissing}>Iyi nkuru ntabwo ifite umwandiko wuzuye kugeza ubu.</Text>
           )}
+
+          {story ? (
+            <Pressable
+              onPress={() => navigation.navigate('Story', { storyId: story.id })}
+              accessibilityRole="button"
+              accessibilityLabel={`Reba amakuru akurikiranwa: ${story.title}`}
+              style={styles.storyLink}
+            >
+              <MaterialCommunityIcons name="update" size={15} color={colors.blue300} />
+              <Text style={styles.storyLinkText}>
+                {story.isLive ? 'Amakuru akurikiranwa' : 'Amakuru yarangiye'}: {story.title} — reba ayabanje
+              </Text>
+              <MaterialCommunityIcons name="chevron-right" size={16} color={colors.blue300} />
+            </Pressable>
+          ) : null}
 
           {article.sourceUrl ? (
             <Pressable
@@ -170,4 +186,21 @@ const styles = StyleSheet.create({
     marginBottom: spacing.xl,
   },
   sourceLinkText: { ...typography.caption, color: colors.blue300, marginLeft: spacing.sm, fontWeight: '600' },
+  storyLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(208,52,44,0.12)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(208,52,44,0.3)',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  storyLinkText: {
+    flex: 1,
+    ...typography.caption,
+    color: colors.blue300,
+    marginLeft: spacing.sm,
+    fontWeight: '600',
+  },
 });

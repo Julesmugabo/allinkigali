@@ -36,6 +36,7 @@ const SEGMENTS = [
   { key: 'pending', label: 'Pending' },
   { key: 'archived', label: 'Archived' },
   { key: 'categories', label: 'Categories' },
+  { key: 'stories', label: 'Stories' },
   { key: 'ads', label: 'Ads' },
 ];
 
@@ -52,6 +53,7 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
   const {
     articles,
     categories,
+    stories,
     deleteArticle,
     approveArticle,
     rejectArticle,
@@ -61,6 +63,9 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
     updateCategory,
     deleteCategory,
     refreshArticles,
+    addStory,
+    updateStory,
+    deleteStory,
   } = useNews();
   const { ads, deleteAd } = useAds();
 
@@ -80,6 +85,7 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
   const [newCategory, setNewCategory] = useState('');
   const [renamingKey, setRenamingKey] = useState(null);
   const [renameText, setRenameText] = useState('');
+  const [newStoryTitle, setNewStoryTitle] = useState('');
   // Open by default on a desktop-width screen, closed on a phone — but
   // always a toggle, on either size, via the menu button in the top bar.
   const [sidebarOpen, setSidebarOpen] = useState(isWide);
@@ -177,6 +183,7 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
             onPress: () => selectSegment('archived'),
           },
           { key: 'categories', label: 'Categories', icon: 'shape-outline', onPress: () => selectSegment('categories') },
+          { key: 'stories', label: 'Stories', icon: 'update', badge: stories.length || null, onPress: () => selectSegment('stories') },
           { key: 'ads', label: 'Ads', icon: 'bullhorn-outline', badge: ads.length || null, onPress: () => selectSegment('ads') },
         ],
       },
@@ -204,7 +211,7 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
         ],
       },
     ],
-    [stats.pending, stats.archived, ads.length, selectSegment, navigation, viaDirector, handleExit]
+    [stats.pending, stats.archived, stories.length, ads.length, selectSegment, navigation, viaDirector, handleExit]
   );
 
   const handleDelete = useCallback(
@@ -271,6 +278,40 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
       ]);
     },
     [deleteAd]
+  );
+
+  const storyCounts = useMemo(() => {
+    const counts = new Map();
+    articles.forEach((a) => {
+      if (a.storyId) counts.set(a.storyId, (counts.get(a.storyId) || 0) + 1);
+    });
+    return stories.map((s) => ({ ...s, count: counts.get(s.id) || 0 }));
+  }, [stories, articles]);
+
+  const handleAddStory = useCallback(() => {
+    const title = newStoryTitle.trim();
+    if (!title) return;
+    addStory(title);
+    setNewStoryTitle('');
+  }, [newStoryTitle, addStory]);
+
+  const handleToggleStoryLive = useCallback(
+    (story) => updateStory(story.id, { isLive: !story.isLive }),
+    [updateStory]
+  );
+
+  const handleDeleteStory = useCallback(
+    (story) => {
+      Alert.alert(
+        'Delete story',
+        `Delete "${story.title}"? Its articles stay, they just stop being grouped together.`,
+        [
+          { text: 'Cancel', style: 'cancel' },
+          { text: 'Delete', style: 'destructive', onPress: () => deleteStory(story.id) },
+        ]
+      );
+    },
+    [deleteStory]
   );
 
   return (
@@ -348,6 +389,8 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
                 ? stats.pending
                 : option.key === 'archived'
                 ? stats.archived
+                : option.key === 'stories'
+                ? stories.length
                 : option.key === 'ads'
                 ? ads.length
                 : 0;
@@ -462,6 +505,74 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
                   </Pressable>
                 </View>
               )
+            )}
+          </View>
+        ) : segment === 'stories' ? (
+          /* --- Stories segment -------------------------------------------- */
+          <View>
+            <View style={styles.addCategoryRow}>
+              <TextField
+                label="Start a new live story"
+                value={newStoryTitle}
+                onChangeText={setNewStoryTitle}
+                placeholder="e.g. Intambara muri Iran"
+                icon="update"
+                style={styles.addCategoryField}
+                onSubmitEditing={handleAddStory}
+              />
+              <Pressable
+                onPress={handleAddStory}
+                accessibilityRole="button"
+                accessibilityLabel="Add story"
+                style={styles.addCategoryButton}
+              >
+                <MaterialCommunityIcons name="plus" size={20} color={colors.white} />
+              </Pressable>
+            </View>
+
+            {storyCounts.length ? (
+              storyCounts.map((story) => (
+                <View key={story.id} style={styles.categoryRow}>
+                  <View style={styles.categoryBody}>
+                    <View style={styles.storyTitleRow}>
+                      {story.isLive ? <View style={styles.liveDot} /> : null}
+                      <Text style={styles.categoryLabel} numberOfLines={1}>
+                        {story.title}
+                      </Text>
+                    </View>
+                    <Text style={styles.categoryCount}>
+                      {story.count} {story.count === 1 ? 'update' : 'updates'} · {story.isLive ? 'Live' : 'Ended'}
+                    </Text>
+                  </View>
+                  <Pressable
+                    onPress={() => handleToggleStoryLive(story)}
+                    accessibilityRole="button"
+                    accessibilityLabel={story.isLive ? 'Mark story ended' : 'Reopen story'}
+                    style={styles.categoryAction}
+                  >
+                    <MaterialCommunityIcons
+                      name={story.isLive ? 'stop-circle-outline' : 'play-circle-outline'}
+                      size={16}
+                      color={colors.blue300}
+                    />
+                  </Pressable>
+                  <Pressable
+                    onPress={() => handleDeleteStory(story)}
+                    accessibilityRole="button"
+                    accessibilityLabel={`Delete ${story.title}`}
+                    style={[styles.categoryAction, styles.categoryDelete]}
+                  >
+                    <MaterialCommunityIcons name="trash-can-outline" size={16} color={colors.danger} />
+                  </Pressable>
+                </View>
+              ))
+            ) : (
+              <EmptyState
+                tone="dark"
+                icon="update"
+                title="No live stories yet"
+                message="Start one here, or from the article editor, to group updates on an ongoing event."
+              />
             )}
           </View>
         ) : segment === 'ads' ? (
@@ -702,6 +813,14 @@ const styles = StyleSheet.create({
     marginLeft: spacing.sm,
   },
   categoryDelete: { backgroundColor: 'rgba(208,52,44,0.16)' },
+  storyTitleRow: { flexDirection: 'row', alignItems: 'center' },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.breaking,
+    marginRight: spacing.xs,
+  },
   renameField: { flex: 1, marginBottom: 0 },
   adRow: {
     flexDirection: 'row',

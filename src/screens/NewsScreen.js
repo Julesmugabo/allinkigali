@@ -52,6 +52,11 @@ export default function NewsScreen({ navigation }) {
     [incrementArticleView, navigation]
   );
 
+  const handleStoryPress = useCallback(
+    (story) => navigation.navigate('Story', { storyId: story.id }),
+    [navigation]
+  );
+
   // The News admin anchors each ad to a real article's id ("show this right
   // after that story") rather than a raw position, so placement survives
   // articles being added/archived above it. One combined list keeps the
@@ -77,7 +82,7 @@ export default function NewsScreen({ navigation }) {
           <View style={styles.liveDot} />
         </View>
 
-        <HeroCard article={feed.hero} onPress={handleArticlePress} />
+        <HeroCard article={feed.hero} onPress={handleArticlePress} onStoryPress={handleStoryPress} />
 
         {heroAd ? <AdBox ad={heroAd} style={styles.heroAdSpacing} /> : null}
 
@@ -91,7 +96,7 @@ export default function NewsScreen({ navigation }) {
         <SectionLabel title="AMAKURU MASHYA" actionLabel="Byose" onActionPress={() => {}} />
       </View>
     ),
-    [feed, heroAd, handleArticlePress]
+    [feed, heroAd, handleArticlePress, handleStoryPress]
   );
 
   return (

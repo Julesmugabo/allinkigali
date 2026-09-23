@@ -55,6 +55,7 @@ function computeFeed(articles, categoryKey = 'all') {
 export function NewsProvider({ children }) {
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
+  const [stories, setStories] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
 
   const refreshArticles = useCallback(async () => {
@@ -76,12 +77,21 @@ export function NewsProvider({ children }) {
     }
   }, []);
 
+  const refreshStories = useCallback(async () => {
+    try {
+      const data = await apiFetch('/news/stories');
+      setStories(data || []);
+    } catch {
+      // same reasoning as refreshArticles
+    }
+  }, []);
+
   useEffect(() => {
     (async () => {
-      await Promise.all([refreshArticles(), fetchCategories()]);
+      await Promise.all([refreshArticles(), fetchCategories(), refreshStories()]);
       setIsLoading(false);
     })();
-  }, [refreshArticles, fetchCategories]);
+  }, [refreshArticles, fetchCategories, refreshStories]);
 
   const addArticle = useCallback(async (data) => {
     try {
@@ -143,6 +153,51 @@ export function NewsProvider({ children }) {
 
   const getFeed = useCallback((categoryKey) => computeFeed(articles, categoryKey), [articles]);
 
+  const addStory = useCallback(async (title) => {
+    try {
+      const story = await apiFetch('/news/stories', { method: 'POST', body: { title } });
+      setStories((current) => [story, ...current]);
+      return story;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const updateStory = useCallback(async (id, patch) => {
+    try {
+      const updated = await apiFetch(`/news/stories/${id}`, { method: 'PATCH', body: patch });
+      setStories((current) => current.map((s) => (s.id === id ? updated : s)));
+      return updated;
+    } catch {
+      return null;
+    }
+  }, []);
+
+  const deleteStory = useCallback(async (id) => {
+    try {
+      await apiFetch(`/news/stories/${id}`, { method: 'DELETE' });
+      setStories((current) => current.filter((s) => s.id !== id));
+      // Matches the server's "on delete set null" — the articles stay,
+      // they just fall out of the story.
+      setArticles((current) => current.map((a) => (a.storyId === id ? { ...a, storyId: null } : a)));
+    } catch {
+      // no-op — the story stays in the list, matching a failed delete
+      // leaving state untouched rather than silently disappearing
+    }
+  }, []);
+
+  const getStoryById = useCallback((id) => stories.find((s) => s.id === id) || null, [stories]);
+
+  // Newest first — same ordering the reader-facing timeline and the "which
+  // update is this story's current headline" logic both rely on.
+  const getArticlesForStory = useCallback(
+    (storyId) =>
+      articles
+        .filter((a) => a.storyId === storyId && a.status === 'published' && !a.isArchived)
+        .sort((a, b) => new Date(b.publishedAt) - new Date(a.publishedAt)),
+    [articles]
+  );
+
   const addCategory = useCallback(
     async (label) => {
       const key = slugify(label);
@@ -195,6 +250,7 @@ export function NewsProvider({ children }) {
       articles,
       categories,
       categoriesWithAll,
+      stories,
       isLoading,
       refreshArticles,
       addArticle,
@@ -210,11 +266,18 @@ export function NewsProvider({ children }) {
       addCategory,
       updateCategory,
       deleteCategory,
+      refreshStories,
+      addStory,
+      updateStory,
+      deleteStory,
+      getStoryById,
+      getArticlesForStory,
     }),
     [
       articles,
       categories,
       categoriesWithAll,
+      stories,
       isLoading,
       refreshArticles,
       addArticle,
@@ -230,6 +293,12 @@ export function NewsProvider({ children }) {
       addCategory,
       updateCategory,
       deleteCategory,
+      refreshStories,
+      addStory,
+      updateStory,
+      deleteStory,
+      getStoryById,
+      getArticlesForStory,
     ]
   );
 

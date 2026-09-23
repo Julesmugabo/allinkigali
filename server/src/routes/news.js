@@ -33,6 +33,16 @@ function articleToJson(row) {
     isArchived: row.is_archived,
     views: row.views,
     publishedAt: row.published_at,
+    storyId: row.story_id,
+  };
+}
+
+function storyToJson(row) {
+  return {
+    id: row.id,
+    title: row.title,
+    isLive: row.is_live,
+    createdAt: row.created_at,
   };
 }
 
@@ -54,6 +64,7 @@ function articleFields(data) {
     isTrending: 'is_trending',
     isArchived: 'is_archived',
     publishedAt: 'published_at',
+    storyId: 'story_id',
   };
   const columns = [];
   const values = [];
@@ -119,6 +130,12 @@ router.get('/articles', attachUserIfPresent, async (req, res) => {
 router.post('/articles', requireAuth, requireRole('news', 'director'), async (req, res) => {
   const { columns, values } = articleFields(req.body || {});
   if (!columns.length) return res.status(400).json({ error: 'No fields provided.' });
+  // The admin explicitly picks the one hero article — enforce that at
+  // write time rather than trusting the client, same reasoning as the
+  // unique-ad-per-article index: only one row should ever be featured.
+  if (req.body?.isFeatured) {
+    await query('update news_articles set is_featured = false where is_featured');
+  }
   const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
   const { rows } = await query(
     `insert into news_articles (${columns.join(', ')}) values (${placeholders}) returning *`,
@@ -130,6 +147,9 @@ router.post('/articles', requireAuth, requireRole('news', 'director'), async (re
 router.patch('/articles/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
   const { columns, values } = articleFields(req.body || {});
   if (!columns.length) return res.status(400).json({ error: 'No fields provided.' });
+  if (req.body?.isFeatured) {
+    await query('update news_articles set is_featured = false where is_featured and id != $1', [req.params.id]);
+  }
   const setClause = columns.map((c, i) => `${c} = $${i + 1}`).join(', ');
   const { rows } = await query(
     `update news_articles set ${setClause} where id = $${columns.length + 1} returning *`,
@@ -142,6 +162,46 @@ router.patch('/articles/:id', requireAuth, requireRole('news', 'director'), asyn
 router.delete('/articles/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
   const { rowCount } = await query('delete from news_articles where id = $1', [req.params.id]);
   if (!rowCount) return res.status(404).json({ error: 'Article not found.' });
+  res.status(204).end();
+});
+
+router.get('/stories', async (_req, res) => {
+  const { rows } = await query('select * from news_stories order by created_at desc');
+  res.json(rows.map(storyToJson));
+});
+
+router.post('/stories', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const { title } = req.body || {};
+  if (!title || !title.trim()) return res.status(400).json({ error: 'title is required.' });
+  const { rows } = await query(
+    'insert into news_stories (title) values ($1) returning *',
+    [title.trim()]
+  );
+  res.status(201).json(storyToJson(rows[0]));
+});
+
+router.patch('/stories/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const { title, isLive } = req.body || {};
+  const columns = [];
+  const values = [];
+  if (title !== undefined) { columns.push('title'); values.push(title); }
+  if (isLive !== undefined) { columns.push('is_live'); values.push(isLive); }
+  if (!columns.length) return res.status(400).json({ error: 'No fields provided.' });
+
+  const setClause = columns.map((c, i) => `${c} = $${i + 1}`).join(', ');
+  const { rows } = await query(
+    `update news_stories set ${setClause} where id = $${columns.length + 1} returning *`,
+    [...values, req.params.id]
+  );
+  if (!rows[0]) return res.status(404).json({ error: 'Story not found.' });
+  res.json(storyToJson(rows[0]));
+});
+
+router.delete('/stories/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  // Articles keep existing (story_id just goes back to null, per the FK's
+  // "on delete set null") — deleting a story never deletes coverage.
+  const { rowCount } = await query('delete from news_stories where id = $1', [req.params.id]);
+  if (!rowCount) return res.status(404).json({ error: 'Story not found.' });
   res.status(204).end();
 });
 

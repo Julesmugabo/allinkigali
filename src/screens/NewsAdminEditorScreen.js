@@ -39,7 +39,7 @@ const DESTINATIONS = [
 
 export default function NewsAdminEditorScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
-  const { categories, addArticle, updateArticle, getArticleById } = useNews();
+  const { categories, stories, addArticle, updateArticle, getArticleById, addStory } = useNews();
 
   const editingId = route?.params?.articleId || null;
   const existing = useMemo(() => (editingId ? getArticleById(editingId) : null), [editingId, getArticleById]);
@@ -51,9 +51,14 @@ export default function NewsAdminEditorScreen({ route, navigation }) {
   const [body, setBody] = useState(existing?.body || '');
   const [imageUrl, setImageUrl] = useState(existing?.imageUrl || null);
   const [isBreaking, setIsBreaking] = useState(Boolean(existing?.isBreaking));
+  const [isFeatured, setIsFeatured] = useState(Boolean(existing?.isFeatured));
+  const [storyId, setStoryId] = useState(existing?.storyId || null);
+  const [newStoryTitle, setNewStoryTitle] = useState('');
   const [destination, setDestination] = useState(existing?.status || 'published');
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
+
+  const liveStories = useMemo(() => stories.filter((s) => s.isLive), [stories]);
 
   const pickPhoto = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
@@ -88,6 +93,26 @@ export default function NewsAdminEditorScreen({ route, navigation }) {
     if (!validate()) return;
     setIsSaving(true);
 
+    // A brand-new story is created first so its real id can go straight
+    // into the article payload below, same one-extra-request pattern
+    // FlierEditorScreen would use if a business didn't exist yet.
+    let resolvedStoryId = storyId;
+    if (storyId === 'new') {
+      const title = newStoryTitle.trim();
+      if (!title) {
+        setErrors({ story: 'Andika izina ry\'ibiganiro (story).' });
+        setIsSaving(false);
+        return;
+      }
+      const story = await addStory(title);
+      if (!story) {
+        setErrors({ story: 'Ntibyashobotse gushyiraho iki kiganiro. Gerageza nanone.' });
+        setIsSaving(false);
+        return;
+      }
+      resolvedStoryId = story.id;
+    }
+
     const payload = {
       title: title.trim(),
       category,
@@ -96,6 +121,8 @@ export default function NewsAdminEditorScreen({ route, navigation }) {
       body: body.trim(),
       imageUrl: imageUrl || null,
       isBreaking,
+      isFeatured,
+      storyId: resolvedStoryId || null,
       status: destination,
       icon: CATEGORY_ICONS[category] || 'newspaper-variant-outline',
     };
@@ -113,7 +140,10 @@ export default function NewsAdminEditorScreen({ route, navigation }) {
     }
 
     navigation.goBack();
-  }, [validate, title, category, source, sourceUrl, body, imageUrl, isBreaking, destination, editingId, updateArticle, addArticle, navigation]);
+  }, [
+    validate, title, category, source, sourceUrl, body, imageUrl, isBreaking, isFeatured,
+    storyId, newStoryTitle, addStory, destination, editingId, updateArticle, addArticle, navigation,
+  ]);
 
   if (editingId && !existing) {
     return (
@@ -232,6 +262,80 @@ export default function NewsAdminEditorScreen({ route, navigation }) {
             <Text style={styles.breakingLabel}>Mark as breaking news</Text>
           </Pressable>
 
+          <Pressable
+            onPress={() => setIsFeatured((v) => !v)}
+            accessibilityRole="button"
+            style={styles.breakingRow}
+          >
+            <MaterialCommunityIcons
+              name={isFeatured ? 'checkbox-marked' : 'checkbox-blank-outline'}
+              size={20}
+              color={isFeatured ? colors.blue500 : colors.blue300}
+            />
+            <Text style={styles.breakingLabel}>Make this the top/hero story</Text>
+          </Pressable>
+          {isFeatured ? (
+            <Text style={styles.featuredHint}>
+              Only one article can be the hero — saving this will un-feature whichever one is now.
+            </Text>
+          ) : null}
+
+          <Text style={styles.label}>Live story (optional)</Text>
+          <View style={styles.chipRow}>
+            <Pressable
+              onPress={() => setStoryId(null)}
+              accessibilityRole="button"
+              style={[styles.chip, !storyId && styles.chipActive]}
+            >
+              <Text style={[styles.chipLabel, !storyId && styles.chipLabelActive]}>None</Text>
+            </Pressable>
+            {liveStories.map((story) => {
+              const active = storyId === story.id;
+              return (
+                <Pressable
+                  key={story.id}
+                  onPress={() => setStoryId(story.id)}
+                  accessibilityRole="button"
+                  style={[styles.chip, active && styles.chipActive]}
+                >
+                  <Text style={[styles.chipLabel, active && styles.chipLabelActive]} numberOfLines={1}>
+                    {story.title}
+                  </Text>
+                </Pressable>
+              );
+            })}
+            <Pressable
+              onPress={() => setStoryId('new')}
+              accessibilityRole="button"
+              style={[styles.chip, styles.chipRowInner, storyId === 'new' && styles.chipActive]}
+            >
+              <MaterialCommunityIcons
+                name="plus"
+                size={13}
+                color={storyId === 'new' ? colors.white : colors.blue300}
+              />
+              <Text style={[styles.chipLabel, styles.chipLabelSpaced, storyId === 'new' && styles.chipLabelActive]}>
+                New story
+              </Text>
+            </Pressable>
+          </View>
+          {storyId === 'new' ? (
+            <TextField
+              value={newStoryTitle}
+              onChangeText={setNewStoryTitle}
+              placeholder="Urugero: Intambara muri Iran"
+              icon="update"
+              error={errors.story}
+              style={styles.field}
+            />
+          ) : null}
+          {storyId && storyId !== 'new' ? (
+            <Text style={styles.featuredHint}>
+              This article joins "{liveStories.find((s) => s.id === storyId)?.title}" as its latest update —
+              readers can browse every past update in that story.
+            </Text>
+          ) : null}
+
           <Text style={styles.label}>Destination</Text>
           <View style={styles.destinationList}>
             {DESTINATIONS.map((option) => {
@@ -318,11 +422,22 @@ const styles = StyleSheet.create({
     marginBottom: spacing.sm,
   },
   chipActive: { backgroundColor: colors.blue500, borderColor: colors.blue500 },
+  chipRowInner: { flexDirection: 'row', alignItems: 'center' },
   chipLabel: { fontSize: 12.5, color: colors.textOnNavy },
+  chipLabelSpaced: { marginLeft: 4 },
   chipLabelActive: { color: colors.white, fontWeight: '600' },
   errorText: { ...typography.caption, color: colors.breaking, marginBottom: spacing.md },
-  breakingRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xl },
+  breakingRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.md },
   breakingLabel: { ...typography.body, fontSize: 13.5, color: colors.textOnNavy, marginLeft: spacing.sm },
+  featuredHint: {
+    ...typography.caption,
+    fontSize: 11.5,
+    lineHeight: 16,
+    color: colors.blue300,
+    marginTop: -spacing.sm,
+    marginBottom: spacing.lg,
+  },
+  field: { marginBottom: spacing.lg },
   destinationList: { marginBottom: spacing.xl },
   destination: {
     flexDirection: 'row',

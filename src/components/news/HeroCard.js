@@ -13,11 +13,12 @@ import { useNews } from '../../context/NewsContext';
 import { timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius } from '../../theme';
 
-export default function HeroCard({ article, onPress }) {
-  const { categories } = useNews();
+export default function HeroCard({ article, onPress, onStoryPress }) {
+  const { categories, getStoryById } = useNews();
   if (!article) return null;
 
   const categoryLabel = (categories.find((c) => c.key === article.category)?.label || '').toUpperCase();
+  const story = article.storyId ? getStoryById(article.storyId) : null;
 
   return (
     <Pressable
@@ -67,6 +68,22 @@ export default function HeroCard({ article, onPress }) {
           </View>
           <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
         </View>
+
+        {story ? (
+          <Pressable
+            onPress={() => onStoryPress && onStoryPress(story)}
+            accessibilityRole="button"
+            accessibilityLabel={`Reba amakuru akurikiranwa: ${story.title}`}
+            style={styles.storyLink}
+            hitSlop={6}
+          >
+            <View style={styles.liveDot} />
+            <Text style={styles.storyLinkText} numberOfLines={1}>
+              {story.isLive ? 'Amakuru akurikiranwa' : 'Amakuru yarangiye'} — reba ayabanje
+            </Text>
+            <MaterialCommunityIcons name="chevron-right" size={15} color={colors.blue300} />
+          </Pressable>
+        ) : null}
       </View>
     </Pressable>
   );
@@ -123,5 +140,27 @@ const styles = StyleSheet.create({
   time: {
     ...typography.meta,
     color: 'rgba(133,183,235,0.5)',
+  },
+  storyLink: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    marginTop: spacing.md,
+    paddingTop: spacing.md,
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: 'rgba(133,183,235,0.2)',
+  },
+  liveDot: {
+    width: 6,
+    height: 6,
+    borderRadius: 3,
+    backgroundColor: colors.breaking,
+    marginRight: spacing.xs,
+  },
+  storyLinkText: {
+    flex: 1,
+    ...typography.caption,
+    fontSize: 12,
+    fontWeight: '600',
+    color: colors.blue300,
   },
 });
