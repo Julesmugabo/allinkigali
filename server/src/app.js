@@ -21,6 +21,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const newsRoutes = require('./routes/news');
 const businessesRoutes = require('./routes/businesses');
+const bookingsRoutes = require('./routes/bookings');
 
 const app = express();
 app.use(cors());
@@ -31,6 +32,7 @@ app.get('/health', (_req, res) => res.json({ ok: true }));
 app.use('/auth', authRoutes);
 app.use('/news', newsRoutes);
 app.use('/businesses', businessesRoutes);
+app.use('/bookings', bookingsRoutes);
 
 // Last-resort handler so a route bug returns JSON, not an HTML stack trace,
 // to a client that only ever expects JSON.

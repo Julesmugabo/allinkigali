@@ -47,13 +47,15 @@ export default function BusinessBookScreen({ route, navigation }) {
   const [note, setNote] = useState('');
   const [isPlacing, setIsPlacing] = useState(false);
   const [placedBooking, setPlacedBooking] = useState(null);
+  const [error, setError] = useState(null);
 
   const selectedItem = business?.items?.find((i) => i.id === selectedItemId) || null;
   const unitPrice = business?.items ? selectedItem?.price || 0 : business?.priceFrom || 0;
   const total = unitPrice * quantity;
 
-  const handleConfirm = useCallback(() => {
+  const handleConfirm = useCallback(async () => {
     setIsPlacing(true);
+    setError(null);
     const requestDetails = {
       itemLabel: selectedItem?.label || null,
       quantity,
@@ -61,20 +63,32 @@ export default function BusinessBookScreen({ route, navigation }) {
       note: note.trim(),
       total,
     };
-    Promise.all([
+
+    await Promise.all([
       new Promise((resolve) => setTimeout(resolve, 600)),
       notifySeller(business, requestDetails),
-    ]).then(() => {
-      const booking = placeBooking({
-        business,
-        itemLabel: selectedItem?.label,
-        quantity,
-        date,
-        note: note.trim(),
-      });
-      setPlacedBooking(booking);
-      setIsPlacing(false);
+    ]);
+
+    // placeBooking now writes to our own backend and resolves to null on
+    // failure rather than throwing — must be awaited and checked, or a
+    // failed request would silently show the success screen (this
+    // screen's own version of a bug already hit and fixed in
+    // SalesPartnerScreen.js: never assign a Promise into state expecting
+    // the resolved value).
+    const booking = await placeBooking({
+      business,
+      itemLabel: selectedItem?.label,
+      quantity,
+      date,
+      note: note.trim(),
     });
+    setIsPlacing(false);
+
+    if (!booking) {
+      setError('Ntibyashobotse kohereza icyifuzo. Gerageza nanone.');
+      return;
+    }
+    setPlacedBooking(booking);
   }, [placeBooking, business, selectedItem, quantity, date, note, total]);
 
   const handleCall = useCallback(() => {
@@ -221,6 +235,8 @@ export default function BusinessBookScreen({ route, navigation }) {
             </Text>
           </View>
 
+          {error ? <Text style={styles.errorText}>{error}</Text> : null}
+
           <PrimaryButton
             label="Emeza icyifuzo"
             icon="check"
@@ -328,6 +344,7 @@ const styles = StyleSheet.create({
   },
   totalLabel: { ...typography.bodyStrong, color: colors.white },
   totalValue: { ...typography.price, fontSize: 18, color: colors.white },
+  errorText: { ...typography.caption, color: colors.breaking, marginBottom: spacing.md },
   notice: {
     flexDirection: 'row',
     alignItems: 'flex-start',

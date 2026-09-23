@@ -1,31 +1,49 @@
 /**
  * BookingContext.js — Ibyifuzo byo kubona serivisi (service bookings).
  *
- * Mirrors OrdersContext but for services (gym membership, kids visit, a
- * ride) instead of physical goods. PAYMENT IS NOT BUILT — and per the
- * platform's business model (it only connects customer and seller, never
- * handles the transaction itself) it doesn't need to be; placeBooking()
- * just records the request with paymentMethod: null.
+ * Talks to our own Express + Postgres backend now (server/src/routes/bookings.js),
+ * not in-memory state — every screen still only ever calls useBookings().
+ *
+ * PAYMENT IS NOT BUILT — and per the platform's business model (it only
+ * connects customer and seller, never handles the transaction itself) it
+ * doesn't need to be; placeBooking() just records the request with
+ * paymentMethod: null.
  *
  * `status` + `respondedAt` exist so the seller dashboard has something to
  * show as an inbox: a request starts 'new', and the seller marks it
  * 'handled' or 'no_response' — that's also what a response-time stat is
  * computed from.
  */
-import React, { createContext, useContext, useMemo, useState, useCallback } from 'react';
+import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
+import { apiFetch } from '../services/apiClient';
 import { makeOrderRef } from '../utils/format';
 
 const BookingContext = createContext(null);
 
 export function BookingProvider({ children }) {
   const [bookings, setBookings] = useState([]);
+  const [isLoading, setIsLoading] = useState(true);
 
-  const placeBooking = useCallback(({ business, itemLabel, quantity, date, note }) => {
-    const now = new Date().toISOString();
-    const booking = {
-      id: `booking-${Date.now()}`,
+  const refreshBookings = useCallback(async () => {
+    try {
+      const data = await apiFetch('/bookings');
+      setBookings(data || []);
+    } catch {
+      // Leave whatever was already loaded rather than blanking the list
+      // over a transient network hiccup.
+    }
+  }, []);
+
+  useEffect(() => {
+    (async () => {
+      await refreshBookings();
+      setIsLoading(false);
+    })();
+  }, [refreshBookings]);
+
+  const placeBooking = useCallback(async ({ business, itemLabel, quantity, date, note }) => {
+    const payload = {
       ref: makeOrderRef(),
-      createdAt: now,
       businessId: business.id,
       businessName: business.name,
       itemLabel: itemLabel || null,
@@ -35,21 +53,24 @@ export function BookingProvider({ children }) {
       quantity,
       date,
       note: note || '',
-      paymentMethod: null, // the platform never collects this — customer and seller settle directly
-      status: 'new', // 'new' | 'handled' | 'no_response'
-      respondedAt: null,
     };
 
-    setBookings((current) => [booking, ...current]);
-    return booking;
+    try {
+      const booking = await apiFetch('/bookings', { method: 'POST', body: payload });
+      setBookings((current) => [booking, ...current]);
+      return booking;
+    } catch {
+      return null;
+    }
   }, []);
 
-  const updateBookingStatus = useCallback((id, status) => {
-    setBookings((current) =>
-      current.map((b) =>
-        b.id === id ? { ...b, status, respondedAt: new Date().toISOString() } : b
-      )
-    );
+  const updateBookingStatus = useCallback(async (id, status) => {
+    try {
+      const updated = await apiFetch(`/bookings/${id}`, { method: 'PATCH', body: { status } });
+      setBookings((current) => current.map((b) => (b.id === id ? updated : b)));
+    } catch {
+      // no-op — status stays as it was, matching the pre-fix state
+    }
   }, []);
 
   const getBookingsForBusiness = useCallback(
@@ -58,8 +79,8 @@ export function BookingProvider({ children }) {
   );
 
   const value = useMemo(
-    () => ({ bookings, placeBooking, updateBookingStatus, getBookingsForBusiness }),
-    [bookings, placeBooking, updateBookingStatus, getBookingsForBusiness]
+    () => ({ bookings, isLoading, refreshBookings, placeBooking, updateBookingStatus, getBookingsForBusiness }),
+    [bookings, isLoading, refreshBookings, placeBooking, updateBookingStatus, getBookingsForBusiness]
   );
 
   return <BookingContext.Provider value={value}>{children}</BookingContext.Provider>;
