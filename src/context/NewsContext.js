@@ -56,15 +56,22 @@ export function NewsProvider({ children }) {
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
   const [stories, setStories] = useState([]);
+  // null until loaded, so a hidden count never flashes on screen first.
+  const [showViewCounts, setShowViewCounts] = useState(null);
   const [isLoading, setIsLoading] = useState(true);
+  // True when the last attempt to fetch articles failed — lets the News screen
+  // show a retry instead of a misleading "no news" empty state.
+  const [loadFailed, setLoadFailed] = useState(false);
 
   const refreshArticles = useCallback(async () => {
     try {
       const data = await apiFetch('/news/articles');
       setArticles(data || []);
+      setLoadFailed(false);
     } catch {
       // Leave whatever was already loaded rather than blanking the feed
       // over a transient network hiccup.
+      setLoadFailed(true);
     }
   }, []);
 
@@ -86,12 +93,34 @@ export function NewsProvider({ children }) {
     }
   }, []);
 
+  const refreshSettings = useCallback(async () => {
+    try {
+      const data = await apiFetch('/news/settings');
+      setShowViewCounts(Boolean(data?.showViewCounts));
+    } catch {
+      // stays null (counts hidden) rather than guessing
+    }
+  }, []);
+
+  const updateViewCountSetting = useCallback(async (value) => {
+    try {
+      const data = await apiFetch('/news/settings', { method: 'PATCH', body: { showViewCounts: value } });
+      setShowViewCounts(Boolean(data.showViewCounts));
+      return true;
+    } catch {
+      return false;
+    }
+  }, []);
+
+  const reload = useCallback(async () => {
+    setIsLoading(true);
+    await Promise.all([refreshArticles(), fetchCategories(), refreshStories(), refreshSettings()]);
+    setIsLoading(false);
+  }, [refreshArticles, fetchCategories, refreshStories, refreshSettings]);
+
   useEffect(() => {
-    (async () => {
-      await Promise.all([refreshArticles(), fetchCategories(), refreshStories()]);
-      setIsLoading(false);
-    })();
-  }, [refreshArticles, fetchCategories, refreshStories]);
+    reload();
+  }, [reload]);
 
   const addArticle = useCallback(async (data) => {
     try {
@@ -251,7 +280,11 @@ export function NewsProvider({ children }) {
       categories,
       categoriesWithAll,
       stories,
+      showViewCounts: showViewCounts === true,
+      updateViewCountSetting,
       isLoading,
+      loadFailed,
+      reload,
       refreshArticles,
       addArticle,
       updateArticle,
@@ -278,7 +311,11 @@ export function NewsProvider({ children }) {
       categories,
       categoriesWithAll,
       stories,
+      showViewCounts,
+      updateViewCountSetting,
       isLoading,
+      loadFailed,
+      reload,
       refreshArticles,
       addArticle,
       updateArticle,

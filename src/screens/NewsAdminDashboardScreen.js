@@ -13,7 +13,7 @@
  * counted only from actual taps in the News tab from this session onward.
  */
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, Alert, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, Alert, Switch, useWindowDimensions, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -66,6 +66,8 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
     addStory,
     updateStory,
     deleteStory,
+    showViewCounts,
+    updateViewCountSetting,
   } = useNews();
   const { ads, deleteAd } = useAds();
 
@@ -374,6 +376,26 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
           <Text style={styles.viewsText}>
             {stats.views} article {stats.views === 1 ? 'read' : 'reads'} counted this session
           </Text>
+        </View>
+
+        <View style={styles.toggleCard}>
+          <View style={styles.toggleText}>
+            <Text style={styles.toggleTitle}>Show view counts to readers</Text>
+            <Text style={styles.toggleHint}>
+              {showViewCounts
+                ? 'Readers see how many people read each article.'
+                : 'Hidden from readers. You still see the counts here.'}
+            </Text>
+          </View>
+          <Switch
+            value={showViewCounts}
+            onValueChange={(value) => {
+              updateViewCountSetting(value).then((ok) => {
+                if (!ok) Alert.alert('Ntibyashobotse', 'Ntibyashobotse guhindura. Gerageza nanone.');
+              });
+            }}
+            accessibilityLabel="Show view counts to readers"
+          />
         </View>
 
         <PrimaryButton
@@ -786,6 +808,19 @@ const styles = StyleSheet.create({
     marginBottom: spacing.lg,
   },
   viewsText: { ...typography.caption, color: colors.blue300, marginLeft: spacing.sm },
+  toggleCard: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(133,183,235,0.22)',
+    borderRadius: radius.md,
+    padding: spacing.md,
+    marginBottom: spacing.lg,
+  },
+  toggleText: { flex: 1, marginRight: spacing.md },
+  toggleTitle: { ...typography.bodyStrong, fontSize: 13.5, color: colors.white },
+  toggleHint: { ...typography.caption, color: colors.textOnNavyFaint, marginTop: 2 },
   newButton: { marginBottom: spacing.xl },
   segmentRow: {
     flexDirection: 'row',

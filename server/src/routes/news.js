@@ -165,6 +165,25 @@ router.delete('/articles/:id', requireAuth, requireRole('news', 'director'), asy
   res.status(204).end();
 });
 
+router.get('/settings', async (_req, res) => {
+  const { rows } = await query('select show_view_counts from news_settings where id');
+  res.json({ showViewCounts: rows[0] ? rows[0].show_view_counts : true });
+});
+
+router.patch('/settings', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const { showViewCounts } = req.body || {};
+  if (typeof showViewCounts !== 'boolean') {
+    return res.status(400).json({ error: 'showViewCounts must be true or false.' });
+  }
+  const { rows } = await query(
+    `insert into news_settings (id, show_view_counts) values (true, $1)
+     on conflict (id) do update set show_view_counts = excluded.show_view_counts
+     returning show_view_counts`,
+    [showViewCounts]
+  );
+  res.json({ showViewCounts: rows[0].show_view_counts });
+});
+
 router.get('/stories', async (_req, res) => {
   const { rows } = await query('select * from news_stories order by created_at desc');
   res.json(rows.map(storyToJson));

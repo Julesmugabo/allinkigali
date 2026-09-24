@@ -13,6 +13,7 @@ import HeroCard from '../components/news/HeroCard';
 import TrendingRail from '../components/news/TrendingRail';
 import NewsListItem from '../components/news/NewsListItem';
 import AdBox from '../components/news/AdBox';
+import FeedSkeleton from '../components/news/FeedSkeleton';
 import SectionLabel from '../components/common/SectionLabel';
 import EmptyState from '../components/common/EmptyState';
 
@@ -26,7 +27,7 @@ export default function NewsScreen({ navigation }) {
   const [isRefreshing, setIsRefreshing] = useState(false);
   const [refreshKey, setRefreshKey] = useState(0);
 
-  const { categoriesWithAll, getFeed, incrementArticleView } = useNews();
+  const { categoriesWithAll, getFeed, incrementArticleView, isLoading, loadFailed, reload, articles } = useNews();
   const { getAdAfter } = useAds();
 
   // refreshKey is in the deps so pull-to-refresh recomputes relative times.
@@ -110,7 +111,7 @@ export default function NewsScreen({ navigation }) {
       />
 
       <FlatList
-        data={feedItems}
+        data={isLoading ? [] : feedItems}
         keyExtractor={(item) => item.rowKey}
         renderItem={({ item }) =>
           item.kind === 'ad' ? (
@@ -119,13 +120,23 @@ export default function NewsScreen({ navigation }) {
             <NewsListItem article={item.article} onPress={handleArticlePress} />
           )
         }
-        ListHeaderComponent={listHeader}
+        ListHeaderComponent={isLoading ? <FeedSkeleton /> : listHeader}
         ListEmptyComponent={
-          <EmptyState
-            icon="newspaper-variant-outline"
-            title="Nta makuru ari muri iki gice"
-            message="Hitamo ikindi gice cyangwa ukurure hasi kugira ngo uvugurure."
-          />
+          isLoading ? null : loadFailed && !articles.length ? (
+            <EmptyState
+              icon="wifi-off"
+              title="Ntibyashoboye gufungura amakuru"
+              message="Reba internet yawe hanyuma ongera ugerageze."
+              actionLabel="Ongera ugerageze"
+              onActionPress={reload}
+            />
+          ) : (
+            <EmptyState
+              icon="newspaper-variant-outline"
+              title="Nta makuru ari muri iki gice"
+              message="Hitamo ikindi gice cyangwa ukurure hasi kugira ngo uvugurure."
+            />
+          )
         }
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
