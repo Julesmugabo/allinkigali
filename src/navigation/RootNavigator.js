@@ -35,7 +35,7 @@ export default function RootNavigator() {
         name="NewsTab"
         component={NewsStack}
         options={{
-          tabLabel: 'Amakuru',
+          tabLabel: 'News',
           tabIcon: 'newspaper-variant-outline',
           tabIconActive: 'newspaper-variant',
         }}
@@ -45,7 +45,7 @@ export default function RootNavigator() {
         name="ShopTab"
         component={ShopStack}
         options={({ route }) => ({
-          tabLabel: 'Ubucuruzi',
+          tabLabel: 'Access Market',
           tabIcon: 'shopping-outline',
           tabIconActive: 'shopping',
           showsCartBadge: true,
@@ -57,7 +57,7 @@ export default function RootNavigator() {
         name="AccountTab"
         component={AccountStack}
         options={{
-          tabLabel: 'Jyewe',
+          tabLabel: 'Me',
           tabIcon: 'account-outline',
           tabIconActive: 'account',
         }}

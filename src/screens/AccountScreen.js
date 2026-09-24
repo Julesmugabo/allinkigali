@@ -1,9 +1,14 @@
 /**
- * AccountScreen.js — Ecran ya "Jyewe".
+ * AccountScreen.js — Ecran ya "Jyewe" (Me tab).
  *
  * Two states in one screen:
- *   signed out -> sign-up (role choice + name/email/password) or sign-in
- *   signed in  -> profile summary, order shortcuts, settings, sign out
+ *   signed out -> sign-up (role choice + name/email/password) or sign-in —
+ *     same single form for everyone, customer or admin; there's no separate
+ *     hidden admin gate any more.
+ *   signed in  -> profile summary, order shortcuts, settings, sign out —
+ *     plus a "Ubuyobozi" row that only appears when the signed-in account's
+ *     `role` (news/sellers/director) is set, leading straight into that
+ *     dashboard.
  */
 import React, { useCallback, useState } from 'react';
 import {
@@ -29,6 +34,7 @@ import MenuRow from '../components/account/MenuRow';
 import { useUser } from '../context/UserContext';
 import { useOrders } from '../context/OrdersContext';
 import { useBusinesses } from '../context/BusinessContext';
+import { ROLE_META } from '../admin/adminAuth';
 import { colors, typography, spacing, radius, gutter } from '../theme';
 
 const ROLE_COPY = {
@@ -162,18 +168,6 @@ export default function AccountScreen({ navigation }) {
                 {authMode === 'signin' ? 'Nta konti mfite? Fungura imwe' : 'Nasanzwe mfite konti? Injira'}
               </Text>
             </Pressable>
-
-            {/* Staff-only entry. Deliberately quiet, and it leads to its own
-                password screen — never the customer sign-up above. */}
-            <Pressable
-              onPress={() => navigation.navigate('Admin')}
-              style={styles.adminLink}
-              hitSlop={8}
-              accessibilityRole="button"
-              accessibilityLabel="Ubuyobozi"
-            >
-              <Text style={styles.adminLinkText}>Ubuyobozi</Text>
-            </Pressable>
           </ScrollView>
         </KeyboardAvoidingView>
       </GradientBackground>
@@ -188,7 +182,7 @@ export default function AccountScreen({ navigation }) {
         showsVerticalScrollIndicator={false}
       >
         <View style={[styles.profileArea, { paddingTop: insets.top + spacing.lg }]}>
-          <Text style={styles.screenTitle}>Jyewe</Text>
+          <Text style={styles.screenTitle}>Me</Text>
           <ProfileHeader
             user={user}
             activeCount={activeOrders.length}
@@ -219,13 +213,28 @@ export default function AccountScreen({ navigation }) {
           <Text style={styles.groupLabel}>Ubucuruzi</Text>
           <View style={styles.group}>
             {myBusinesses.length ? (
-              <MenuRow
-                icon="view-dashboard-outline"
-                label="Dashboard y'ubucuruzi"
-                value={myBusinesses[0].name}
-                onPress={() => navigation.navigate('SellerDashboard', { businessId: myBusinesses[0].id })}
-                isLast
-              />
+              myBusinesses[0].verified ? (
+                <MenuRow
+                  icon="view-dashboard-outline"
+                  label="Dashboard y'ubucuruzi"
+                  value={myBusinesses[0].name}
+                  onPress={() => navigation.navigate('SellerDashboard', { businessId: myBusinesses[0].id })}
+                  isLast
+                />
+              ) : (
+                <MenuRow
+                  icon="clock-outline"
+                  label="Ubucuruzi buracyasuzumwa"
+                  value={myBusinesses[0].name}
+                  onPress={() =>
+                    Alert.alert(
+                      'Biracyasuzumwa',
+                      'Ubuyobozi burimo kureba ubucuruzi bwawe. Uzabona dashboard yawe iyo bwemejwe.'
+                    )
+                  }
+                  isLast
+                />
+              )
             ) : (
               <MenuRow
                 icon="storefront-outline"
@@ -236,6 +245,20 @@ export default function AccountScreen({ navigation }) {
               />
             )}
           </View>
+
+          {user.role ? (
+            <>
+              <Text style={styles.groupLabel}>Ubuyobozi</Text>
+              <View style={styles.group}>
+                <MenuRow
+                  icon={ROLE_META[user.role].icon}
+                  label={ROLE_META[user.role].label}
+                  onPress={() => navigation.navigate('Admin', { screen: ROLE_META[user.role].route })}
+                  isLast
+                />
+              </View>
+            </>
+          ) : null}
 
           <Text style={styles.groupLabel}>Konti</Text>
           <View style={styles.group}>
@@ -307,12 +330,6 @@ const styles = StyleSheet.create({
     ...typography.caption,
     color: colors.blue300,
     fontWeight: '600',
-  },
-  adminLink: { alignSelf: 'center', marginTop: spacing.xxxl, padding: spacing.sm },
-  adminLinkText: {
-    ...typography.meta,
-    color: 'rgba(133,183,235,0.45)',
-    letterSpacing: 0.5,
   },
   profileArea: {
     paddingHorizontal: gutter,

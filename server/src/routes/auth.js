@@ -83,6 +83,27 @@ router.post('/login', async (req, res) => {
   res.json({ token: signToken(user), role: user.role, user: userToJson(user) });
 });
 
+router.post('/change-password', requireAuth, async (req, res) => {
+  const { currentPassword, newPassword } = req.body || {};
+  if (!currentPassword || !newPassword) {
+    return res.status(400).json({ error: 'currentPassword and newPassword are required.' });
+  }
+  if (newPassword.length < 6) {
+    return res.status(400).json({ error: "Ijambo ry'ibanga rigomba kuba nibura inyuguti 6." });
+  }
+
+  const { rows } = await query('select password_hash from users where id = $1', [req.user.sub]);
+  if (!rows[0] || !(await bcrypt.compare(currentPassword, rows[0].password_hash))) {
+    return res.status(401).json({ error: "Ijambo ry'ibanga risanzwe si ryo." });
+  }
+
+  await query('update users set password_hash = $1 where id = $2', [
+    await bcrypt.hash(newPassword, 10),
+    req.user.sub,
+  ]);
+  res.status(204).end();
+});
+
 router.get('/me', requireAuth, async (req, res) => {
   const { rows } = await query('select * from users where id = $1', [req.user.sub]);
   if (!rows[0]) return res.status(404).json({ error: 'Account not found.' });

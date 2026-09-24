@@ -8,7 +8,6 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import AdminGateScreen from '../screens/AdminGateScreen';
 import NewsAdminDashboardScreen from '../screens/NewsAdminDashboardScreen';
 import NewsAdminEditorScreen from '../screens/NewsAdminEditorScreen';
 import AdEditorScreen from '../screens/AdEditorScreen';
@@ -31,7 +30,6 @@ export default function AdminNavigator() {
         contentStyle: { backgroundColor: '#042C53' },
       }}
     >
-      <Stack.Screen name="AdminGate" component={AdminGateScreen} />
       <Stack.Screen name="NewsAdminDashboard" component={NewsAdminDashboardScreen} />
       <Stack.Screen name="NewsAdminEditor" component={NewsAdminEditorScreen} />
       <Stack.Screen name="AdEditor" component={AdEditorScreen} />

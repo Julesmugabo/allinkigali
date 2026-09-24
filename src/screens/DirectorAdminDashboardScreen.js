@@ -16,20 +16,22 @@
  * no payment data anywhere in the platform, so anything like that would be
  * fabricated. "Counted this session" is as far as any of this goes.
  */
-import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, useWindowDimensions, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect, useMemo, useState } from 'react';
+import { View, Text, ScrollView, Pressable, Alert, useWindowDimensions, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GradientBackground from '../components/common/GradientBackground';
 import EmptyState from '../components/common/EmptyState';
+import TextField from '../components/common/TextField';
+import PrimaryButton from '../components/common/PrimaryButton';
 import AdminStatCard from '../components/admin/AdminStatCard';
 import AdminSidebar, { SIDEBAR_BREAKPOINT } from '../components/admin/AdminSidebar';
 
 import { useBusinesses } from '../context/BusinessContext';
 import { useBookings } from '../context/BookingContext';
 import { useNews } from '../context/NewsContext';
-import { setToken } from '../services/apiClient';
+import { apiFetch, setToken } from '../services/apiClient';
 import { getCategoryCounts } from '../services/businessSearch';
 import { colors, typography, spacing, radius, gutter, shadows } from '../theme';
 
@@ -37,6 +39,12 @@ const SEGMENTS = [
   { key: 'overview', label: 'Overview' },
   { key: 'sellers', label: 'Sellers' },
   { key: 'news', label: 'News' },
+  { key: 'admins', label: 'Admins' },
+];
+
+const ASSIGNABLE_ROLES = [
+  { key: 'news', label: 'News admin' },
+  { key: 'sellers', label: 'Sellers admin' },
 ];
 
 // Sellers type this field in free text on their own registration form (see
@@ -62,6 +70,65 @@ export default function DirectorAdminDashboardScreen({ navigation }) {
 
   const [segment, setSegment] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(isWide);
+
+  const [admins, setAdmins] = useState([]);
+  const [assignEmail, setAssignEmail] = useState('');
+  const [assignRole, setAssignRole] = useState('news');
+  const [assignError, setAssignError] = useState(null);
+  const [isAssigning, setIsAssigning] = useState(false);
+
+  const refreshAdmins = useCallback(async () => {
+    try {
+      const data = await apiFetch('/admin/admins');
+      setAdmins(data || []);
+    } catch {
+      // leave whatever was already loaded
+    }
+  }, []);
+
+  useEffect(() => {
+    if (segment === 'admins') refreshAdmins();
+  }, [segment, refreshAdmins]);
+
+  const handleAssignRole = useCallback(async () => {
+    const email = assignEmail.trim();
+    if (!email) {
+      setAssignError('Andika email.');
+      return;
+    }
+    setAssignError(null);
+    setIsAssigning(true);
+    try {
+      await apiFetch('/admin/assign-role', { method: 'POST', body: { email, role: assignRole } });
+      setAssignEmail('');
+      await refreshAdmins();
+    } catch (e) {
+      setAssignError(e.message || 'Ntibyashobotse kubika.');
+    } finally {
+      setIsAssigning(false);
+    }
+  }, [assignEmail, assignRole, refreshAdmins]);
+
+  const handleRevokeRole = useCallback(
+    (admin) => {
+      Alert.alert('Revoke access', `Remove ${admin.email}'s admin access?`, [
+        { text: 'Cancel', style: 'cancel' },
+        {
+          text: 'Revoke',
+          style: 'destructive',
+          onPress: async () => {
+            try {
+              await apiFetch('/admin/assign-role', { method: 'POST', body: { email: admin.email, role: null } });
+              await refreshAdmins();
+            } catch (e) {
+              Alert.alert('Ntibyashobotse', e.message || 'Gerageza nanone.');
+            }
+          },
+        },
+      ]);
+    },
+    [refreshAdmins]
+  );
 
   const sellerStats = useMemo(() => {
     const verified = businesses.filter((b) => b.verified).length;
@@ -214,6 +281,7 @@ export default function DirectorAdminDashboardScreen({ navigation }) {
           { key: 'overview', label: 'Overview', icon: 'view-dashboard-outline', onPress: () => selectSegment('overview') },
           { key: 'sellers', label: 'Sellers', icon: 'store-outline', onPress: () => selectSegment('sellers') },
           { key: 'news', label: 'News', icon: 'newspaper-variant-outline', onPress: () => selectSegment('news') },
+          { key: 'admins', label: 'Admins', icon: 'account-key-outline', badge: admins.length || null, onPress: () => selectSegment('admins') },
         ],
       },
       {
@@ -228,7 +296,7 @@ export default function DirectorAdminDashboardScreen({ navigation }) {
         items: [{ key: 'exit', label: 'Exit Admin', icon: 'exit-to-app', onPress: handleExit }],
       },
     ],
-    [selectSegment, openNews, openSellers, handleExit]
+    [selectSegment, openNews, openSellers, handleExit, admins.length]
   );
 
   return (
@@ -423,7 +491,7 @@ export default function DirectorAdminDashboardScreen({ navigation }) {
                 <EmptyState tone="dark" icon="inbox-outline" title="No requests yet" />
               )}
             </View>
-          ) : (
+          ) : segment === 'news' ? (
             <View>
               <View style={styles.statsRow}>
                 <AdminStatCard icon="newspaper-variant-outline" value={newsStats.total} label="Total articles" style={styles.statSpacing} />
@@ -460,6 +528,78 @@ export default function DirectorAdminDashboardScreen({ navigation }) {
                 ))
               ) : (
                 <EmptyState tone="dark" icon="eye-outline" title="No reads yet" message="Reads are counted from real taps in the News tab — nothing here yet this session." />
+              )}
+            </View>
+          ) : (
+            /* --- Admins segment ---------------------------------------- */
+            <View>
+              <Text style={styles.sectionTitle}>Grant dashboard access</Text>
+              <Text style={styles.sectionNote}>
+                The email must already have an allinkigali account (they sign up like anyone else in the Me tab)
+                — this just grants that account access to a dashboard.
+              </Text>
+
+              <TextField
+                label="Email"
+                value={assignEmail}
+                onChangeText={setAssignEmail}
+                placeholder="umuntu@example.com"
+                icon="email-outline"
+                autoCapitalize="none"
+                keyboardType="email-address"
+                error={assignError}
+              />
+
+              <View style={styles.roleChipRow}>
+                {ASSIGNABLE_ROLES.map((option) => {
+                  const active = assignRole === option.key;
+                  return (
+                    <Pressable
+                      key={option.key}
+                      onPress={() => setAssignRole(option.key)}
+                      accessibilityRole="button"
+                      style={[styles.roleChip, active && styles.roleChipActive]}
+                    >
+                      <Text style={[styles.roleChipLabel, active && styles.roleChipLabelActive]}>{option.label}</Text>
+                    </Pressable>
+                  );
+                })}
+              </View>
+
+              <PrimaryButton
+                label="Grant access"
+                icon="account-key-outline"
+                onPress={handleAssignRole}
+                loading={isAssigning}
+                style={styles.newButton}
+              />
+
+              <Text style={styles.sectionTitle}>Current admins</Text>
+              {admins.length ? (
+                admins.map((admin) => (
+                  <View key={admin.id} style={styles.listRow}>
+                    <View style={{ flex: 1 }}>
+                      <Text style={styles.listRowLabel} numberOfLines={1}>
+                        {admin.email}
+                      </Text>
+                      <Text style={styles.listRowValue}>
+                        {admin.role === 'director' ? 'Director' : admin.role === 'news' ? 'News admin' : 'Sellers admin'}
+                      </Text>
+                    </View>
+                    {admin.role !== 'director' ? (
+                      <Pressable
+                        onPress={() => handleRevokeRole(admin)}
+                        accessibilityRole="button"
+                        accessibilityLabel={`Revoke ${admin.email}`}
+                        style={styles.revokeAction}
+                      >
+                        <MaterialCommunityIcons name="close" size={16} color={colors.danger} />
+                      </Pressable>
+                    ) : null}
+                  </View>
+                ))
+              ) : (
+                <EmptyState tone="dark" icon="account-key-outline" title="No admins yet" />
               )}
             </View>
           )}
@@ -578,6 +718,30 @@ const styles = StyleSheet.create({
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.sm,
+  },
+  newButton: { marginBottom: spacing.xl },
+  roleChipRow: { flexDirection: 'row', marginBottom: spacing.lg },
+  roleChip: {
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(133,183,235,0.3)',
+    backgroundColor: 'rgba(255,255,255,0.08)',
+    borderRadius: radius.pill,
+    paddingHorizontal: spacing.md,
+    height: 34,
+    justifyContent: 'center',
+    marginRight: spacing.sm,
+  },
+  roleChipActive: { backgroundColor: colors.blue500, borderColor: colors.blue500 },
+  roleChipLabel: { fontSize: 12.5, color: colors.textOnNavy },
+  roleChipLabelActive: { color: colors.white, fontWeight: '600' },
+  revokeAction: {
+    width: 32,
+    height: 32,
+    borderRadius: radius.sm,
+    backgroundColor: 'rgba(208,52,44,0.16)',
+    alignItems: 'center',
+    justifyContent: 'center',
+    marginLeft: spacing.sm,
   },
   listRowLabel: { flex: 1, ...typography.bodyStrong, fontSize: 13, color: colors.white, marginRight: spacing.sm },
   listRowValue: { ...typography.caption, color: colors.textOnNavyFaint },
