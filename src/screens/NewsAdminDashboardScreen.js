@@ -13,7 +13,8 @@
  * counted only from actual taps in the News tab from this session onward.
  */
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, Alert, Switch, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, Switch, useWindowDimensions, StyleSheet } from 'react-native';
+import { showAlert } from '../utils/showAlert';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -27,7 +28,6 @@ import AdminSidebar, { SIDEBAR_BREAKPOINT } from '../components/admin/AdminSideb
 
 import { useNews } from '../context/NewsContext';
 import { useAds } from '../context/AdsContext';
-import { setToken } from '../services/apiClient';
 import { normalise } from '../utils/format';
 import { colors, typography, spacing, radius, gutter, shadows } from '../theme';
 
@@ -62,7 +62,6 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
     addCategory,
     updateCategory,
     deleteCategory,
-    refreshArticles,
     addStory,
     updateStory,
     deleteStory,
@@ -71,16 +70,11 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
   } = useNews();
   const { ads, deleteAd } = useAds();
 
-  // Only a real exit (not "back to Director") ends the actual session —
-  // going back up to Director just navigates, since that admin is still
-  // signed in and hasn't asked to leave the admin area at all.
-  const handleExit = useCallback(async () => {
-    if (!viaDirector) {
-      await setToken(null);
-      await refreshArticles(); // scope shrinks back to public-only now
-    }
+  // Leaving a dashboard no longer signs anyone out — an admin is just a
+  // signed-in account now, so this only navigates (sign out is in the Me tab).
+  const handleExit = useCallback(() => {
     navigation.navigate(exitTarget);
-  }, [viaDirector, exitTarget, navigation, refreshArticles]);
+  }, [exitTarget, navigation]);
 
   const [segment, setSegment] = useState(route?.params?.segment || 'all');
   const [search, setSearch] = useState('');
@@ -221,7 +215,7 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
 
   const handleDelete = useCallback(
     (article) => {
-      Alert.alert('Delete article', `Delete "${article.title}"?`, [
+      showAlert('Delete article', `Delete "${article.title}"?`, [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: () => deleteArticle(article.id) },
       ]);
@@ -240,7 +234,7 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
     async (category) => {
       const removed = await deleteCategory(category.key);
       if (!removed) {
-        Alert.alert(
+        showAlert(
           'Category in use',
           `"${category.label}" still has articles. Move or delete those articles first.`
         );
@@ -277,7 +271,7 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
 
   const handleDeleteAd = useCallback(
     (ad) => {
-      Alert.alert('Delete ad', 'Remove this ad from the News feed?', [
+      showAlert('Delete ad', 'Remove this ad from the News feed?', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: () => deleteAd(ad.id) },
       ]);
@@ -307,7 +301,7 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
 
   const handleDeleteStory = useCallback(
     (story) => {
-      Alert.alert(
+      showAlert(
         'Delete story',
         `Delete "${story.title}"? Its articles stay, they just stop being grouped together.`,
         [
@@ -391,7 +385,7 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
             value={showViewCounts}
             onValueChange={(value) => {
               updateViewCountSetting(value).then((ok) => {
-                if (!ok) Alert.alert('Ntibyashobotse', 'Ntibyashobotse guhindura. Gerageza nanone.');
+                if (!ok) showAlert('Ntibyashobotse', 'Ntibyashobotse guhindura. Gerageza nanone.');
               });
             }}
             accessibilityLabel="Show view counts to readers"

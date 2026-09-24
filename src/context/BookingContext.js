@@ -16,6 +16,7 @@
  */
 import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
 import { apiFetch } from '../services/apiClient';
+import { useUser } from './UserContext';
 import { makeOrderRef } from '../utils/format';
 
 const BookingContext = createContext(null);
@@ -23,6 +24,7 @@ const BookingContext = createContext(null);
 export function BookingProvider({ children }) {
   const [bookings, setBookings] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useUser();
 
   const refreshBookings = useCallback(async () => {
     try {
@@ -34,12 +36,15 @@ export function BookingProvider({ children }) {
     }
   }, []);
 
+  // What the server returns depends on who's asking (your own requests, the
+  // requests sent to your business, or everything for an admin), so reload
+  // whenever the signed-in person changes.
   useEffect(() => {
     (async () => {
       await refreshBookings();
       setIsLoading(false);
     })();
-  }, [refreshBookings]);
+  }, [refreshBookings, user?.id]);
 
   const placeBooking = useCallback(async ({ business, itemLabel, quantity, date, note }) => {
     const payload = {

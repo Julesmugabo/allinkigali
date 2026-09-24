@@ -15,7 +15,8 @@
  * Every number is real, computed from BusinessContext/BookingContext.
  */
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, Image, ScrollView, Pressable, Alert, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, Text, Image, ScrollView, Pressable, useWindowDimensions, StyleSheet } from 'react-native';
+import { showAlert } from '../utils/showAlert';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -29,7 +30,6 @@ import AdminSidebar, { SIDEBAR_BREAKPOINT } from '../components/admin/AdminSideb
 import { useBusinesses } from '../context/BusinessContext';
 import { useBookings } from '../context/BookingContext';
 import { useFliers } from '../context/FliersContext';
-import { setToken } from '../services/apiClient';
 import { categoryLabel, getCategoryCounts } from '../services/businessSearch';
 import { normalise } from '../utils/format';
 import { colors, typography, spacing, radius, gutter, shadows } from '../theme';
@@ -59,10 +59,11 @@ export default function SellersAdminDashboardScreen({ navigation, route }) {
   const exitTarget = viaDirector ? 'DirectorAdminDashboard' : 'Main';
 
   // Only a real exit (not "back to Director") ends the actual session.
-  const handleExit = useCallback(async () => {
-    if (!viaDirector) await setToken(null);
+  // Leaving a dashboard only navigates — an admin is just a signed-in account
+  // now, and sign out lives in the Me tab.
+  const handleExit = useCallback(() => {
     navigation.navigate(exitTarget);
-  }, [viaDirector, exitTarget, navigation]);
+  }, [exitTarget, navigation]);
 
   const { businesses, approveBusiness, deleteBusiness } = useBusinesses();
   const { bookings } = useBookings();
@@ -165,7 +166,7 @@ export default function SellersAdminDashboardScreen({ navigation, route }) {
 
   const handleReject = useCallback(
     (business) => {
-      Alert.alert(
+      showAlert(
         'Reject this seller?',
         `"${business.name}" hasn't been approved yet, so this removes the listing entirely (not an archive — it was never live).`,
         [
@@ -212,7 +213,7 @@ export default function SellersAdminDashboardScreen({ navigation, route }) {
 
   const handleDeleteFlier = useCallback(
     (flier) => {
-      Alert.alert('Delete flier', 'Remove this flier from the Shop tab?', [
+      showAlert('Delete flier', 'Remove this flier from the Shop tab?', [
         { text: 'Cancel', style: 'cancel' },
         { text: 'Delete', style: 'destructive', onPress: () => deleteFlier(flier.id) },
       ]);

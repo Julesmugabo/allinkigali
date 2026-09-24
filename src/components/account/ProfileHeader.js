@@ -1,6 +1,6 @@
 /**
  * ProfileHeader.js — Umutwe werekana konti y'umukoresha.
- * Avatar (initials), name, email, and a compact summary of the user's orders.
+ * Avatar (initials), name, email, and a compact summary of the user's service requests.
  */
 import React from 'react';
 import { View, Text, Image, StyleSheet } from 'react-native';
@@ -19,7 +19,7 @@ function Stat({ value, label, icon }) {
   );
 }
 
-export default function ProfileHeader({ user, activeCount = 0, completedCount = 0 }) {
+export default function ProfileHeader({ user, waitingCount = 0, handledCount = 0 }) {
   if (!user) return null;
 
   return (
@@ -44,9 +44,9 @@ export default function ProfileHeader({ user, activeCount = 0, completedCount = 
       </View>
 
       <View style={styles.stats}>
-        <Stat value={activeCount} label="Biri mu nzira" icon="moped" />
+        <Stat value={waitingCount} label="Requests waiting" icon="clock-outline" />
         <View style={styles.statDivider} />
-        <Stat value={completedCount} label="Byarangiye" icon="check-circle-outline" />
+        <Stat value={handledCount} label="Requests handled" icon="check-circle-outline" />
       </View>
     </View>
   );

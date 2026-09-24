@@ -8,7 +8,8 @@
  * position so placement survives articles being added or archived later.
  */
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, Image, ScrollView, Pressable, Alert, StyleSheet } from 'react-native';
+import { View, Text, Image, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { showAlert } from '../utils/showAlert';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -52,7 +53,7 @@ export default function AdEditorScreen({ route, navigation }) {
   const pickMedia = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Ntibyakunze', 'Dukeneye uruhushya rwo kubona amafoto/amavidewo yawe.');
+      showAlert('Ntibyakunze', 'Dukeneye uruhushya rwo kubona amafoto/amavidewo yawe.');
       return;
     }
 

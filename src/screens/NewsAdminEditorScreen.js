@@ -7,7 +7,8 @@
  * queue). Same form conventions as SalesPartnerForm.
  */
 import React, { useCallback, useMemo, useState } from 'react';
-import { View, Text, Image, ScrollView, Pressable, Alert, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { View, Text, Image, ScrollView, Pressable, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { showAlert } from '../utils/showAlert';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import * as ImagePicker from 'expo-image-picker';
@@ -63,7 +64,7 @@ export default function NewsAdminEditorScreen({ route, navigation }) {
   const pickPhoto = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Ntibyakunze', 'Dukeneye uruhushya rwo kubona amafoto yawe.');
+      showAlert('Ntibyakunze', 'Dukeneye uruhushya rwo kubona amafoto yawe.');
       return;
     }
 

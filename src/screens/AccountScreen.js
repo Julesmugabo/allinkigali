@@ -1,26 +1,24 @@
 /**
- * AccountScreen.js — Ecran ya "Jyewe" (Me tab).
+ * AccountScreen.js — The Me tab.
  *
  * Two states in one screen:
- *   signed out -> sign-up (role choice + name/email/password) or sign-in —
- *     same single form for everyone, customer or admin; there's no separate
- *     hidden admin gate any more.
- *   signed in  -> profile summary, order shortcuts, settings, sign out —
- *     plus a "Ubuyobozi" row that only appears when the signed-in account's
- *     `role` (news/sellers/director) is set, leading straight into that
- *     dashboard.
+ *   signed out -> sign-up (role choice + name/email/password) or sign-in, plus
+ *     Help and Terms links. Same single form for everyone, customer or admin.
+ *   signed in  -> profile card and the settings groups (see SettingsList):
+ *     Admin (only if the account has an admin role), My activity, My business,
+ *     Account, Help, Sign out.
  */
 import React, { useCallback, useState } from 'react';
 import {
   View,
   Text,
   ScrollView,
-  Alert,
   Pressable,
   KeyboardAvoidingView,
   Platform,
   StyleSheet,
 } from 'react-native';
+import { showAlert } from '../utils/showAlert';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GradientBackground from '../components/common/GradientBackground';
@@ -29,12 +27,11 @@ import AuthForm from '../components/account/AuthForm';
 import SignInForm from '../components/account/SignInForm';
 import RoleChoice from '../components/account/RoleChoice';
 import ProfileHeader from '../components/account/ProfileHeader';
-import MenuRow from '../components/account/MenuRow';
+import SettingsList from '../components/account/SettingsList';
 
 import { useUser } from '../context/UserContext';
-import { useOrders } from '../context/OrdersContext';
+import { useBookings } from '../context/BookingContext';
 import { useBusinesses } from '../context/BusinessContext';
-import { ROLE_META } from '../admin/adminAuth';
 import { colors, typography, spacing, radius, gutter } from '../theme';
 
 const ROLE_COPY = {
@@ -44,28 +41,26 @@ const ROLE_COPY = {
 
 export default function AccountScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { user, isSignedIn, isLoading, isBootstrapping, error, clearError, signUp, signIn, signOut, updateProfile } = useUser();
-  const { activeOrders, pastOrders } = useOrders();
+  const { user, isSignedIn, isLoading, isBootstrapping, error, clearError, signUp, signIn, signOut } = useUser();
+  const { bookings } = useBookings();
   const { getBusinessesByOwner } = useBusinesses();
 
   const [pendingRole, setPendingRole] = useState(null);
   const [authMode, setAuthMode] = useState('signup'); // 'signup' | 'signin'
 
+  // A new seller goes straight into business registration after signing up.
   const routeAfterAuth = useCallback(
-    (newUser, role) => {
-      if (role === 'seller') {
-        updateProfile({ role: 'seller' });
-        navigation.navigate('SalesPartner');
-      }
+    (role) => {
+      if (role === 'seller') navigation.navigate('SalesPartner');
     },
-    [updateProfile, navigation]
+    [navigation]
   );
 
   const handleSignUp = useCallback(
     async (values) => {
       try {
-        const newUser = await signUp(values);
-        routeAfterAuth(newUser, pendingRole);
+        await signUp(values);
+        routeAfterAuth(pendingRole);
       } catch (e) {
         // The message is already shown under the form via `error`.
       }
@@ -94,13 +89,18 @@ export default function AccountScreen({ navigation }) {
   );
 
   const confirmSignOut = useCallback(() => {
-    Alert.alert('Sohoka', 'Uremeza ko usohoka muri konti yawe?', [
-      { text: 'Oya', style: 'cancel' },
-      { text: 'Yego, sohoka', style: 'destructive', onPress: signOut },
+    showAlert('Sign out', 'Do you want to sign out of your account?', [
+      { text: 'Cancel', style: 'cancel' },
+      { text: 'Sign out', style: 'destructive', onPress: signOut },
     ]);
   }, [signOut]);
 
-  const myBusinesses = user ? getBusinessesByOwner(user.id) : [];
+  const myBusiness = user ? getBusinessesByOwner(user.id)[0] || null : null;
+
+  // Requests I sent (the server also returns requests sent to my business).
+  const myRequests = user ? bookings.filter((b) => b.customerId === user.id) : [];
+  const waitingRequests = myRequests.filter((b) => b.status === 'new').length;
+  const handledRequests = myRequests.filter((b) => b.status === 'handled').length;
 
   // The tab bar is laid out below the screen, so only breathing room is needed.
   const bottomPadding = spacing.xl;
@@ -168,6 +168,16 @@ export default function AccountScreen({ navigation }) {
                 {authMode === 'signin' ? 'Nta konti mfite? Fungura imwe' : 'Nasanzwe mfite konti? Injira'}
               </Text>
             </Pressable>
+
+            <View style={styles.helpLinks}>
+              <Pressable onPress={() => navigation.navigate('Info', { kind: 'help' })} hitSlop={8} accessibilityRole="button">
+                <Text style={styles.helpLinkText}>Help & FAQ</Text>
+              </Pressable>
+              <Text style={styles.helpDot}>·</Text>
+              <Pressable onPress={() => navigation.navigate('Info', { kind: 'privacy' })} hitSlop={8} accessibilityRole="button">
+                <Text style={styles.helpLinkText}>Terms & privacy</Text>
+              </Pressable>
+            </View>
           </ScrollView>
         </KeyboardAvoidingView>
       </GradientBackground>
@@ -185,121 +195,23 @@ export default function AccountScreen({ navigation }) {
           <Text style={styles.screenTitle}>Me</Text>
           <ProfileHeader
             user={user}
-            activeCount={activeOrders.length}
-            completedCount={pastOrders.length}
+            waitingCount={waitingRequests}
+            handledCount={handledRequests}
           />
         </View>
 
         {/* White sheet: everything below the profile lives on light ground so
             long menus stay easy to read. */}
         <View style={styles.sheet}>
-          <Text style={styles.groupLabel}>Ibyo natumije</Text>
-          <View style={styles.group}>
-            <MenuRow
-              icon="clipboard-text-clock-outline"
-              label="Ibyo natumije byose"
-              badgeCount={activeOrders.length || null}
-              onPress={() => navigation.navigate('Orders')}
-            />
-            <MenuRow
-              icon="moped"
-              label="Biri mu nzira"
-              value={String(activeOrders.length)}
-              onPress={() => navigation.navigate('Orders', { filter: 'active' })}
-              isLast
-            />
-          </View>
+          <SettingsList
+            user={user}
+            navigation={navigation}
+            myBusiness={myBusiness}
+            waitingRequests={waitingRequests}
+            onSignOut={confirmSignOut}
+          />
 
-          <Text style={styles.groupLabel}>Ubucuruzi</Text>
-          <View style={styles.group}>
-            {myBusinesses.length ? (
-              myBusinesses[0].verified ? (
-                <MenuRow
-                  icon="view-dashboard-outline"
-                  label="Dashboard y'ubucuruzi"
-                  value={myBusinesses[0].name}
-                  onPress={() => navigation.navigate('SellerDashboard', { businessId: myBusinesses[0].id })}
-                  isLast
-                />
-              ) : (
-                <MenuRow
-                  icon="clock-outline"
-                  label="Ubucuruzi buracyasuzumwa"
-                  value={myBusinesses[0].name}
-                  onPress={() =>
-                    Alert.alert(
-                      'Biracyasuzumwa',
-                      'Ubuyobozi burimo kureba ubucuruzi bwawe. Uzabona dashboard yawe iyo bwemejwe.'
-                    )
-                  }
-                  isLast
-                />
-              )
-            ) : (
-              <MenuRow
-                icon="storefront-outline"
-                label="Ba umufatanyabikorwa"
-                value="Andikisha ubucuruzi"
-                onPress={() => navigation.navigate('SalesPartner')}
-                isLast
-              />
-            )}
-          </View>
-
-          {user.role ? (
-            <>
-              <Text style={styles.groupLabel}>Ubuyobozi</Text>
-              <View style={styles.group}>
-                <MenuRow
-                  icon={ROLE_META[user.role].icon}
-                  label={ROLE_META[user.role].label}
-                  onPress={() => navigation.navigate('Admin', { screen: ROLE_META[user.role].route })}
-                  isLast
-                />
-              </View>
-            </>
-          ) : null}
-
-          <Text style={styles.groupLabel}>Konti</Text>
-          <View style={styles.group}>
-            <MenuRow
-              icon="account-edit-outline"
-              label="Hindura amakuru yanjye"
-              onPress={() => Alert.alert('Biraza vuba', 'Guhindura amakuru bizaboneka vuba.')}
-            />
-            <MenuRow
-              icon="map-marker-outline"
-              label="Aderesi zanjye"
-              onPress={() => Alert.alert('Biraza vuba', 'Kubika aderesi bizaboneka vuba.')}
-            />
-            <MenuRow
-              icon="bell-outline"
-              label="Amatangazo"
-              onPress={() => Alert.alert('Biraza vuba', 'Igenamiterere ry\'amatangazo rizaboneka vuba.')}
-              isLast
-            />
-          </View>
-
-          <Text style={styles.groupLabel}>Ubufasha</Text>
-          <View style={styles.group}>
-            <MenuRow
-              icon="help-circle-outline"
-              label="Ibibazo bikunze kubazwa"
-              onPress={() => Alert.alert('Biraza vuba', 'Ubufasha buzaboneka vuba.')}
-            />
-            <MenuRow
-              icon="shield-check-outline"
-              label="Amabwiriza n'ibanga ry'amakuru"
-              onPress={() => Alert.alert('Biraza vuba', 'Amabwiriza azaboneka vuba.')}
-              isLast
-            />
-          </View>
-
-          <View style={styles.group}>
-            <MenuRow icon="logout" label="Sohoka" destructive onPress={confirmSignOut} isLast />
-          </View>
-
-          <Text style={styles.version}>allinkigali · verisiyo 1.0.0</Text>
+          <Text style={styles.version}>allinkigali · version 1.0.0</Text>
         </View>
       </ScrollView>
     </GradientBackground>
@@ -364,6 +276,9 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: spacing.xl,
   },
+  helpLinks: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', marginTop: spacing.xxl },
+  helpLinkText: { ...typography.caption, color: colors.blue300, fontWeight: '600' },
+  helpDot: { ...typography.caption, color: colors.textOnNavyFaint, marginHorizontal: spacing.md },
   version: {
     ...typography.meta,
     color: colors.textMuted,

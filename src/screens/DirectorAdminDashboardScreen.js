@@ -17,7 +17,8 @@
  * fabricated. "Counted this session" is as far as any of this goes.
  */
 import React, { useCallback, useEffect, useMemo, useState } from 'react';
-import { View, Text, ScrollView, Pressable, Alert, useWindowDimensions, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, useWindowDimensions, StyleSheet } from 'react-native';
+import { showAlert } from '../utils/showAlert';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -31,7 +32,7 @@ import AdminSidebar, { SIDEBAR_BREAKPOINT } from '../components/admin/AdminSideb
 import { useBusinesses } from '../context/BusinessContext';
 import { useBookings } from '../context/BookingContext';
 import { useNews } from '../context/NewsContext';
-import { apiFetch, setToken } from '../services/apiClient';
+import { apiFetch } from '../services/apiClient';
 import { getCategoryCounts } from '../services/businessSearch';
 import { colors, typography, spacing, radius, gutter, shadows } from '../theme';
 
@@ -66,7 +67,7 @@ export default function DirectorAdminDashboardScreen({ navigation }) {
 
   const { businesses } = useBusinesses();
   const { bookings } = useBookings();
-  const { articles, categories: newsCategories, refreshArticles } = useNews();
+  const { articles, categories: newsCategories } = useNews();
 
   const [segment, setSegment] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(isWide);
@@ -111,7 +112,7 @@ export default function DirectorAdminDashboardScreen({ navigation }) {
 
   const handleRevokeRole = useCallback(
     (admin) => {
-      Alert.alert('Revoke access', `Remove ${admin.email}'s admin access?`, [
+      showAlert('Revoke access', `Remove ${admin.email}'s admin access?`, [
         { text: 'Cancel', style: 'cancel' },
         {
           text: 'Revoke',
@@ -121,7 +122,7 @@ export default function DirectorAdminDashboardScreen({ navigation }) {
               await apiFetch('/admin/assign-role', { method: 'POST', body: { email: admin.email, role: null } });
               await refreshAdmins();
             } catch (e) {
-              Alert.alert('Ntibyashobotse', e.message || 'Gerageza nanone.');
+              showAlert('Ntibyashobotse', e.message || 'Gerageza nanone.');
             }
           },
         },
@@ -218,15 +219,11 @@ export default function DirectorAdminDashboardScreen({ navigation }) {
     [navigation]
   );
 
-  // The top of the admin hierarchy — exiting here always ends the real
-  // session (unlike News/Sellers, which only sign out if they weren't
-  // reached via this screen), so someone else on the device can't reopen
-  // the dashboard without signing in again.
-  const handleExit = useCallback(async () => {
-    await setToken(null);
-    await refreshArticles(); // scope shrinks back to public-only now
+  // Leaving only navigates back to the app — the director stays signed in
+  // like any other account, and signs out from the Me tab.
+  const handleExit = useCallback(() => {
     navigation.navigate('Main');
-  }, [navigation, refreshArticles]);
+  }, [navigation]);
 
   const attentionItems = useMemo(() => {
     const items = [];

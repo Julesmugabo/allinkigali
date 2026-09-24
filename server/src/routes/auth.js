@@ -104,6 +104,21 @@ router.post('/change-password', requireAuth, async (req, res) => {
   res.status(204).end();
 });
 
+router.patch('/me', requireAuth, async (req, res) => {
+  const { firstName, lastName, phone } = req.body || {};
+  if (!firstName || !firstName.trim()) return res.status(400).json({ error: 'Enter your first name.' });
+  if (!lastName || !lastName.trim()) return res.status(400).json({ error: 'Enter your last name.' });
+
+  // Email and role are deliberately not editable here — role in particular
+  // must never be changeable by the account holder.
+  const { rows } = await query(
+    'update users set first_name = $1, last_name = $2, phone = $3 where id = $4 returning *',
+    [firstName.trim(), lastName.trim(), (phone || '').trim(), req.user.sub]
+  );
+  if (!rows[0]) return res.status(404).json({ error: 'Account not found.' });
+  res.json({ user: userToJson(rows[0]) });
+});
+
 router.get('/me', requireAuth, async (req, res) => {
   const { rows } = await query('select * from users where id = $1', [req.user.sub]);
   if (!rows[0]) return res.status(404).json({ error: 'Account not found.' });

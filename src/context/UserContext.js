@@ -125,12 +125,27 @@ export function UserProvider({ children }) {
     }
   }, []);
 
-  // Local-only: a UI hint for routing straight into business registration
-  // right after sign-up, not a real account attribute stored on the
-  // backend — a person's actual "seller" status is just whether they own
-  // any businesses (see BusinessContext.getBusinessesByOwner).
-  const updateProfile = useCallback((patch) => {
-    setUser((current) => (current ? { ...current, ...patch } : current));
+  /**
+   * Save name + phone. Email and role can't be changed from here. Returns
+   * true on success; on failure sets `error` and returns false.
+   */
+  const saveProfile = useCallback(async ({ firstName, lastName, phone }) => {
+    setError(null);
+    try {
+      const { user: updated } = await apiFetch('/auth/me', {
+        method: 'PATCH',
+        body: { firstName, lastName, phone },
+      });
+      setUser(updated);
+      return true;
+    } catch (e) {
+      setError(e.message);
+      return false;
+    }
+  }, []);
+
+  const changePassword = useCallback(async ({ currentPassword, newPassword }) => {
+    await apiFetch('/auth/change-password', { method: 'POST', body: { currentPassword, newPassword } });
   }, []);
 
   const signOut = useCallback(async () => {
@@ -149,10 +164,11 @@ export function UserProvider({ children }) {
       clearError,
       signUp,
       signIn,
-      updateProfile,
+      saveProfile,
+      changePassword,
       signOut,
     }),
-    [user, isLoading, isBootstrapping, error, clearError, signUp, signIn, updateProfile, signOut]
+    [user, isLoading, isBootstrapping, error, clearError, signUp, signIn, saveProfile, changePassword, signOut]
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

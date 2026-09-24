@@ -12,6 +12,10 @@ import OrderDetailScreen from '../screens/OrderDetailScreen';
 import SalesPartnerScreen from '../screens/SalesPartnerScreen';
 import SellerDashboardScreen from '../screens/SellerDashboardScreen';
 import SellerPlansScreen from '../screens/SellerPlansScreen';
+import EditProfileScreen from '../screens/EditProfileScreen';
+import ChangePasswordScreen from '../screens/ChangePasswordScreen';
+import MyRequestsScreen from '../screens/MyRequestsScreen';
+import InfoScreen from '../screens/InfoScreen';
 
 const Stack = createNativeStackNavigator();
 const darkScreenOptions = { contentStyle: { backgroundColor: '#042C53' } };
@@ -31,6 +35,10 @@ export default function AccountStack() {
       <Stack.Screen name="SalesPartner" component={SalesPartnerScreen} options={darkScreenOptions} />
       <Stack.Screen name="SellerDashboard" component={SellerDashboardScreen} options={darkScreenOptions} />
       <Stack.Screen name="SellerPlans" component={SellerPlansScreen} options={darkScreenOptions} />
+      <Stack.Screen name="EditProfile" component={EditProfileScreen} options={darkScreenOptions} />
+      <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={darkScreenOptions} />
+      <Stack.Screen name="MyRequests" component={MyRequestsScreen} options={darkScreenOptions} />
+      <Stack.Screen name="Info" component={InfoScreen} options={darkScreenOptions} />
     </Stack.Navigator>
   );
 }

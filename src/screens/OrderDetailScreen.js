@@ -5,7 +5,8 @@
  * and the option to call it off while it's still at the depot.
  */
 import React, { useCallback } from 'react';
-import { View, Text, ScrollView, Pressable, Alert, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import { showAlert } from '../utils/showAlert';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -28,7 +29,7 @@ export default function OrderDetailScreen({ navigation, route }) {
   const order = getOrderById(orderId);
 
   const handleCancel = useCallback(() => {
-    Alert.alert('Hagarika icyifuzo', 'Uremeza ko uhagarika iki cyifuzo?', [
+    showAlert('Hagarika icyifuzo', 'Uremeza ko uhagarika iki cyifuzo?', [
       { text: 'Oya', style: 'cancel' },
       {
         text: 'Yego, hagarika',

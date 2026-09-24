@@ -7,7 +7,8 @@
  * the business lives in BusinessContext.
  */
 import React, { useCallback, useRef, useState } from 'react';
-import { View, Text, Pressable, Image, Alert, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Image, StyleSheet } from 'react-native';
+import { showAlert } from '../../utils/showAlert';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import * as ImagePicker from 'expo-image-picker';
 
@@ -55,7 +56,7 @@ export default function SalesPartnerForm({ onSubmit, isSubmitting = false, initi
   const pickPhoto = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      Alert.alert('Ntibyakunze', 'Dukeneye uruhushya rwo kubona amafoto yawe.');
+      showAlert('Ntibyakunze', 'Dukeneye uruhushya rwo kubona amafoto yawe.');
       return;
     }
 
