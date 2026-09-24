@@ -54,22 +54,22 @@ export function UserProvider({ children }) {
     setError(null);
 
     if (!firstName || !firstName.trim()) {
-      const message = 'Andika izina ryawe rya mbere.';
+      const message = 'Enter your first name.';
       setError(message);
       throw new Error(message);
     }
     if (!lastName || !lastName.trim()) {
-      const message = 'Andika izina ryawe rya nyuma.';
+      const message = 'Enter your last name.';
       setError(message);
       throw new Error(message);
     }
     if (!isValidEmail(email)) {
-      const message = 'Imeyili ntabwo yujuje ibisabwa.';
+      const message = 'That email does not look right.';
       setError(message);
       throw new Error(message);
     }
     if (!password || password.length < 6) {
-      const message = "Ijambo ry'ibanga rigomba kuba nibura inyuguti 6.";
+      const message = 'Password must be at least 6 characters.';
       setError(message);
       throw new Error(message);
     }
@@ -98,12 +98,12 @@ export function UserProvider({ children }) {
     setError(null);
 
     if (!isValidEmail(email)) {
-      const message = 'Imeyili ntabwo yujuje ibisabwa.';
+      const message = 'That email does not look right.';
       setError(message);
       throw new Error(message);
     }
     if (!password) {
-      const message = "Andika ijambo ry'ibanga.";
+      const message = 'Enter your password.';
       setError(message);
       throw new Error(message);
     }

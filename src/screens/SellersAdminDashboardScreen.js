@@ -207,7 +207,7 @@ export default function SellersAdminDashboardScreen({ navigation, route }) {
   // both businesses and fliers, not just the handful seeded today.
   const businessNameById = useMemo(() => new Map(businesses.map((b) => [b.id, b.name])), [businesses]);
   const businessNameFor = useCallback(
-    (id) => businessNameById.get(id) || 'Ubucuruzi bwasibwe',
+    (id) => businessNameById.get(id) || 'Deleted business',
     [businessNameById]
   );
 
@@ -238,26 +238,26 @@ export default function SellersAdminDashboardScreen({ navigation, route }) {
         >
           <View style={styles.topBar}>
             <Pressable
-              onPress={() => setSidebarOpen((v) => !v)}
+              onPress={handleExit}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
+              accessibilityLabel={viaDirector ? 'Back to Director dashboard' : 'Go back'}
               style={styles.backButton}
             >
-              <MaterialCommunityIcons name={sidebarOpen ? 'menu-open' : 'menu'} size={20} color={colors.textOnNavy} />
+              <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textOnNavy} />
             </Pressable>
             <View style={styles.titleWrap}>
               <Text style={styles.title}>Sales Partners Dashboard</Text>
               <Text style={styles.subtitle}>Every seller on the platform, in one place</Text>
             </View>
             <Pressable
-              onPress={handleExit}
+              onPress={() => setSidebarOpen((v) => !v)}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel={viaDirector ? 'Back to Director dashboard' : 'Exit admin'}
-              style={styles.backButton}
+              accessibilityLabel={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
+              style={[styles.backButton, styles.menuButtonRight]}
             >
-              <MaterialCommunityIcons name={viaDirector ? 'arrow-left' : 'exit-to-app'} size={20} color={colors.textOnNavy} />
+              <MaterialCommunityIcons name={sidebarOpen ? 'menu-open' : 'menu'} size={20} color={colors.textOnNavy} />
             </Pressable>
           </View>
 
@@ -477,6 +477,7 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   titleWrap: { flex: 1 },
+  menuButtonRight: { marginRight: 0, marginLeft: spacing.md },
   title: { fontSize: 18, fontWeight: '700', color: colors.white, letterSpacing: -0.3 },
   subtitle: { ...typography.caption, color: colors.textOnNavyFaint, marginTop: 2 },
   statsRow: { flexDirection: 'row', marginBottom: spacing.md },

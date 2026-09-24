@@ -22,14 +22,14 @@ import { colors, typography, spacing, radius } from '../../theme';
 // suggestions for the common cases. "other" always stays last and reveals a
 // free-text field, so a seller is never blocked from registering something
 // that isn't in this list.
-const OTHER_CATEGORY = { key: 'other', label: 'Ubundi', icon: 'shape-outline' };
+const OTHER_CATEGORY = { key: 'other', label: 'Other', icon: 'shape-outline' };
 const CATEGORY_OPTIONS = [...BUSINESS_CATEGORIES, OTHER_CATEGORY];
 
 function isKnownCategory(key) {
   return BUSINESS_CATEGORIES.some((c) => c.key === key);
 }
 
-export default function SalesPartnerForm({ onSubmit, isSubmitting = false, initialValues = null, submitLabel = 'Ohereza kwiyandikisha' }) {
+export default function SalesPartnerForm({ onSubmit, isSubmitting = false, initialValues = null, submitLabel = 'Submit registration' }) {
   const initialIsCustomCategory = Boolean(initialValues?.category) && !isKnownCategory(initialValues.category);
 
   const [name, setName] = useState(initialValues?.name || '');
@@ -56,7 +56,7 @@ export default function SalesPartnerForm({ onSubmit, isSubmitting = false, initi
   const pickPhoto = useCallback(async () => {
     const permission = await ImagePicker.requestMediaLibraryPermissionsAsync();
     if (!permission.granted) {
-      showAlert('Ntibyakunze', 'Dukeneye uruhushya rwo kubona amafoto yawe.');
+      showAlert('Not allowed', 'We need permission to access your photos.');
       return;
     }
 
@@ -76,15 +76,15 @@ export default function SalesPartnerForm({ onSubmit, isSubmitting = false, initi
 
   const validate = useCallback(() => {
     const next = {};
-    if (!name.trim()) next.name = 'Andika izina ry\'ubucuruzi.';
-    if (!phone.trim()) next.phone = 'Andika nomero ya telefone.';
-    else if (!isValidPhone(phone)) next.phone = 'Nomero igomba gutangira na 07.';
-    if (isOther && !customCategory.trim()) next.customCategory = 'Andika ubwoko bw\'ubucuruzi bwawe.';
-    if (!servicesText.trim()) next.servicesText = 'Andika nibura serivisi imwe.';
-    if (!priceFrom.trim() || Number.isNaN(Number(priceFrom))) next.priceFrom = 'Andika igiciro (imibare gusa).';
-    if (!priceUnit.trim()) next.priceUnit = "Urugero: ukwezi, umwana, urugendo.";
-    if (!location.trim()) next.location = 'Andika aho uherereye.';
-    if (!hours.trim()) next.hours = 'Andika amasaha mukorera.';
+    if (!name.trim()) next.name = 'Enter your business name.';
+    if (!phone.trim()) next.phone = 'Enter a phone number.';
+    else if (!isValidPhone(phone)) next.phone = 'Phone must start with 07.';
+    if (isOther && !customCategory.trim()) next.customCategory = 'Enter your type of business.';
+    if (!servicesText.trim()) next.servicesText = 'Enter at least one service.';
+    if (!priceFrom.trim() || Number.isNaN(Number(priceFrom))) next.priceFrom = 'Enter a price (numbers only).';
+    if (!priceUnit.trim()) next.priceUnit = 'For example: month, child, trip.';
+    if (!location.trim()) next.location = 'Enter where you are.';
+    if (!hours.trim()) next.hours = 'Enter your opening hours.';
     setErrors(next);
     return Object.keys(next).length === 0;
   }, [name, phone, isOther, customCategory, servicesText, priceFrom, priceUnit, location, hours]);
@@ -141,22 +141,22 @@ export default function SalesPartnerForm({ onSubmit, isSubmitting = false, initi
         ) : (
           <>
             <MaterialCommunityIcons name="camera-plus-outline" size={26} color={colors.blue300} />
-            <Text style={styles.photoLabel}>Shyiraho ifoto y'ubucuruzi</Text>
+            <Text style={styles.photoLabel}>Add a photo of your business</Text>
           </>
         )}
       </Pressable>
 
       <TextField
-        label="Izina ry'ubucuruzi"
+        label="Business name"
         value={name}
         onChangeText={setName}
-        placeholder="Urugero: Fitnesspoint"
+        placeholder="e.g. Fitnesspoint"
         icon="storefront-outline"
         error={errors.name}
       />
 
       <TextField
-        label="Telefone (abakiriya bazakuhamagara)"
+        label="Phone (customers will call you)"
         value={phone}
         onChangeText={setPhone}
         placeholder="0788 000 000"
@@ -166,7 +166,7 @@ export default function SalesPartnerForm({ onSubmit, isSubmitting = false, initi
         onSubmitEditing={() => locationRef.current?.focus()}
       />
 
-      <Text style={styles.label}>Ubwoko bw'ubucuruzi</Text>
+      <Text style={styles.label}>Type of business</Text>
       <View style={styles.categoryRow}>
         {CATEGORY_OPTIONS.map((option) => {
           const active = category === option.key;
@@ -192,30 +192,30 @@ export default function SalesPartnerForm({ onSubmit, isSubmitting = false, initi
 
       {isOther ? (
         <TextField
-          label="Andika ubwoko bw'ubucuruzi bwawe"
+          label="Enter your type of business"
           value={customCategory}
           onChangeText={setCustomCategory}
-          placeholder="Urugero: Isuku y'imodoka, Ubwubatsi, Ubwiteganyirize..."
+          placeholder="e.g. Car wash, Construction, Insurance..."
           icon="shape-outline"
           error={errors.customCategory}
         />
       ) : null}
 
       <TextField
-        label="Serivisi utanga (tandukanya na comma)"
+        label="Services you offer (separate with commas)"
         value={servicesText}
         onChangeText={setServicesText}
-        placeholder="Urugero: Gym, Personal Training, Group Classes"
+        placeholder="e.g. Gym, Personal Training, Group Classes"
         icon="format-list-bulleted"
         error={errors.servicesText}
       />
 
       <TextField
         ref={locationRef}
-        label="Aho uherereye"
+        label="Where you are"
         value={location}
         onChangeText={setLocation}
-        placeholder="Urugero: Kacyiru, Kigali"
+        placeholder="e.g. Kacyiru, Kigali"
         icon="map-marker-outline"
         error={errors.location}
         onSubmitEditing={() => hoursRef.current?.focus()}
@@ -223,10 +223,10 @@ export default function SalesPartnerForm({ onSubmit, isSubmitting = false, initi
 
       <TextField
         ref={hoursRef}
-        label="Amasaha mukorera"
+        label="Opening hours"
         value={hours}
         onChangeText={setHours}
-        placeholder="Urugero: 08:00 - 22:00"
+        placeholder="e.g. 08:00 - 22:00"
         icon="clock-outline"
         error={errors.hours}
         onSubmitEditing={() => priceFromRef.current?.focus()}
@@ -236,7 +236,7 @@ export default function SalesPartnerForm({ onSubmit, isSubmitting = false, initi
         <TextField
           ref={priceFromRef}
           style={styles.priceField}
-          label="Igiciro guhera kuri"
+          label="Price from"
           value={priceFrom}
           onChangeText={setPriceFrom}
           placeholder="15000"
@@ -248,27 +248,27 @@ export default function SalesPartnerForm({ onSubmit, isSubmitting = false, initi
         <TextField
           ref={priceUnitRef}
           style={styles.priceField}
-          label="Kuri buri"
+          label="Per"
           value={priceUnit}
           onChangeText={setPriceUnit}
-          placeholder="ukwezi"
+          placeholder="month"
           error={errors.priceUnit}
         />
       </View>
 
       <TextField
-        label="Impamvu abantu bakwifuza (si ngombwa, buri murongo ni imwe)"
+        label="Why people should choose you (optional, one per line)"
         value={highlightsText}
         onChangeText={setHighlightsText}
-        placeholder={'Urugero:\nAhantu hasukuye\nAbatoza b\'inshuti'}
+        placeholder={'e.g.\nA clean, quiet place\nFriendly trainers'}
         multiline
       />
 
       <TextField
-        label="Ibisobanuro birambuye (si ngombwa)"
+        label="Description (optional)"
         value={description}
         onChangeText={setDescription}
-        placeholder="Sobanura ubucuruzi bwawe muri make..."
+        placeholder="Briefly describe your business..."
         multiline
       />
 

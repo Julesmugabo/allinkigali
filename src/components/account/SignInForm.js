@@ -1,7 +1,7 @@
 /**
- * SignInForm.js — Ifishi yo kwinjira (returning customer/seller sign-in).
- * Just email + password. Kept separate from AuthForm (sign-up) since a
- * returning user doesn't need name/role/phone fields again.
+ * SignInForm.js — Email + password to log in.
+ * Kept separate from AuthForm (sign-up) since a returning user doesn't need
+ * name/phone fields again.
  */
 import React, { useState, useRef, useCallback } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
@@ -20,9 +20,9 @@ export default function SignInForm({ onSubmit, isLoading = false, serverError })
 
   const validate = useCallback(() => {
     const next = {};
-    if (!email.trim()) next.email = 'Andika imeyili yawe.';
-    else if (!isValidEmail(email)) next.email = 'Imeyili ntabwo ari yo.';
-    if (!password) next.password = "Andika ijambo ry'ibanga.";
+    if (!email.trim()) next.email = 'Enter your email.';
+    else if (!isValidEmail(email)) next.email = 'That email does not look right.';
+    if (!password) next.password = 'Enter your password.';
     setErrors(next);
     return Object.keys(next).length === 0;
   }, [email, password]);
@@ -35,10 +35,10 @@ export default function SignInForm({ onSubmit, isLoading = false, serverError })
   return (
     <View style={styles.container}>
       <TextField
-        label="Imeyili"
+        label="Email"
         value={email}
         onChangeText={setEmail}
-        placeholder="izina@imeyili.com"
+        placeholder="name@example.com"
         icon="email-outline"
         error={errors.email}
         keyboardType="email-address"
@@ -49,7 +49,7 @@ export default function SignInForm({ onSubmit, isLoading = false, serverError })
 
       <TextField
         ref={passwordRef}
-        label="Ijambo ry'ibanga"
+        label="Password"
         value={password}
         onChangeText={setPassword}
         placeholder="••••••••"
@@ -64,7 +64,7 @@ export default function SignInForm({ onSubmit, isLoading = false, serverError })
 
       {serverError ? <Text style={styles.serverError}>{serverError}</Text> : null}
 
-      <PrimaryButton label="Injira" onPress={handleSubmit} loading={isLoading} icon="login" style={styles.submit} />
+      <PrimaryButton label="Log in" onPress={handleSubmit} loading={isLoading} icon="login" style={styles.submit} />
     </View>
   );
 }

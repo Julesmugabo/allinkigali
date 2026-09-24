@@ -46,15 +46,15 @@ function computeStats(bookings) {
 
   const responded = bookings.filter((b) => b.respondedAt);
   const handled = bookings.filter((b) => b.status === 'handled').length;
-  let avgResponseLabel = 'Nta makuru arahari';
+  let avgResponseLabel = 'No data yet';
   if (responded.length) {
     const avgMinutes =
       responded.reduce((sum, b) => sum + (new Date(b.respondedAt) - new Date(b.createdAt)) / 60000, 0) /
       responded.length;
     avgResponseLabel =
-      avgMinutes < 60 ? `Iminota ${Math.round(avgMinutes)}` : `Amasaha ${Math.round(avgMinutes / 60)}`;
+      avgMinutes < 60 ? `${Math.round(avgMinutes)} min` : `${Math.round(avgMinutes / 60)} h`;
   }
-  const handledRateLabel = responded.length ? `${Math.round((handled / responded.length) * 100)}%` : 'Nta makuru arahari';
+  const handledRateLabel = responded.length ? `${Math.round((handled / responded.length) * 100)}%` : 'No data yet';
 
   return { thisWeek, thisMonth, avgResponseLabel, handledRateLabel };
 }
@@ -101,11 +101,11 @@ export default function SellerDashboardScreen({ route, navigation }) {
   const checklist = useMemo(() => {
     if (!business) return [];
     return [
-      { key: 'photo', label: "Shyiraho ifoto y'ubucuruzi", done: Boolean(business.image) },
-      { key: 'description', label: 'Andika ibisobanuro birambuye', done: Boolean(business.description?.trim()) },
-      { key: 'highlights', label: "Andika impamvu abantu bakwifuza", done: Boolean(business.highlights?.length) },
-      { key: 'verified', label: 'Tegereza ko ubuyobozi bwemeza ubucuruzi bwawe', done: Boolean(business.verified) },
-      { key: 'responded', label: 'Subiza icyifuzo cya mbere', done: bookings.some((b) => b.status !== 'new') },
+      { key: 'photo', label: 'Add a photo of your business', done: Boolean(business.image) },
+      { key: 'description', label: 'Write a full description', done: Boolean(business.description?.trim()) },
+      { key: 'highlights', label: 'Add why people should choose you', done: Boolean(business.highlights?.length) },
+      { key: 'verified', label: 'Wait for the platform team to approve your business', done: Boolean(business.verified) },
+      { key: 'responded', label: 'Reply to your first request', done: bookings.some((b) => b.status !== 'new') },
     ];
   }, [business, bookings]);
 
@@ -190,11 +190,11 @@ export default function SellerDashboardScreen({ route, navigation }) {
       items: [
         {
           key: 'edit',
-          label: 'Hindura ubucuruzi',
+          label: 'Edit business',
           icon: 'pencil-outline',
           onPress: () => navigation.navigate('SalesPartner', { businessId: business.id }),
         },
-        { key: 'plans', label: 'Igenamigambi', icon: 'crown-outline', onPress: () => navigation.navigate('SellerPlans') },
+        { key: 'plans', label: 'Plans', icon: 'crown-outline', onPress: () => navigation.navigate('SellerPlans') },
       ],
     });
     return sections;
@@ -204,7 +204,7 @@ export default function SellerDashboardScreen({ route, navigation }) {
     return (
       <GradientBackground>
         <View style={styles.emptyWrap}>
-          <EmptyState tone="dark" icon="alert-circle-outline" title="Ubucuruzi ntibubonetse" />
+          <EmptyState tone="dark" icon="alert-circle-outline" title="Business not found" />
         </View>
       </GradientBackground>
     );
@@ -237,7 +237,7 @@ export default function SellerDashboardScreen({ route, navigation }) {
               onPress={() => navigation.goBack()}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Subira inyuma"
+              accessibilityLabel="Go back"
               style={styles.backButton}
             >
               <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textOnNavy} />
@@ -270,7 +270,7 @@ export default function SellerDashboardScreen({ route, navigation }) {
               <View style={styles.quickRow}>
                 <Pressable onPress={handlePreview} style={styles.quickAction} accessibilityRole="button">
                   <MaterialCommunityIcons name="eye-outline" size={16} color={colors.blue300} />
-                  <Text style={styles.quickActionLabel}>Reba nk'uko abakiriya babibona</Text>
+                  <Text style={styles.quickActionLabel}>See it as customers see it</Text>
                 </Pressable>
                 <Pressable
                   onPress={() => navigation.navigate('SalesPartner', { businessId: business.id })}
@@ -278,16 +278,16 @@ export default function SellerDashboardScreen({ route, navigation }) {
                   accessibilityRole="button"
                 >
                   <MaterialCommunityIcons name="pencil-outline" size={16} color={colors.blue300} />
-                  <Text style={styles.quickActionLabel}>Hindura ubucuruzi</Text>
+                  <Text style={styles.quickActionLabel}>Edit business</Text>
                 </Pressable>
               </View>
 
               <View style={styles.card}>
                 <View style={styles.availableRow}>
                   <View style={{ flex: 1 }}>
-                    <Text style={styles.availableTitle}>Ndahari ubu</Text>
+                    <Text style={styles.availableTitle}>Available now</Text>
                     <Text style={styles.availableSubtitle}>
-                      {business.isAvailableNow ? 'Abakiriya babona ko uhari' : 'Abakiriya babona ko ufunze/wuzuye'}
+                      {business.isAvailableNow ? 'Customers see that you are available' : 'Customers see that you are closed or full'}
                     </Text>
                   </View>
                   <Switch
@@ -308,16 +308,16 @@ export default function SellerDashboardScreen({ route, navigation }) {
                 <View style={styles.statCard}>
                   <MaterialCommunityIcons name="calendar-week-outline" size={16} color={colors.blue300} />
                   <Text style={styles.statValue}>{stats.thisWeek}</Text>
-                  <Text style={styles.statLabel}>Iki cyumweru</Text>
+                  <Text style={styles.statLabel}>This week</Text>
                 </View>
                 <View style={styles.statCard}>
                   <MaterialCommunityIcons name="calendar-month-outline" size={16} color={colors.blue300} />
                   <Text style={styles.statValue}>{stats.thisMonth}</Text>
-                  <Text style={styles.statLabel}>Uku kwezi</Text>
+                  <Text style={styles.statLabel}>This month</Text>
                 </View>
               </View>
 
-              <Text style={styles.sectionLabel}>Kwongera ubucuruzi bwawe</Text>
+              <Text style={styles.sectionLabel}>Grow your business</Text>
               <View style={styles.checklistCard}>
                 {checklist.map((item) => (
                   <Pressable
@@ -345,17 +345,17 @@ export default function SellerDashboardScreen({ route, navigation }) {
                 <View style={styles.statCard}>
                   <MaterialCommunityIcons name="eye-outline" size={16} color={colors.blue300} />
                   <Text style={styles.statValue}>{business.views || 0}</Text>
-                  <Text style={styles.statLabel}>Abarebye</Text>
+                  <Text style={styles.statLabel}>Views</Text>
                 </View>
                 <View style={styles.statCard}>
                   <MaterialCommunityIcons name="inbox-outline" size={16} color={colors.blue300} />
                   <Text style={styles.statValue}>{bookings.length}</Text>
-                  <Text style={styles.statLabel}>Ibyifuzo byose</Text>
+                  <Text style={styles.statLabel}>All requests</Text>
                 </View>
                 <View style={styles.statCard}>
                   <MaterialCommunityIcons name="check-circle-outline" size={16} color={colors.success} />
                   <Text style={styles.statValue}>{stats.handledRateLabel}</Text>
-                  <Text style={styles.statLabel}>Uko wasubije</Text>
+                  <Text style={styles.statLabel}>Your response</Text>
                 </View>
               </View>
 
@@ -368,7 +368,7 @@ export default function SellerDashboardScreen({ route, navigation }) {
                 <View style={styles.responseCard}>
                   <MaterialCommunityIcons name="chart-line" size={15} color={colors.blue300} />
                   <Text style={styles.responseText}>
-                    {conversionLabel} by'abarebye ubucuruzi bwawe basabye serivisi
+                    {conversionLabel} of the people who viewed your business asked for a service
                   </Text>
                 </View>
               ) : null}
@@ -389,8 +389,8 @@ export default function SellerDashboardScreen({ route, navigation }) {
                 <EmptyState
                   tone="dark"
                   icon="inbox-outline"
-                  title="Nta cyifuzo urahabwa"
-                  message="Igihe umuntu azasaba iyi serivisi, bizagaragara hano."
+                  title="No requests yet"
+                  message="When someone requests your service, it shows up here."
                 />
               )}
             </View>

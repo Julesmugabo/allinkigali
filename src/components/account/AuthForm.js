@@ -1,5 +1,5 @@
 /**
- * AuthForm.js — Ifishi yo kwiyandikisha.
+ * AuthForm.js — The create-an-account form.
  * First name, last name, email, password, optional phone.
  * Validation lives here; the actual account creation lives in UserContext.
  */
@@ -27,13 +27,13 @@ export default function AuthForm({ onSubmit, isLoading = false, serverError }) {
   const validate = useCallback(() => {
     const next = {};
 
-    if (!firstName.trim()) next.firstName = 'Andika izina rya mbere.';
-    if (!lastName.trim()) next.lastName = 'Andika izina rya nyuma.';
-    if (!email.trim()) next.email = 'Andika imeyili yawe.';
-    else if (!isValidEmail(email)) next.email = 'Imeyili ntabwo ari yo.';
-    if (!password) next.password = "Andika ijambo ry'ibanga.";
-    else if (password.length < 6) next.password = "Rigomba kuba nibura inyuguti 6.";
-    if (phone.trim() && !isValidPhone(phone)) next.phone = 'Nomero igomba gutangira na 07.';
+    if (!firstName.trim()) next.firstName = 'Enter your first name.';
+    if (!lastName.trim()) next.lastName = 'Enter your last name.';
+    if (!email.trim()) next.email = 'Enter your email.';
+    else if (!isValidEmail(email)) next.email = 'That email does not look right.';
+    if (!password) next.password = 'Enter a password.';
+    else if (password.length < 6) next.password = 'At least 6 characters.';
+    if (phone.trim() && !isValidPhone(phone)) next.phone = 'Phone must start with 07.';
 
     setErrors(next);
     return Object.keys(next).length === 0;
@@ -53,10 +53,10 @@ export default function AuthForm({ onSubmit, isLoading = false, serverError }) {
   return (
     <View style={styles.container}>
       <TextField
-        label="Izina rya mbere"
+        label="First name"
         value={firstName}
         onChangeText={setFirstName}
-        placeholder="Urugero: Jean"
+        placeholder="e.g. Jean"
         icon="account-outline"
         error={errors.firstName}
         autoCapitalize="words"
@@ -66,10 +66,10 @@ export default function AuthForm({ onSubmit, isLoading = false, serverError }) {
 
       <TextField
         ref={lastNameRef}
-        label="Izina rya nyuma"
+        label="Last name"
         value={lastName}
         onChangeText={setLastName}
-        placeholder="Urugero: Habimana"
+        placeholder="e.g. Habimana"
         icon="account-outline"
         error={errors.lastName}
         autoCapitalize="words"
@@ -79,10 +79,10 @@ export default function AuthForm({ onSubmit, isLoading = false, serverError }) {
 
       <TextField
         ref={emailRef}
-        label="Imeyili"
+        label="Email"
         value={email}
         onChangeText={setEmail}
-        placeholder="izina@imeyili.com"
+        placeholder="name@example.com"
         icon="email-outline"
         error={errors.email}
         keyboardType="email-address"
@@ -93,7 +93,7 @@ export default function AuthForm({ onSubmit, isLoading = false, serverError }) {
 
       <TextField
         ref={passwordRef}
-        label="Ijambo ry'ibanga"
+        label="Password"
         value={password}
         onChangeText={setPassword}
         placeholder="••••••••"
@@ -108,7 +108,7 @@ export default function AuthForm({ onSubmit, isLoading = false, serverError }) {
 
       <TextField
         ref={phoneRef}
-        label="Telefone (si ngombwa)"
+        label="Phone (optional)"
         value={phone}
         onChangeText={setPhone}
         placeholder="0788 000 000"
@@ -122,7 +122,7 @@ export default function AuthForm({ onSubmit, isLoading = false, serverError }) {
       {serverError ? <Text style={styles.serverError}>{serverError}</Text> : null}
 
       <PrimaryButton
-        label="Fungura konti"
+        label="Create account"
         onPress={handleSubmit}
         loading={isLoading}
         icon="account-plus-outline"
@@ -130,7 +130,7 @@ export default function AuthForm({ onSubmit, isLoading = false, serverError }) {
       />
 
       <Text style={styles.terms}>
-        Ukomeje, wemera amabwiriza yo gukoresha allinkigali n'uburyo amakuru yawe abikwa.
+        By continuing you agree to how allinkigali works and stores your details (see Terms & privacy in Settings).
       </Text>
     </View>
   );

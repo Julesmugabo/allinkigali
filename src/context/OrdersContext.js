@@ -10,6 +10,7 @@
  */
 import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
 import { apiFetch } from '../services/apiClient';
+import { useUser } from './UserContext';
 import { ORDER_STATUS, STATUS_FLOW, statusIndex, canCancel } from '../data/orderStatus';
 import { makeOrderRef } from '../utils/format';
 
@@ -18,6 +19,7 @@ const OrdersContext = createContext(null);
 export function OrdersProvider({ children }) {
   const [orders, setOrders] = useState([]);
   const [isLoading, setIsLoading] = useState(true);
+  const { user } = useUser();
 
   const refreshOrders = useCallback(async () => {
     try {
@@ -29,12 +31,14 @@ export function OrdersProvider({ children }) {
     }
   }, []);
 
+  // The server returns only the signed-in person's own orders (everything for
+  // an admin), so reload whenever the signed-in person changes.
   useEffect(() => {
     (async () => {
       await refreshOrders();
       setIsLoading(false);
     })();
-  }, [refreshOrders]);
+  }, [refreshOrders, user?.id]);
 
   /**
    * Create an order from cart items. Returns the new order object so the

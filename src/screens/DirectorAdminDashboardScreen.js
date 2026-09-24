@@ -310,26 +310,26 @@ export default function DirectorAdminDashboardScreen({ navigation }) {
         >
           <View style={styles.topBar}>
             <Pressable
-              onPress={() => setSidebarOpen((v) => !v)}
+              onPress={handleExit}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
+              accessibilityLabel="Go back"
               style={styles.backButton}
             >
-              <MaterialCommunityIcons name={sidebarOpen ? 'menu-open' : 'menu'} size={20} color={colors.textOnNavy} />
+              <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textOnNavy} />
             </Pressable>
             <View style={styles.titleWrap}>
               <Text style={styles.title}>Director Dashboard</Text>
               <Text style={styles.subtitle}>Platform-wide view across sellers and news</Text>
             </View>
             <Pressable
-              onPress={handleExit}
+              onPress={() => setSidebarOpen((v) => !v)}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Exit admin"
-              style={styles.backButton}
+              accessibilityLabel={sidebarOpen ? 'Hide sidebar' : 'Show sidebar'}
+              style={[styles.backButton, styles.menuButtonRight]}
             >
-              <MaterialCommunityIcons name="exit-to-app" size={20} color={colors.textOnNavy} />
+              <MaterialCommunityIcons name={sidebarOpen ? 'menu-open' : 'menu'} size={20} color={colors.textOnNavy} />
             </Pressable>
           </View>
 
@@ -637,6 +637,7 @@ const styles = StyleSheet.create({
     marginRight: spacing.md,
   },
   titleWrap: { flex: 1 },
+  menuButtonRight: { marginRight: 0, marginLeft: spacing.md },
   title: { fontSize: 18, fontWeight: '700', color: colors.white, letterSpacing: -0.3 },
   subtitle: { ...typography.caption, color: colors.textOnNavyFaint, marginTop: 2 },
   segmentRow: {

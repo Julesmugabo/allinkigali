@@ -12,19 +12,19 @@ import { colors, typography, spacing, radius } from '../../theme';
 
 const STATUS_LABEL = {
   new: null,
-  handled: { label: 'Byakiriwe', color: colors.success, icon: 'check-circle' },
-  no_response: { label: 'Ntibyitabiwe', color: colors.warning, icon: 'clock-alert-outline' },
+  handled: { label: 'Handled', color: colors.success, icon: 'check-circle' },
+  no_response: { label: 'No response', color: colors.warning, icon: 'clock-alert-outline' },
 };
 
 function timeAgo(iso) {
   const diffMs = Date.now() - new Date(iso).getTime();
   const minutes = Math.floor(diffMs / 60000);
-  if (minutes < 1) return 'Ubu nonaha';
-  if (minutes < 60) return `Haciye iminota ${minutes}`;
+  if (minutes < 1) return 'Just now';
+  if (minutes < 60) return `${minutes} min ago`;
   const hours = Math.floor(minutes / 60);
-  if (hours < 24) return `Haciye amasaha ${hours}`;
+  if (hours < 24) return `${hours} h ago`;
   const days = Math.floor(hours / 24);
-  return `Haciye iminsi ${days}`;
+  return `${days} days ago`;
 }
 
 export default function SellerRequestRow({ booking, phone, onMarkHandled, onMarkNoResponse }) {
@@ -38,7 +38,7 @@ export default function SellerRequestRow({ booking, phone, onMarkHandled, onMark
     <View style={styles.row}>
       <View style={styles.headerRow}>
         <Text style={styles.what} numberOfLines={1}>
-          {booking.itemLabel || `Umubare: ${booking.quantity}`}
+          {booking.itemLabel || `Quantity: ${booking.quantity}`}
         </Text>
         <Text style={styles.time}>{timeAgo(booking.createdAt)}</Text>
       </View>
@@ -54,7 +54,7 @@ export default function SellerRequestRow({ booking, phone, onMarkHandled, onMark
         {phone ? (
           <Pressable onPress={handleCall} style={styles.callButton} accessibilityRole="button">
             <MaterialCommunityIcons name="phone" size={14} color={colors.white} />
-            <Text style={styles.callLabel}>Hamagara</Text>
+            <Text style={styles.callLabel}>Call</Text>
           </Pressable>
         ) : (
           <View />
@@ -68,10 +68,10 @@ export default function SellerRequestRow({ booking, phone, onMarkHandled, onMark
         ) : (
           <View style={styles.actionRow}>
             <Pressable onPress={() => onMarkNoResponse(booking.id)} style={styles.ghostAction} accessibilityRole="button">
-              <Text style={styles.ghostActionLabel}>Ntibyitabiwe</Text>
+              <Text style={styles.ghostActionLabel}>No response</Text>
             </Pressable>
             <Pressable onPress={() => onMarkHandled(booking.id)} style={styles.primaryAction} accessibilityRole="button">
-              <Text style={styles.primaryActionLabel}>Nabyakiriye</Text>
+              <Text style={styles.primaryActionLabel}>Mark handled</Text>
             </Pressable>
           </View>
         )}

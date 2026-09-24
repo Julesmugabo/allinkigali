@@ -24,30 +24,28 @@ export default function SellerPlansScreen({ navigation }) {
             onPress={() => navigation.goBack()}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel="Subira inyuma"
+            accessibilityLabel="Go back"
             style={styles.backButton}
           >
             <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textOnNavy} />
           </Pressable>
-          <Text style={styles.title}>Igenamigambi</Text>
+          <Text style={styles.title}>Plans</Text>
         </View>
 
         <View style={styles.planCard}>
           <View style={styles.planHeader}>
             <MaterialCommunityIcons name="gift-outline" size={22} color={colors.success} />
-            <Text style={styles.planName}>Igenamigambi ry'ubuntu</Text>
+            <Text style={styles.planName}>Free plan</Text>
           </View>
           <Text style={styles.planDescription}>
-            Ubu ubucuruzi bwawe bwiyandikisha kandi bugaragara mu bashakisha ku buntu, uko ushaka kubukoresha
-            hose.
+            Right now, registering your business and showing up in search is free, for as long as you want to use it.
           </Text>
         </View>
 
         <View style={styles.notice}>
           <MaterialCommunityIcons name="information-outline" size={17} color={colors.blue300} />
           <Text style={styles.noticeText}>
-            Igenamigambi ryishyurwa (urugero: kugira ngo ubucuruzi bwawe bubone imyanya ya mbere mu bishakiwe)
-            biracyategurwa. Uzamenyeshwa mbere y'uko haba impinduka ku giciro.
+            Paid plans (for example, to place your business higher in search results) are still being prepared. You will be told before any pricing changes.
           </Text>
         </View>
       </View>

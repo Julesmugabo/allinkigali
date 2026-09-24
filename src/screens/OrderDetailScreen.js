@@ -29,10 +29,10 @@ export default function OrderDetailScreen({ navigation, route }) {
   const order = getOrderById(orderId);
 
   const handleCancel = useCallback(() => {
-    showAlert('Hagarika icyifuzo', 'Uremeza ko uhagarika iki cyifuzo?', [
-      { text: 'Oya', style: 'cancel' },
+    showAlert('Cancel order', 'Do you want to cancel this order?', [
+      { text: 'No', style: 'cancel' },
       {
-        text: 'Yego, hagarika',
+        text: 'Yes, cancel it',
         style: 'destructive',
         onPress: () => cancelOrder(orderId),
       },
@@ -44,8 +44,8 @@ export default function OrderDetailScreen({ navigation, route }) {
       <View style={styles.container}>
         <EmptyState
           icon="file-search-outline"
-          title="Iki cyifuzo nticyabonetse"
-          actionLabel="Subira inyuma"
+          title="Order not found"
+          actionLabel="Go back"
           onActionPress={() => navigation.goBack()}
           style={{ marginTop: insets.top + spacing.huge }}
         />
@@ -68,7 +68,7 @@ export default function OrderDetailScreen({ navigation, route }) {
               onPress={() => navigation.goBack()}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Subira inyuma"
+              accessibilityLabel="Go back"
               style={styles.backButton}
             >
               <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textOnNavy} />
@@ -89,7 +89,7 @@ export default function OrderDetailScreen({ navigation, route }) {
             <View style={styles.confirmation}>
               <MaterialCommunityIcons name="check-circle" size={18} color={colors.success} />
               <Text style={styles.confirmationText}>
-                Icyifuzo cyawe cyoherejwe. Tugiye kuguhamagara tukemeza.
+                Your order has been sent. We will call you to confirm it.
               </Text>
             </View>
           ) : null}
@@ -97,13 +97,13 @@ export default function OrderDetailScreen({ navigation, route }) {
 
         <View style={styles.body}>
           {/* --- Tracking ------------------------------------------------ */}
-          <Text style={styles.sectionLabel}>Aho kigeze</Text>
+          <Text style={styles.sectionLabel}>Order status</Text>
           <View style={styles.card}>
             <OrderTimeline order={order} />
           </View>
 
           {/* --- Items --------------------------------------------------- */}
-          <Text style={styles.sectionLabel}>Ibyo watumije</Text>
+          <Text style={styles.sectionLabel}>What you ordered</Text>
           <View style={styles.card}>
             {order.items.map((item, index) => (
               <View
@@ -131,7 +131,7 @@ export default function OrderDetailScreen({ navigation, route }) {
           </View>
 
           {/* --- Delivery ------------------------------------------------ */}
-          <Text style={styles.sectionLabel}>Aho bigomba kugera</Text>
+          <Text style={styles.sectionLabel}>Delivery details</Text>
           <View style={styles.card}>
             <View style={styles.infoRow}>
               <MaterialCommunityIcons name="map-marker-outline" size={17} color={colors.blue600} />
@@ -150,21 +150,21 @@ export default function OrderDetailScreen({ navigation, route }) {
           </View>
 
           {/* --- Money --------------------------------------------------- */}
-          <Text style={styles.sectionLabel}>Kwishyura</Text>
+          <Text style={styles.sectionLabel}>Payment</Text>
           <View style={styles.card}>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Ibicuruzwa</Text>
+              <Text style={styles.totalLabel}>Items</Text>
               <Text style={styles.totalValue}>{formatPrice(order.subtotal)}</Text>
             </View>
             <View style={styles.totalRow}>
-              <Text style={styles.totalLabel}>Kubigeza aho uri</Text>
+              <Text style={styles.totalLabel}>Delivery</Text>
               <Text style={styles.totalValue}>
-                {order.deliveryFee === 0 ? 'Ubuntu' : formatPrice(order.deliveryFee)}
+                {order.deliveryFee === 0 ? 'Free' : formatPrice(order.deliveryFee)}
               </Text>
             </View>
             <View style={styles.divider} />
             <View style={styles.totalRow}>
-              <Text style={styles.grandLabel}>Yose hamwe</Text>
+              <Text style={styles.grandLabel}>Total</Text>
               <Text style={styles.grandValue}>{formatPrice(order.total)}</Text>
             </View>
             <View style={styles.paymentNote}>
@@ -172,14 +172,14 @@ export default function OrderDetailScreen({ navigation, route }) {
               <Text style={styles.paymentNoteText}>
                 {order.paymentMethod
                   ? order.paymentMethod
-                  : 'Wishyura igihe bakugejeje ibicuruzwa'}
+                  : 'Pay when your order is delivered'}
               </Text>
             </View>
           </View>
 
           {canCancel(order.status) ? (
             <PrimaryButton
-              label="Hagarika icyifuzo"
+              label="Cancel order"
               icon="close"
               variant="ghost"
               onPress={handleCancel}
@@ -190,7 +190,7 @@ export default function OrderDetailScreen({ navigation, route }) {
           {__DEV__ ? (
             <Pressable onPress={() => advanceStatus(order.id)} style={styles.devButton}>
               <MaterialCommunityIcons name="fast-forward" size={14} color={colors.textMuted} />
-              <Text style={styles.devLabel}>DEV: intambwe ikurikira</Text>
+              <Text style={styles.devLabel}>DEV: next step</Text>
             </Pressable>
           ) : null}
         </View>

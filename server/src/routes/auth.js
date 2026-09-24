@@ -36,17 +36,17 @@ function signToken(user) {
 router.post('/signup', async (req, res) => {
   const { firstName, lastName, email, phone, password } = req.body || {};
 
-  if (!firstName || !firstName.trim()) return res.status(400).json({ error: 'Andika izina ryawe rya mbere.' });
-  if (!lastName || !lastName.trim()) return res.status(400).json({ error: 'Andika izina ryawe rya nyuma.' });
-  if (!email || !email.trim()) return res.status(400).json({ error: 'Andika imeyili yawe.' });
+  if (!firstName || !firstName.trim()) return res.status(400).json({ error: 'Enter your first name.' });
+  if (!lastName || !lastName.trim()) return res.status(400).json({ error: 'Enter your last name.' });
+  if (!email || !email.trim()) return res.status(400).json({ error: 'Enter your email.' });
   if (!password || password.length < 6) {
-    return res.status(400).json({ error: "Ijambo ry'ibanga rigomba kuba nibura inyuguti 6." });
+    return res.status(400).json({ error: 'Password must be at least 6 characters.' });
   }
 
   const normalizedEmail = email.trim().toLowerCase();
   const { rows: existing } = await query('select id from users where email = $1', [normalizedEmail]);
   if (existing[0]) {
-    return res.status(409).json({ error: 'Iyi email isanzwe ifite konti.' });
+    return res.status(409).json({ error: 'This email already has an account.' });
   }
 
   const passwordHash = await bcrypt.hash(password, 10);
@@ -63,7 +63,7 @@ router.post('/signup', async (req, res) => {
 router.post('/login', async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {
-    return res.status(400).json({ error: "Andika email n'ijambo ry'ibanga." });
+    return res.status(400).json({ error: 'Enter your email and password.' });
   }
 
   const { rows } = await query('select * from users where email = $1', [email.trim().toLowerCase()]);
@@ -72,12 +72,12 @@ router.post('/login', async (req, res) => {
   if (!user) {
     // Same message whether the email doesn't exist or the password is
     // wrong — never reveal which one, that's a real enumeration risk.
-    return res.status(401).json({ error: "Email cyangwa ijambo ry'ibanga sibyo." });
+    return res.status(401).json({ error: 'Incorrect email or password.' });
   }
 
   const valid = await bcrypt.compare(password, user.password_hash);
   if (!valid) {
-    return res.status(401).json({ error: "Email cyangwa ijambo ry'ibanga sibyo." });
+    return res.status(401).json({ error: 'Incorrect email or password.' });
   }
 
   res.json({ token: signToken(user), role: user.role, user: userToJson(user) });
@@ -89,12 +89,12 @@ router.post('/change-password', requireAuth, async (req, res) => {
     return res.status(400).json({ error: 'currentPassword and newPassword are required.' });
   }
   if (newPassword.length < 6) {
-    return res.status(400).json({ error: "Ijambo ry'ibanga rigomba kuba nibura inyuguti 6." });
+    return res.status(400).json({ error: 'Password must be at least 6 characters.' });
   }
 
   const { rows } = await query('select password_hash from users where id = $1', [req.user.sub]);
   if (!rows[0] || !(await bcrypt.compare(currentPassword, rows[0].password_hash))) {
-    return res.status(401).json({ error: "Ijambo ry'ibanga risanzwe si ryo." });
+    return res.status(401).json({ error: 'Your current password is incorrect.' });
   }
 
   await query('update users set password_hash = $1 where id = $2', [

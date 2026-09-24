@@ -16,6 +16,8 @@ import EditProfileScreen from '../screens/EditProfileScreen';
 import ChangePasswordScreen from '../screens/ChangePasswordScreen';
 import MyRequestsScreen from '../screens/MyRequestsScreen';
 import InfoScreen from '../screens/InfoScreen';
+import LoginScreen from '../screens/LoginScreen';
+import SignUpScreen from '../screens/SignUpScreen';
 
 const Stack = createNativeStackNavigator();
 const darkScreenOptions = { contentStyle: { backgroundColor: '#042C53' } };
@@ -39,6 +41,8 @@ export default function AccountStack() {
       <Stack.Screen name="ChangePassword" component={ChangePasswordScreen} options={darkScreenOptions} />
       <Stack.Screen name="MyRequests" component={MyRequestsScreen} options={darkScreenOptions} />
       <Stack.Screen name="Info" component={InfoScreen} options={darkScreenOptions} />
+      <Stack.Screen name="Login" component={LoginScreen} options={darkScreenOptions} />
+      <Stack.Screen name="SignUp" component={SignUpScreen} options={darkScreenOptions} />
     </Stack.Navigator>
   );
 }

@@ -1,19 +1,24 @@
 /**
  * orders.js (routes) — replaces OrdersContext's in-memory state.
- * Same posture as bookings.js: no requireAuth/requireRole anywhere here.
- * Real customer accounts don't exist yet (UserContext still generates fake
- * local ids), so there's no real customer identity to lock an order to —
- * matching the in-memory version, which had no access control either.
+ *
+ * Orders belong to the account that placed them (customer_id): a signed-in
+ * person sees and cancels only their own orders; a sellers/director admin
+ * sees all of them; a signed-out visitor sees none. Placing an order still
+ * works signed out (it just isn't attached to anyone).
  */
 const express = require('express');
 const { query } = require('../db');
+const { attachUserIfPresent, requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
+
+const isOrderAdmin = (user) => Boolean(user && (user.role === 'sellers' || user.role === 'director'));
 
 function orderToJson(row) {
   return {
     id: row.id,
     ref: row.ref,
+    customerId: row.customer_id,
     status: row.status,
     deliveryAddress: row.delivery_address,
     phone: row.phone,
@@ -28,18 +33,25 @@ function orderToJson(row) {
   };
 }
 
-router.get('/', async (_req, res) => {
-  const { rows } = await query('select * from orders order by created_at desc');
+router.get('/', attachUserIfPresent, async (req, res) => {
+  const user = req.user;
+  if (!user) return res.json([]);
+  const { rows } = isOrderAdmin(user)
+    ? await query('select * from orders order by created_at desc')
+    : await query('select * from orders where customer_id = $1 order by created_at desc', [user.sub]);
   res.json(rows.map(orderToJson));
 });
 
-router.get('/:id', async (req, res) => {
+router.get('/:id', requireAuth, async (req, res) => {
   const { rows } = await query('select * from orders where id = $1', [req.params.id]);
-  if (!rows[0]) return res.status(404).json({ error: 'Order not found.' });
-  res.json(orderToJson(rows[0]));
+  const row = rows[0];
+  if (!row || (!isOrderAdmin(req.user) && row.customer_id !== req.user.sub)) {
+    return res.status(404).json({ error: 'Order not found.' });
+  }
+  res.json(orderToJson(row));
 });
 
-router.post('/', async (req, res) => {
+router.post('/', attachUserIfPresent, async (req, res) => {
   const { ref, items, subtotal, deliveryFee, total, deliveryAddress, phone, note } = req.body || {};
 
   if (!Array.isArray(items) || !items.length) {
@@ -51,18 +63,18 @@ router.post('/', async (req, res) => {
 
   const { rows } = await query(
     `insert into orders
-      (ref, status, delivery_address, phone, note, payment_method, items, subtotal, delivery_fee, total, history)
-     values ($1, 'pending', $2, $3, $4, null, $5, $6, $7, $8, $9)
+      (ref, status, customer_id, delivery_address, phone, note, payment_method, items, subtotal, delivery_fee, total, history)
+     values ($1, 'pending', $2, $3, $4, $5, null, $6, $7, $8, $9, $10)
      returning *`,
     [
-      ref, deliveryAddress || '', phone || '', note || '',
+      ref, req.user ? req.user.sub : null, deliveryAddress || '', phone || '', note || '',
       JSON.stringify(items), subtotal || 0, deliveryFee || 0, total || 0, JSON.stringify(history),
     ]
   );
   res.status(201).json(orderToJson(rows[0]));
 });
 
-router.patch('/:id/status', async (req, res) => {
+router.patch('/:id/status', requireAuth, async (req, res) => {
   const { status } = req.body || {};
   if (!['pending', 'confirmed', 'dispatched', 'delivered', 'cancelled'].includes(status)) {
     return res.status(400).json({ error: 'Invalid status.' });
@@ -70,6 +82,9 @@ router.patch('/:id/status', async (req, res) => {
 
   const { rows: existing } = await query('select * from orders where id = $1', [req.params.id]);
   if (!existing[0]) return res.status(404).json({ error: 'Order not found.' });
+  if (!isOrderAdmin(req.user) && existing[0].customer_id !== req.user.sub) {
+    return res.status(403).json({ error: 'Not allowed.' });
+  }
 
   const history = [...existing[0].history, { status, at: new Date().toISOString() }];
 

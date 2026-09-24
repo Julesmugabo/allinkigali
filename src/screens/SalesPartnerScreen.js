@@ -50,12 +50,12 @@ export default function SalesPartnerScreen({ route, navigation }) {
       if (editingId) {
         const updated = await updateBusiness(editingId, values);
         setIsSubmitting(false);
-        if (!updated) { setError('Ntibyashobotse kubika. Gerageza nanone.'); return; }
+        if (!updated) { setError('Could not save. Please try again.'); return; }
         setResult({ name: values.name, edited: true });
       } else {
         const business = await addBusiness({ ...values, ownerId: user?.id || null });
         setIsSubmitting(false);
-        if (!business) { setError('Ntibyashobotse kwiyandikisha. Gerageza nanone.'); return; }
+        if (!business) { setError('Could not register. Please try again.'); return; }
         setResult({ ...business, edited: false });
       }
     },
@@ -69,13 +69,13 @@ export default function SalesPartnerScreen({ route, navigation }) {
           <EmptyState
             tone="dark"
             icon="check-circle-outline"
-            title={result.edited ? 'Impinduka zabitswe!' : 'Wiyandikishije neza!'}
+            title={result.edited ? 'Changes saved!' : 'You are registered!'}
             message={
               result.edited
-                ? `Ibiro bya ${result.name} byavuguruwe.`
-                : `${result.name} ubu ushobora kuboneka mu bashakisha serivisi ku Bucuruzi.`
+                ? `${result.name} has been updated.`
+                : `${result.name} can now be found by people searching in the Service Market.`
             }
-            actionLabel={result.edited ? 'Subira kuri Dashboard' : 'Subira ku Jyewe'}
+            actionLabel={result.edited ? 'Back to dashboard' : 'Back to Settings'}
             // goBack() rather than a hardcoded route name — this screen is
             // opened both from the seller's own AccountStack and from the
             // Sales Partners admin dashboard's own stack, and each needs to
@@ -107,18 +107,18 @@ export default function SalesPartnerScreen({ route, navigation }) {
               onPress={() => navigation.goBack()}
               hitSlop={10}
               accessibilityRole="button"
-              accessibilityLabel="Subira inyuma"
+              accessibilityLabel="Go back"
               style={styles.backButton}
             >
               <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textOnNavy} />
             </Pressable>
-            <Text style={styles.title}>{editingId ? 'Hindura ubucuruzi' : 'Ba umufatanyabikorwa'}</Text>
+            <Text style={styles.title}>{editingId ? 'Edit business' : 'Register a business'}</Text>
           </View>
 
           <Text style={styles.subtitle}>
             {editingId
-              ? 'Vugurura amakuru y\'ubucuruzi bwawe — ibi bihita bigaragara mu bashakisha.'
-              : "Andikisha ubucuruzi bwawe kugira ngo bugaragare ku bantu bashakisha serivisi nk'iyo utanga."}
+              ? 'Update your business details. Changes show up in search straight away.'
+              : 'List your business so people searching for a service like yours can find you.'}
           </Text>
 
           {error ? <Text style={styles.errorText}>{error}</Text> : null}
@@ -127,7 +127,7 @@ export default function SalesPartnerScreen({ route, navigation }) {
             onSubmit={handleSubmit}
             isSubmitting={isSubmitting}
             initialValues={existingBusiness}
-            submitLabel={editingId ? 'Bika impinduka' : 'Ohereza kwiyandikisha'}
+            submitLabel={editingId ? 'Save changes' : 'Submit registration'}
           />
         </ScrollView>
       </KeyboardAvoidingView>

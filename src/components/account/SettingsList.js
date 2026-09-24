@@ -1,17 +1,19 @@
 /**
- * SettingsList.js — The signed-in Me screen's settings groups.
+ * SettingsList.js — The settings groups on the Me tab, for everyone.
  *
- * Roles stack rather than replace each other: everyone gets Activity,
- * Account and Help; an account that owns a business also gets My business;
- * an account with an admin role also gets an Admin group at the top. Every
- * row is something you tap to open a screen.
+ * Signed out: Log in comes first, then Create an account, My orders (which
+ * asks you to log in), Appearance, Help.
+ * Signed in: profile-driven groups. Roles stack rather than replace each
+ * other — an account that owns a business also gets My business, one with an
+ * admin role also gets an Admin group at the top. Every row is something you
+ * tap to open a screen.
  */
 import React from 'react';
 import { Text, View, StyleSheet } from 'react-native';
-import { showAlert } from '../../utils/showAlert';
 
 import MenuRow from './MenuRow';
 import { ROLE_META } from '../../admin/adminAuth';
+import { showAlert } from '../../utils/showAlert';
 import { colors, typography, spacing, radius } from '../../theme';
 
 const ADMIN_ROW_LABEL = {
@@ -37,7 +39,73 @@ function Group({ label, children }) {
   );
 }
 
-export default function SettingsList({ user, navigation, myBusiness, waitingRequests, onSignOut }) {
+// Present for everyone on purpose; dark mode itself is built later.
+function AppearanceRow() {
+  return (
+    <MenuRow
+      icon="theme-light-dark"
+      label="Appearance"
+      value="Light"
+      onPress={() => showAlert('Coming soon', 'Switching between light and dark mode will be available soon.')}
+      isLast
+    />
+  );
+}
+
+function HelpRows({ navigation }) {
+  return (
+    <>
+      <MenuRow icon="help-circle-outline" label="Help & FAQ" onPress={() => navigation.navigate('Info', { kind: 'help' })} />
+      <MenuRow
+        icon="shield-check-outline"
+        label="Terms & privacy"
+        onPress={() => navigation.navigate('Info', { kind: 'privacy' })}
+        isLast
+      />
+    </>
+  );
+}
+
+export default function SettingsList({ user, navigation, myBusiness, waitingRequests, onLogOut }) {
+  // ---------------------------------------------------------------- signed out
+  if (!user) {
+    return (
+      <>
+        <Group label="Account">
+          <MenuRow icon="login" label="Log in" onPress={() => navigation.navigate('Login')} />
+          <MenuRow
+            icon="account-plus-outline"
+            label="Create an account"
+            onPress={() => navigation.navigate('SignUp')}
+            isLast
+          />
+        </Group>
+
+        <Group label="My activity">
+          <MenuRow
+            icon="clipboard-text-clock-outline"
+            label="My orders"
+            onPress={() =>
+              showAlert('Log in to see your orders', 'Your orders are saved to your account.', [
+                { text: 'Log in', onPress: () => navigation.navigate('Login') },
+              ])
+            }
+            isLast
+          />
+        </Group>
+
+        <Group label="Preferences">
+          <AppearanceRow />
+        </Group>
+
+        <Group label="Help">
+          <HelpRows navigation={navigation} />
+        </Group>
+      </>
+    );
+  }
+
+  // ------------------------------------------------------------------ signed in
   const adminRows = user.role ? ROLE_DASHBOARDS[user.role] || [] : [];
 
   return (
@@ -57,6 +125,11 @@ export default function SettingsList({ user, navigation, myBusiness, waitingRequ
       ) : null}
 
       <Group label="My activity">
+        <MenuRow
+          icon="clipboard-text-clock-outline"
+          label="My orders"
+          onPress={() => navigation.navigate('Orders')}
+        />
         <MenuRow
           icon="inbox-arrow-up-outline"
           label="My service requests"
@@ -106,18 +179,16 @@ export default function SettingsList({ user, navigation, myBusiness, waitingRequ
         <MenuRow icon="key-outline" label="Change password" onPress={() => navigation.navigate('ChangePassword')} isLast />
       </Group>
 
+      <Group label="Preferences">
+        <AppearanceRow />
+      </Group>
+
       <Group label="Help">
-        <MenuRow icon="help-circle-outline" label="Help & FAQ" onPress={() => navigation.navigate('Info', { kind: 'help' })} />
-        <MenuRow
-          icon="shield-check-outline"
-          label="Terms & privacy"
-          onPress={() => navigation.navigate('Info', { kind: 'privacy' })}
-          isLast
-        />
+        <HelpRows navigation={navigation} />
       </Group>
 
       <View style={styles.group}>
-        <MenuRow icon="logout" label="Sign out" destructive onPress={onSignOut} isLast />
+        <MenuRow icon="logout" label="Log out" destructive onPress={onLogOut} isLast />
       </View>
     </>
   );

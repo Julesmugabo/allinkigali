@@ -23,7 +23,7 @@ export default function OrderCard({ order, onPress }) {
     <Pressable
       onPress={() => onPress && onPress(order)}
       accessibilityRole="button"
-      accessibilityLabel={`Icyifuzo ${order.ref}, ${status.label}`}
+      accessibilityLabel={`Order ${order.ref}, ${status.label}`}
       style={({ pressed }) => [styles.card, pressed && styles.pressed]}
     >
       <View style={styles.topRow}>
@@ -63,7 +63,7 @@ export default function OrderCard({ order, onPress }) {
         <View style={styles.addressRow}>
           <MaterialCommunityIcons name="map-marker-outline" size={13} color={colors.textMuted} />
           <Text style={styles.address} numberOfLines={1}>
-            {order.deliveryAddress || 'Nta aderesi'}
+            {order.deliveryAddress || 'No address'}
           </Text>
         </View>
 

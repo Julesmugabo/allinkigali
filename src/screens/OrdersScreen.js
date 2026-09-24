@@ -13,8 +13,8 @@ import { useOrders } from '../context/OrdersContext';
 import { colors, typography, spacing, radius, gutter } from '../theme';
 
 const FILTERS = [
-  { key: 'active', label: 'Biri mu nzira' },
-  { key: 'past', label: 'Byarangiye' },
+  { key: 'active', label: 'In progress' },
+  { key: 'past', label: 'Completed' },
 ];
 
 export default function OrdersScreen({ navigation, route }) {
@@ -42,12 +42,12 @@ export default function OrdersScreen({ navigation, route }) {
             onPress={() => navigation.goBack()}
             hitSlop={10}
             accessibilityRole="button"
-            accessibilityLabel="Subira inyuma"
+            accessibilityLabel="Go back"
             style={styles.backButton}
           >
             <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textOnNavy} />
           </Pressable>
-          <Text style={styles.title}>Ibyo natumije</Text>
+          <Text style={styles.title}>My orders</Text>
         </View>
 
         <View style={styles.filters}>
@@ -88,14 +88,14 @@ export default function OrdersScreen({ navigation, route }) {
           filter === 'active' ? (
             <EmptyState
               icon="basket-outline"
-              title="Nta cyifuzo kiri mu nzira"
-              message="Iyo utumije gaz, uzabona aho igeze hano."
+              title="No orders in progress"
+              message="When you place an order, you can follow it here."
             />
           ) : (
             <EmptyState
               icon="history"
-              title="Nta cyifuzo cyarangiye"
-              message="Ibyakugezeho byose bizajya bigaragara hano."
+              title="No completed orders"
+              message="Orders that have been delivered or cancelled show up here."
             />
           )
         }

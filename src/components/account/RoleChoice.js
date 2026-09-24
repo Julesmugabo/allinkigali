@@ -1,9 +1,10 @@
 /**
- * RoleChoice.js — "Uri nde?" (Who are you?)
+ * RoleChoice.js — "How do you want to start?"
  *
- * Shown before sign-up so a seller lands straight in business registration
- * afterwards instead of everyone getting the same generic customer screen.
- * Purely presentational — AccountScreen owns what happens after a choice.
+ * Shown first when creating an account, so someone who wants to list a
+ * business lands straight in business registration afterwards instead of
+ * everyone getting the same generic screen. Purely presentational — the
+ * sign-up screen owns what happens after a choice.
  */
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
@@ -13,15 +14,15 @@ import { colors, typography, spacing, radius } from '../../theme';
 const OPTIONS = [
   {
     key: 'customer',
-    icon: 'account-search-outline',
-    title: 'Umukiriya',
-    subtitle: "Shakisha serivisi n'ubucuruzi hafi yawe",
+    icon: 'account-plus-outline',
+    title: 'Just need to create an account',
+    subtitle: 'Find services, send requests and keep track of them',
   },
   {
     key: 'seller',
     icon: 'storefront-outline',
-    title: 'Umufatanyabikorwa',
-    subtitle: 'Andikisha ubucuruzi bwawe ubone abakiriya',
+    title: 'Register a business',
+    subtitle: 'List your business and get customers',
   },
 ];
 
