@@ -47,13 +47,13 @@ export function formatDateTime(date = new Date()) {
 }
 
 /**
- * Short relative time for news cards: "ubu", "45min", "2h", "3 days".
+ * Short relative time for news cards: "now", "45min", "2h", "1 day", "3 days", "2 weeks".
  */
 export function timeAgo(isoOrDate, now = new Date()) {
   const then = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
   const seconds = Math.max(0, Math.floor((now - then) / 1000));
 
-  if (seconds < 60) return 'ubu';
+  if (seconds < 60) return 'now';
 
   const minutes = Math.floor(seconds / 60);
   if (minutes < 60) return `${minutes}min`;
@@ -62,11 +62,11 @@ export function timeAgo(isoOrDate, now = new Date()) {
   if (hours < 24) return `${hours}h`;
 
   const days = Math.floor(hours / 24);
-  if (days === 1) return 'ejo';
+  if (days === 1) return '1 day';
   if (days < 7) return `${days} days`;
 
   const weeks = Math.floor(days / 7);
-  if (weeks < 5) return `${weeks} icyumweru`;
+  if (weeks < 5) return `${weeks} ${weeks === 1 ? 'week' : 'weeks'}`;
 
   return formatLongDate(then);
 }

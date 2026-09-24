@@ -46,15 +46,6 @@ export default function HeroCard({ article, onPress, onStoryPress }) {
           />
         ) : null}
 
-        {categoryLabel ? (
-          <Badge
-            label={categoryLabel}
-            color={colors.blue300}
-            backgroundColor="rgba(55,138,221,0.22)"
-            borderColor="rgba(55,138,221,0.4)"
-            style={styles.categoryBadge}
-          />
-        ) : null}
       </View>
 
       <View style={styles.body}>
@@ -63,13 +54,24 @@ export default function HeroCard({ article, onPress, onStoryPress }) {
         </Text>
 
         <View style={styles.footer}>
-          <View style={styles.sourceChip}>
-            <MaterialCommunityIcons name="open-in-new" size={11} color={colors.blue300} />
-            <Text style={styles.sourceText}>{article.source}</Text>
-          </View>
           <View style={styles.timeViews}>
-            <ViewCount count={article.views || 0} light style={styles.views} />
             <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
+            <ViewCount count={article.views || 0} light style={styles.views} />
+          </View>
+          <View style={styles.tags}>
+            {categoryLabel ? (
+              <View style={styles.categoryChip}>
+                <Text style={styles.categoryText} numberOfLines={1}>
+                  {categoryLabel}
+                </Text>
+              </View>
+            ) : null}
+            <View style={styles.sourceChip}>
+              <MaterialCommunityIcons name="open-in-new" size={11} color={colors.blue300} />
+              <Text style={styles.sourceText} numberOfLines={1}>
+                {article.source}
+              </Text>
+            </View>
           </View>
         </View>
 
@@ -109,7 +111,6 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: '100%' },
   placeholder: { alignItems: 'center', justifyContent: 'center' },
   breakingBadge: { position: 'absolute', top: spacing.md, left: spacing.md },
-  categoryBadge: { position: 'absolute', top: spacing.md, right: spacing.md },
   body: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,
@@ -126,6 +127,7 @@ const styles = StyleSheet.create({
     justifyContent: 'space-between',
   },
   sourceChip: {
+    flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: 'rgba(24,95,165,0.35)',
@@ -142,7 +144,30 @@ const styles = StyleSheet.create({
     fontWeight: '500',
   },
   timeViews: { flexDirection: 'row', alignItems: 'center' },
-  views: { marginRight: spacing.md },
+  tags: {
+    flexShrink: 1,
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'flex-end',
+    marginLeft: spacing.sm,
+  },
+  categoryChip: {
+    flexShrink: 1,
+    backgroundColor: 'rgba(55,138,221,0.22)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(55,138,221,0.4)',
+    borderRadius: radius.xs,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 3,
+    marginRight: spacing.xs,
+  },
+  categoryText: {
+    fontSize: 9.5,
+    fontWeight: '700',
+    letterSpacing: 0.5,
+    color: colors.blue300,
+  },
+  views: { marginLeft: spacing.sm },
   time: {
     ...typography.meta,
     color: 'rgba(133,183,235,0.5)',
