@@ -45,7 +45,7 @@ export default function RootNavigator() {
         name="ShopTab"
         component={ShopStack}
         options={({ route }) => ({
-          tabLabel: 'Access Market',
+          tabLabel: 'Service Market',
           tabIcon: 'shopping-outline',
           tabIconActive: 'shopping',
           showsCartBadge: true,
