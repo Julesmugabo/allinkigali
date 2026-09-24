@@ -10,6 +10,7 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import ArticleLabels from '../news/ArticleLabels';
 import { timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius } from '../../theme';
 
@@ -31,6 +32,7 @@ export default function AdminArticleRow({
   selected = false,
   onToggleSelect,
   onRestore,
+  onToggleBreaking,
 }) {
   const status = STATUS_META[article.status] || STATUS_META.draft;
   const isSelect = mode === 'select';
@@ -65,6 +67,8 @@ export default function AdminArticleRow({
         </Text>
       </View>
 
+      <ArticleLabels article={article} style={styles.labels} />
+
       <View style={styles.footer}>
         <View style={[styles.statusBadge, { backgroundColor: `${status.color}22` }]}>
           <Text style={[styles.statusLabel, { color: status.color }]}>{status.label}</Text>
@@ -89,6 +93,20 @@ export default function AdminArticleRow({
           </View>
         ) : isSelect ? null : (
           <View style={styles.actions}>
+            {onToggleBreaking ? (
+              <Pressable
+                onPress={() => onToggleBreaking(article)}
+                style={[styles.iconAction, article.isBreaking && styles.breakingOn]}
+                accessibilityRole="button"
+                accessibilityLabel={article.isBreaking ? 'Remove breaking label' : 'Mark as breaking'}
+              >
+                <MaterialCommunityIcons
+                  name="flash"
+                  size={16}
+                  color={article.isBreaking ? colors.white : colors.blue300}
+                />
+              </Pressable>
+            ) : null}
             <Pressable
               onPress={() => onEdit(article)}
               style={styles.iconAction}
@@ -166,6 +184,8 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     marginLeft: spacing.sm,
   },
+  labels: { marginTop: spacing.sm },
+  breakingOn: { backgroundColor: colors.breaking },
   deleteAction: { backgroundColor: 'rgba(208,52,44,0.16)' },
   ghostAction: { paddingHorizontal: spacing.sm, height: 30, justifyContent: 'center' },
   ghostLabel: { fontSize: 12, color: colors.textOnNavyFaint },

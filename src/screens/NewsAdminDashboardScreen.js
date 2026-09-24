@@ -55,6 +55,7 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
     categories,
     stories,
     deleteArticle,
+    updateArticle,
     approveArticle,
     rejectArticle,
     archiveArticles,
@@ -689,6 +690,7 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
                       : 'manage'
                   }
                   onEdit={(a) => navigation.navigate('NewsAdminEditor', { articleId: a.id })}
+                  onToggleBreaking={(a) => updateArticle(a.id, { isBreaking: !a.isBreaking })}
                   onDelete={handleDelete}
                   onApprove={approveArticle}
                   onReject={rejectArticle}

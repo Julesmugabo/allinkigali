@@ -19,6 +19,7 @@ import PrimaryButton from '../components/common/PrimaryButton';
 import EmptyState from '../components/common/EmptyState';
 
 import { useNews } from '../context/NewsContext';
+import { EDITOR_LABELS, LABELS } from '../data/articleLabels';
 import { colors, typography, spacing, radius, gutter } from '../theme';
 
 // A thumbnail icon per category so the editor stays short — the feed cards
@@ -53,6 +54,8 @@ export default function NewsAdminEditorScreen({ route, navigation }) {
   const [imageUrl, setImageUrl] = useState(existing?.imageUrl || null);
   const [isBreaking, setIsBreaking] = useState(Boolean(existing?.isBreaking));
   const [isFeatured, setIsFeatured] = useState(Boolean(existing?.isFeatured));
+  const [isTrending, setIsTrending] = useState(Boolean(existing?.isTrending));
+  const [labels, setLabels] = useState(existing?.labels || []);
   const [storyId, setStoryId] = useState(existing?.storyId || null);
   const [newStoryTitle, setNewStoryTitle] = useState('');
   const [destination, setDestination] = useState(existing?.status || 'published');
@@ -123,6 +126,8 @@ export default function NewsAdminEditorScreen({ route, navigation }) {
       imageUrl: imageUrl || null,
       isBreaking,
       isFeatured,
+      isTrending,
+      labels,
       storyId: resolvedStoryId || null,
       status: destination,
       icon: CATEGORY_ICONS[category] || 'newspaper-variant-outline',
@@ -142,7 +147,7 @@ export default function NewsAdminEditorScreen({ route, navigation }) {
 
     navigation.goBack();
   }, [
-    validate, title, category, source, sourceUrl, body, imageUrl, isBreaking, isFeatured,
+    validate, title, category, source, sourceUrl, body, imageUrl, isBreaking, isFeatured, isTrending, labels,
     storyId, newStoryTitle, addStory, destination, editingId, updateArticle, addArticle, navigation,
   ]);
 
@@ -280,6 +285,39 @@ export default function NewsAdminEditorScreen({ route, navigation }) {
               Only one article can be the hero — saving this will un-feature whichever one is now.
             </Text>
           ) : null}
+
+          <Pressable
+            onPress={() => setIsTrending((v) => !v)}
+            accessibilityRole="button"
+            style={styles.breakingRow}
+          >
+            <MaterialCommunityIcons
+              name={isTrending ? 'checkbox-marked' : 'checkbox-blank-outline'}
+              size={20}
+              color={isTrending ? colors.blue500 : colors.blue300}
+            />
+            <Text style={styles.breakingLabel}>Show in the "most read" strip</Text>
+          </Pressable>
+
+          <Text style={styles.label}>Labels (optional)</Text>
+          <View style={styles.chipRow}>
+            {EDITOR_LABELS.map((key) => {
+              const active = labels.includes(key);
+              return (
+                <Pressable
+                  key={key}
+                  onPress={() =>
+                    setLabels((current) => (current.includes(key) ? current.filter((k) => k !== key) : [...current, key]))
+                  }
+                  accessibilityRole="button"
+                  accessibilityState={{ selected: active }}
+                  style={[styles.chip, active && styles.chipActive]}
+                >
+                  <Text style={[styles.chipLabel, active && styles.chipLabelActive]}>{LABELS[key].text}</Text>
+                </Pressable>
+              );
+            })}
+          </View>
 
           <Text style={styles.label}>Live story (optional)</Text>
           <View style={styles.chipRow}>

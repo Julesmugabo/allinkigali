@@ -12,7 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GradientBackground from '../components/common/GradientBackground';
 import BrandLogo from '../components/news/BrandLogo';
-import Badge from '../components/common/Badge';
+import ArticleLabels from '../components/news/ArticleLabels';
 import { useNews } from '../context/NewsContext';
 import { timeAgo } from '../utils/date';
 import { colors, typography, spacing, radius, gutter } from '../theme';
@@ -58,9 +58,7 @@ export default function ArticleDetailScreen({ route, navigation }) {
             <MaterialCommunityIcons name="arrow-left" size={20} color={colors.white} />
           </Pressable>
 
-          {article.isBreaking ? (
-            <Badge label="BREAKING" color={colors.white} backgroundColor={colors.breaking} style={styles.breakingBadge} />
-          ) : null}
+          <ArticleLabels article={article} style={styles.labels} />
         </View>
 
         <View style={styles.content}>
@@ -133,7 +131,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'center',
   },
-  breakingBadge: { position: 'absolute', bottom: spacing.md, left: gutter },
+  labels: { position: 'absolute', bottom: spacing.sm, left: gutter, right: gutter },
   content: { paddingHorizontal: gutter, paddingTop: spacing.lg },
   category: {
     ...typography.caption,

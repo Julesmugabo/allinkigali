@@ -8,7 +8,7 @@ import { View, Text, Pressable, Image, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import BrandLogo from './BrandLogo';
-import Badge from '../common/Badge';
+import ArticleLabels from './ArticleLabels';
 import ViewCount from './ViewCount';
 import { useNews } from '../../context/NewsContext';
 import { timeAgo } from '../../utils/date';
@@ -37,14 +37,7 @@ export default function HeroCard({ article, onPress, onStoryPress }) {
           </View>
         )}
 
-        {article.isBreaking ? (
-          <Badge
-            label="BREAKING"
-            color={colors.white}
-            backgroundColor={colors.breaking}
-            style={styles.breakingBadge}
-          />
-        ) : null}
+        <ArticleLabels article={article} style={styles.labels} />
 
       </View>
 
@@ -110,7 +103,7 @@ const styles = StyleSheet.create({
   },
   image: { width: '100%', height: '100%' },
   placeholder: { alignItems: 'center', justifyContent: 'center' },
-  breakingBadge: { position: 'absolute', top: spacing.md, left: spacing.md },
+  labels: { position: 'absolute', top: spacing.md, left: spacing.md, right: spacing.md },
   body: {
     paddingHorizontal: spacing.md,
     paddingTop: spacing.md,

@@ -12,6 +12,14 @@ const requireRole = require('../middleware/requireRole');
 
 const router = express.Router();
 
+// Labels the news admin can put on an article besides Breaking/Trending.
+const ALLOWED_LABELS = ['exclusive', 'opinion', 'sponsored', 'pick'];
+
+// Keep only known labels, each once — nothing else can end up in the column.
+function cleanLabels(labels) {
+  return Array.isArray(labels) ? ALLOWED_LABELS.filter((l) => labels.includes(l)) : [];
+}
+
 function isNewsAdmin(user) {
   return user && (user.role === 'news' || user.role === 'director');
 }
@@ -34,6 +42,7 @@ function articleToJson(row) {
     views: row.views,
     publishedAt: row.published_at,
     storyId: row.story_id,
+    labels: row.labels || [],
   };
 }
 
@@ -65,6 +74,7 @@ function articleFields(data) {
     isArchived: 'is_archived',
     publishedAt: 'published_at',
     storyId: 'story_id',
+    labels: 'labels',
   };
   const columns = [];
   const values = [];
@@ -128,7 +138,9 @@ router.get('/articles', attachUserIfPresent, async (req, res) => {
 });
 
 router.post('/articles', requireAuth, requireRole('news', 'director'), async (req, res) => {
-  const { columns, values } = articleFields(req.body || {});
+  const body = req.body || {};
+  if ('labels' in body) body.labels = cleanLabels(body.labels);
+  const { columns, values } = articleFields(body);
   if (!columns.length) return res.status(400).json({ error: 'No fields provided.' });
   // The admin explicitly picks the one hero article — enforce that at
   // write time rather than trusting the client, same reasoning as the
@@ -145,7 +157,9 @@ router.post('/articles', requireAuth, requireRole('news', 'director'), async (re
 });
 
 router.patch('/articles/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
-  const { columns, values } = articleFields(req.body || {});
+  const body = req.body || {};
+  if ('labels' in body) body.labels = cleanLabels(body.labels);
+  const { columns, values } = articleFields(body);
   if (!columns.length) return res.status(400).json({ error: 'No fields provided.' });
   if (req.body?.isFeatured) {
     await query('update news_articles set is_featured = false where is_featured and id != $1', [req.params.id]);

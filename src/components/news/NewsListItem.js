@@ -7,6 +7,7 @@ import { View, Text, Pressable, Image, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import ViewCount from './ViewCount';
+import ArticleLabels from './ArticleLabels';
 import { useNews } from '../../context/NewsContext';
 import { timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius, shadows } from '../../theme';
@@ -33,6 +34,7 @@ export default function NewsListItem({ article, onPress }) {
       </View>
 
       <View style={styles.body}>
+        <ArticleLabels article={article} style={styles.labels} />
         <Text style={styles.title} numberOfLines={3}>
           {article.title}
         </Text>
@@ -86,6 +88,7 @@ const styles = StyleSheet.create({
   },
   thumbImage: { width: '100%', height: '100%' },
   body: { flex: 1, marginLeft: spacing.md - 2, minWidth: 0 },
+  labels: { marginBottom: 2 },
   tags: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginLeft: spacing.sm },
   categoryChip: {
     flexShrink: 1,
