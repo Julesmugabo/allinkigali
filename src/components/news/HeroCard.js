@@ -9,6 +9,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import BrandLogo from './BrandLogo';
 import Badge from '../common/Badge';
+import ViewCount from './ViewCount';
 import { useNews } from '../../context/NewsContext';
 import { timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius } from '../../theme';
@@ -66,7 +67,10 @@ export default function HeroCard({ article, onPress, onStoryPress }) {
             <MaterialCommunityIcons name="open-in-new" size={11} color={colors.blue300} />
             <Text style={styles.sourceText}>{article.source}</Text>
           </View>
-          <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
+          <View style={styles.timeViews}>
+            <ViewCount count={article.views || 0} light style={styles.views} />
+            <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
+          </View>
         </View>
 
         {story ? (
@@ -137,6 +141,8 @@ const styles = StyleSheet.create({
     marginLeft: 4,
     fontWeight: '500',
   },
+  timeViews: { flexDirection: 'row', alignItems: 'center' },
+  views: { marginRight: spacing.md },
   time: {
     ...typography.meta,
     color: 'rgba(133,183,235,0.5)',

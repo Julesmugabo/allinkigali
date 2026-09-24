@@ -73,7 +73,7 @@ export default function ArticleDetailScreen({ route, navigation }) {
               <Text style={styles.sourceText}>{article.source}</Text>
             </View>
             <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
-            {article.views ? <Text style={styles.time}>· {article.views} abasomye</Text> : null}
+            <Text style={styles.time}>· {article.views || 0} abasomye</Text>
           </View>
 
           {article.body?.trim() ? (

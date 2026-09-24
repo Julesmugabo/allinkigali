@@ -6,6 +6,7 @@ import React from 'react';
 import { View, Text, Pressable, Image, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
+import ViewCount from './ViewCount';
 import { useNews } from '../../context/NewsContext';
 import { timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius, shadows } from '../../theme';
@@ -39,7 +40,10 @@ export default function NewsListItem({ article, onPress }) {
         </Text>
 
         <View style={styles.footer}>
-          <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
+          <View style={styles.timeViews}>
+            <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
+            <ViewCount count={article.views || 0} style={styles.views} />
+          </View>
           <View style={styles.sourceChip}>
             <MaterialCommunityIcons name="open-in-new" size={10} color={colors.blue600} />
             <Text style={styles.sourceText}>{article.source}</Text>
@@ -89,6 +93,8 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     justifyContent: 'space-between',
   },
+  timeViews: { flexDirection: 'row', alignItems: 'center' },
+  views: { marginLeft: spacing.sm },
   time: {
     ...typography.meta,
     color: colors.textMuted,

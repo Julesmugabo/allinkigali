@@ -61,8 +61,7 @@ export default function AdminArticleRow({
       <View style={styles.metaRow}>
         {categoryLabel ? <Text style={styles.category}>{categoryLabel}</Text> : null}
         <Text style={styles.meta}>
-          {article.source} · {timeAgo(article.publishedAt)}
-          {article.views ? ` · ${article.views} views` : ''}
+          {article.source} · {timeAgo(article.publishedAt)} · {article.views || 0} views
         </Text>
       </View>
 

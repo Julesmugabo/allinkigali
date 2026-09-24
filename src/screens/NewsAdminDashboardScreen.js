@@ -86,6 +86,7 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
   const [renamingKey, setRenamingKey] = useState(null);
   const [renameText, setRenameText] = useState('');
   const [newStoryTitle, setNewStoryTitle] = useState('');
+  const [sortByViews, setSortByViews] = useState(false);
   // Open by default on a desktop-width screen, closed on a phone — but
   // always a toggle, on either size, via the menu button in the top bar.
   const [sidebarOpen, setSidebarOpen] = useState(isWide);
@@ -115,11 +116,13 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
     if (segment === 'pending') base = articles.filter((a) => a.status === 'pending' && !a.isArchived);
     else if (segment === 'archived') base = articles.filter((a) => a.isArchived);
     else base = articles.filter((a) => !a.isArchived);
-    if (!q) return base;
-    return base.filter((a) =>
-      normalise([a.title, a.source, categoryLabelFor(a.category)].join(' ')).includes(q)
-    );
-  }, [articles, segment, search, categoryLabelFor]);
+    if (q) {
+      base = base.filter((a) =>
+        normalise([a.title, a.source, categoryLabelFor(a.category)].join(' ')).includes(q)
+      );
+    }
+    return sortByViews ? [...base].sort((a, b) => (b.views || 0) - (a.views || 0)) : base;
+  }, [articles, segment, search, categoryLabelFor, sortByViews]);
 
   const toggleSelectMode = useCallback(() => {
     setSelectMode((v) => !v);
@@ -432,10 +435,25 @@ export default function NewsAdminDashboardScreen({ navigation, route }) {
                 </View>
               </>
             ) : (
-              <Pressable onPress={toggleSelectMode} style={styles.selectToggle} accessibilityRole="button">
-                <MaterialCommunityIcons name="checkbox-multiple-marked-outline" size={15} color={colors.blue300} />
-                <Text style={styles.selectToggleLabel}>Select to archive</Text>
-              </Pressable>
+              <>
+                <Pressable onPress={toggleSelectMode} style={styles.selectToggle} accessibilityRole="button">
+                  <MaterialCommunityIcons name="checkbox-multiple-marked-outline" size={15} color={colors.blue300} />
+                  <Text style={styles.selectToggleLabel}>Select to archive</Text>
+                </Pressable>
+                <Pressable
+                  onPress={() => setSortByViews((v) => !v)}
+                  style={styles.selectToggle}
+                  accessibilityRole="button"
+                  accessibilityLabel={sortByViews ? 'Sort by newest' : 'Sort by most viewed'}
+                >
+                  <MaterialCommunityIcons
+                    name={sortByViews ? 'eye-check' : 'eye-outline'}
+                    size={15}
+                    color={sortByViews ? colors.white : colors.blue300}
+                  />
+                  <Text style={[styles.selectToggleLabel, sortByViews && styles.sortActiveLabel]}>Most viewed</Text>
+                </Pressable>
+              </>
             )}
           </View>
         ) : null}
@@ -721,6 +739,7 @@ const styles = StyleSheet.create({
   selectToggle: { flexDirection: 'row', alignItems: 'center' },
   selectToggleLabel: { ...typography.caption, color: colors.blue300, fontWeight: '600', marginLeft: spacing.xs },
   selectCount: { ...typography.caption, color: colors.textOnNavy, fontWeight: '600' },
+  sortActiveLabel: { color: colors.white },
   selectActions: { flexDirection: 'row', alignItems: 'center' },
   ghostAction: { paddingHorizontal: spacing.sm, height: 32, justifyContent: 'center' },
   ghostLabel: { fontSize: 12, color: colors.textOnNavyFaint },
