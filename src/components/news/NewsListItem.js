@@ -33,8 +33,6 @@ export default function NewsListItem({ article, onPress }) {
       </View>
 
       <View style={styles.body}>
-        <Text style={[styles.category, { color: accent }]}>{categoryLabel}</Text>
-
         <Text style={styles.title} numberOfLines={3}>
           {article.title}
         </Text>
@@ -44,9 +42,20 @@ export default function NewsListItem({ article, onPress }) {
             <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
             <ViewCount count={article.views || 0} style={styles.views} />
           </View>
-          <View style={styles.sourceChip}>
-            <MaterialCommunityIcons name="open-in-new" size={10} color={colors.blue600} />
-            <Text style={styles.sourceText}>{article.source}</Text>
+          <View style={styles.tags}>
+            {categoryLabel ? (
+              <View style={[styles.categoryChip, { backgroundColor: tint }]}>
+                <Text style={[styles.category, { color: accent }]} numberOfLines={1}>
+                  {categoryLabel}
+                </Text>
+              </View>
+            ) : null}
+            <View style={styles.sourceChip}>
+              <MaterialCommunityIcons name="open-in-new" size={10} color={colors.blue600} />
+              <Text style={styles.sourceText} numberOfLines={1}>
+                {article.source}
+              </Text>
+            </View>
           </View>
         </View>
       </View>
@@ -77,11 +86,18 @@ const styles = StyleSheet.create({
   },
   thumbImage: { width: '100%', height: '100%' },
   body: { flex: 1, marginLeft: spacing.md - 2, minWidth: 0 },
+  tags: { flexShrink: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', marginLeft: spacing.sm },
+  categoryChip: {
+    flexShrink: 1,
+    borderRadius: radius.xs,
+    paddingHorizontal: 6,
+    paddingVertical: 2,
+    marginRight: spacing.xs,
+  },
   category: {
     fontSize: 9.5,
     fontWeight: '700',
     letterSpacing: 0.5,
-    marginBottom: 3,
   },
   title: {
     ...typography.cardTitle,
@@ -100,6 +116,7 @@ const styles = StyleSheet.create({
     color: colors.textMuted,
   },
   sourceChip: {
+    flexShrink: 1,
     flexDirection: 'row',
     alignItems: 'center',
     backgroundColor: colors.blue100,

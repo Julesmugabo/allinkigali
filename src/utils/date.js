@@ -47,7 +47,7 @@ export function formatDateTime(date = new Date()) {
 }
 
 /**
- * Short relative time for news cards: "ubu", "45min", "2h", "3 iminsi".
+ * Short relative time for news cards: "ubu", "45min", "2h", "3 days".
  */
 export function timeAgo(isoOrDate, now = new Date()) {
   const then = isoOrDate instanceof Date ? isoOrDate : new Date(isoOrDate);
@@ -63,7 +63,7 @@ export function timeAgo(isoOrDate, now = new Date()) {
 
   const days = Math.floor(hours / 24);
   if (days === 1) return 'ejo';
-  if (days < 7) return `${days} iminsi`;
+  if (days < 7) return `${days} days`;
 
   const weeks = Math.floor(days / 7);
   if (weeks < 5) return `${weeks} icyumweru`;
