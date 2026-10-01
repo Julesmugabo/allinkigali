@@ -13,6 +13,7 @@ import { View, Text, FlatList, ActivityIndicator, Keyboard, StyleSheet } from 'r
 import ServiceSearchBar from './ServiceSearchBar';
 import BusinessCard from './BusinessCard';
 import FlierCarousel from './FlierCarousel';
+import MarketplaceMenu from './MarketplaceMenu';
 import EmptyState from '../common/EmptyState';
 
 import { useBusinesses } from '../../context/BusinessContext';
@@ -92,6 +93,8 @@ export default function ServicesPanel({ navigation, topPadding }) {
         onChangeText={setQuery}
         onSubmit={() => runSearch(query)}
       />
+
+      <MarketplaceMenu navigation={navigation} />
 
       <FlierCarousel
         fliers={fliers}

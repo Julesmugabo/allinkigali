@@ -22,6 +22,7 @@ import { BookingProvider } from './src/context/BookingContext';
 import { FliersProvider } from './src/context/FliersContext';
 import { NewsProvider } from './src/context/NewsContext';
 import { AdsProvider } from './src/context/AdsContext';
+import { PropertyProvider } from './src/context/PropertyContext';
 import { navTheme, colors } from './src/theme';
 
 export default function App() {
@@ -35,18 +36,20 @@ export default function App() {
                 <FliersProvider>
                   <NewsProvider>
                     <AdsProvider>
-                      {/* Fixes a real bug: an elastic/overscroll bounce on a
-                          scrollable screen briefly reveals whatever sits
-                          behind it. With no background here, that was the
-                          page's default white — a jarring flash, especially
-                          on the dark navy screens (Shop, Me, Admin). */}
-                      <View style={{ flex: 1, backgroundColor: colors.navy800 }}>
-                        <StatusBar style="light" />
-                        <InstallAppBanner />
-                        <NavigationContainer theme={navTheme}>
-                          <AppNavigator />
-                        </NavigationContainer>
-                      </View>
+                      <PropertyProvider>
+                        {/* Fixes a real bug: an elastic/overscroll bounce on a
+                            scrollable screen briefly reveals whatever sits
+                            behind it. With no background here, that was the
+                            page's default white — a jarring flash, especially
+                            on the dark navy screens (Shop, Me, Admin). */}
+                        <View style={{ flex: 1, backgroundColor: colors.navy800 }}>
+                          <StatusBar style="light" />
+                          <InstallAppBanner />
+                          <NavigationContainer theme={navTheme}>
+                            <AppNavigator />
+                          </NavigationContainer>
+                        </View>
+                      </PropertyProvider>
                     </AdsProvider>
                   </NewsProvider>
                 </FliersProvider>
