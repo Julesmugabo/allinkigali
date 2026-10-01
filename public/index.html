@@ -22,10 +22,13 @@
 
     <!-- The `react-native-web` recommended style reset: https://necolas.github.io/react-native-web/docs/setup/#root-element -->
     <style id="expo-reset">
-      /* These styles make the body full-height */
+      /* These styles make the body full-height. The background colour is a
+         backstop against the same white-flash bug App.js's root View fixes —
+         this covers the moment before React has painted anything. */
       html,
       body {
         height: 100%;
+        background-color: #042c53;
       }
       /* These styles disable body scrolling if you are using <ScrollView> */
       body {
