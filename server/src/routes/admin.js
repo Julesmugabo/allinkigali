@@ -72,8 +72,9 @@ router.get('/admins', requireAuth, requireRole('director'), async (_req, res) =>
 router.post('/assign-role', requireAuth, requireRole('director'), async (req, res) => {
   const { email, role } = req.body || {};
   if (!email || !email.trim()) return res.status(400).json({ error: 'email is required.' });
-  if (role !== null && role !== 'news' && role !== 'sellers') {
-    return res.status(400).json({ error: 'role must be "news", "sellers", or null to revoke.' });
+  const ASSIGNABLE = ['news', 'sellers', 'ibibanza', 'inzuzamacye', 'salehouse', 'allingadget', 'uruhurwiza'];
+  if (role !== null && !ASSIGNABLE.includes(role)) {
+    return res.status(400).json({ error: `role must be one of: ${ASSIGNABLE.join(', ')}, or null to revoke.` });
   }
 
   const { rows } = await query(

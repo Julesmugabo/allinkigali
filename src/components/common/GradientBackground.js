@@ -13,7 +13,7 @@ export default function GradientBackground({
   children,
   style,
   colorsOverride,
-  showBlooms = true,
+  showBlooms = false,
   start = { x: 0.1, y: 0 },
   end = { x: 0.9, y: 1 },
 }) {

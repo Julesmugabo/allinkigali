@@ -20,6 +20,8 @@ import LandDetailScreen from '../screens/LandDetailScreen';
 import PropertyMarketScreen from '../screens/PropertyMarketScreen';
 import PropertyDetailScreen from '../screens/PropertyDetailScreen';
 import ListPropertyScreen from '../screens/ListPropertyScreen';
+import ListLandScreen from '../screens/ListLandScreen';
+import ListingPlansScreen from '../screens/ListingPlansScreen';
 import ProductMarketScreen from '../screens/ProductMarketScreen';
 import ProductDetailScreen from '../screens/ProductDetailScreen';
 
@@ -45,6 +47,8 @@ export default function ShopStack() {
       <Stack.Screen name="PropertyMarket" component={PropertyMarketScreen} />
       <Stack.Screen name="PropertyDetail" component={PropertyDetailScreen} />
       <Stack.Screen name="ListProperty" component={ListPropertyScreen} />
+      <Stack.Screen name="ListLand" component={ListLandScreen} />
+      <Stack.Screen name="ListingPlans" component={ListingPlansScreen} />
 
       <Stack.Screen name="ProductMarket" component={ProductMarketScreen} />
       <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />

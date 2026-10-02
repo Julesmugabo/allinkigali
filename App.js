@@ -23,6 +23,7 @@ import { FliersProvider } from './src/context/FliersContext';
 import { NewsProvider } from './src/context/NewsContext';
 import { AdsProvider } from './src/context/AdsContext';
 import { PropertyProvider } from './src/context/PropertyContext';
+import { LandProvider } from './src/context/LandContext';
 import { navTheme, colors } from './src/theme';
 
 export default function App() {
@@ -37,6 +38,7 @@ export default function App() {
                   <NewsProvider>
                     <AdsProvider>
                       <PropertyProvider>
+                        <LandProvider>
                         {/* Fixes a real bug: an elastic/overscroll bounce on a
                             scrollable screen briefly reveals whatever sits
                             behind it. With no background here, that was the
@@ -49,6 +51,7 @@ export default function App() {
                             <AppNavigator />
                           </NavigationContainer>
                         </View>
+                        </LandProvider>
                       </PropertyProvider>
                     </AdsProvider>
                   </NewsProvider>

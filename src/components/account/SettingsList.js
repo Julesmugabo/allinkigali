@@ -17,17 +17,26 @@ import { showAlert } from '../../utils/showAlert';
 import { colors, typography, spacing, radius } from '../../theme';
 
 const ADMIN_ROW_LABEL = {
-  news: 'Access the News dashboard',
-  sellers: 'Access the Sales Partners dashboard',
-  director: 'Access the Director dashboard',
+  news:        'Access the News dashboard',
+  sellers:     'Access the Sales Partners dashboard',
+  director:    'Access the Director dashboard',
+  ibibanza:    'Manage Ibibanza (land listings)',
+  inzuzamacye: 'Manage Inzu Zamacye (rentals)',
+  salehouse:   'Manage House for Sale listings',
+  allingadget: 'Manage Allingadget products',
+  uruhurwiza:  'Manage Uruhu Rwiza products',
 };
 
-// Which dashboards each admin role gets a row for. The director can open all
-// three so it doesn't have to go through the Director dashboard first.
+// Which dashboard rows each role gets. Director sees everything.
 const ROLE_DASHBOARDS = {
-  news: ['news'],
-  sellers: ['sellers'],
-  director: ['director', 'news', 'sellers'],
+  news:        ['news'],
+  sellers:     ['sellers'],
+  director:    ['director', 'news', 'sellers', 'ibibanza', 'inzuzamacye', 'salehouse', 'allingadget', 'uruhurwiza'],
+  ibibanza:    ['ibibanza'],
+  inzuzamacye: ['inzuzamacye'],
+  salehouse:   ['salehouse'],
+  allingadget: ['allingadget'],
+  uruhurwiza:  ['uruhurwiza'],
 };
 
 function Group({ label, children }) {
@@ -90,6 +99,11 @@ export default function SettingsList({ user, navigation, myBusiness, waitingRequ
                 { text: 'Log in', onPress: () => navigation.navigate('Login') },
               ])
             }
+          />
+          <MenuRow
+            icon="home-city-outline"
+            label="Property & land listing plans"
+            onPress={() => navigation.navigate('ShopTab', { screen: 'ListingPlans' })}
             isLast
           />
         </Group>
@@ -135,6 +149,11 @@ export default function SettingsList({ user, navigation, myBusiness, waitingRequ
           label="My service requests"
           badgeCount={waitingRequests || null}
           onPress={() => navigation.navigate('MyRequests')}
+        />
+        <MenuRow
+          icon="home-city-outline"
+          label="Property & land listing plans"
+          onPress={() => navigation.navigate('ShopTab', { screen: 'ListingPlans' })}
           isLast
         />
       </Group>

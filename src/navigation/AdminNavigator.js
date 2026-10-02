@@ -18,6 +18,9 @@ import SellerDashboardScreen from '../screens/SellerDashboardScreen';
 import SellerPlansScreen from '../screens/SellerPlansScreen';
 import BusinessDetailScreen from '../screens/BusinessDetailScreen';
 import DirectorAdminDashboardScreen from '../screens/DirectorAdminDashboardScreen';
+import IbibanzaDashboardScreen from '../screens/IbibanzaDashboardScreen';
+import PropertyAdminDashboardScreen from '../screens/PropertyAdminDashboardScreen';
+import ProductAdminDashboardScreen from '../screens/ProductAdminDashboardScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -54,6 +57,13 @@ export default function AdminNavigator() {
       <Stack.Screen name="BusinessDetail" component={BusinessDetailScreen} />
 
       <Stack.Screen name="DirectorAdminDashboard" component={DirectorAdminDashboardScreen} />
+
+      {/* Marketplace admin dashboards — one role per store/mode */}
+      <Stack.Screen name="IbibanzaDashboard"     component={IbibanzaDashboardScreen} />
+      <Stack.Screen name="InzuZamacyeDashboard"  component={PropertyAdminDashboardScreen} initialParams={{ mode: 'rent' }} />
+      <Stack.Screen name="SaleHouseDashboard"    component={PropertyAdminDashboardScreen} initialParams={{ mode: 'sale' }} />
+      <Stack.Screen name="AllingadgetDashboard"  component={ProductAdminDashboardScreen}  initialParams={{ store: 'allingadget' }} />
+      <Stack.Screen name="UruhuRwizaDashboard"   component={ProductAdminDashboardScreen}  initialParams={{ store: 'uruhu-rwiza' }} />
     </Stack.Navigator>
   );
 }

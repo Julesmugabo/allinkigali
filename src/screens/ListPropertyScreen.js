@@ -6,25 +6,29 @@
  * No server call yet — that comes once the browsing experience is approved.
  */
 import React, { useCallback, useState } from 'react';
-import { View, Text, Pressable, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { View, Text, Image, Pressable, ScrollView, KeyboardAvoidingView, Platform, ActivityIndicator, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GradientBackground from '../components/common/GradientBackground';
 import TextField from '../components/common/TextField';
 import PrimaryButton from '../components/common/PrimaryButton';
-import EmptyState from '../components/common/EmptyState';
 import SettingsHeader from '../components/account/SettingsHeader';
 
 import { useProperties } from '../context/PropertyContext';
 import { PROVINCES, getDistricts, getSectors } from '../data/rwandaLocations';
 import { PROPERTY_FEATURES } from '../data/propertyListings';
 import { isValidPhone } from '../utils/format';
+import { getToken } from '../services/apiClient';
+import { pickAndUpload } from '../utils/uploadPhoto';
 import { colors, typography, spacing, radius, gutter } from '../theme';
 
-export default function ListPropertyScreen({ navigation }) {
+const MAX_PHOTOS = 5;
+
+export default function ListPropertyScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const { addProperty } = useProperties();
+  const listingType = route.params?.listingType === 'sale' ? 'sale' : 'rent';
 
   const [title, setTitle] = useState('');
   const [province, setProvince] = useState(null);
@@ -37,15 +41,50 @@ export default function ListPropertyScreen({ navigation }) {
   const [phone, setPhone] = useState('');
   const [description, setDescription] = useState('');
   const [features, setFeatures] = useState([]);
+  const [photos, setPhotos] = useState([]);
+  const [uploadingIdx, setUploadingIdx] = useState(null);
   const [errors, setErrors] = useState({});
   const [isSaving, setIsSaving] = useState(false);
-  const [done, setDone] = useState(false);
 
   const toggleFeature = useCallback((f) => {
     setFeatures((current) => (current.includes(f) ? current.filter((x) => x !== f) : [...current, f]));
   }, []);
 
-  const handleSubmit = useCallback(() => {
+  const handlePickPhoto = useCallback(async (idx) => {
+    try {
+      setUploadingIdx(idx);
+      const token = await getToken();
+      const url = await pickAndUpload(token);
+      if (!url) return;
+      setPhotos((prev) => {
+        const next = [...prev];
+        if (idx < next.length) {
+          next[idx] = { ...next[idx], url };
+        } else {
+          next.push({ url, label: '' });
+        }
+        return next;
+      });
+    } catch (e) {
+      setErrors((prev) => ({ ...prev, photos: e.message || 'Photo upload failed.' }));
+    } finally {
+      setUploadingIdx(null);
+    }
+  }, []);
+
+  const handlePhotoLabel = useCallback((idx, label) => {
+    setPhotos((prev) => {
+      const next = [...prev];
+      next[idx] = { ...next[idx], label };
+      return next;
+    });
+  }, []);
+
+  const handleRemovePhoto = useCallback((idx) => {
+    setPhotos((prev) => prev.filter((_, i) => i !== idx));
+  }, []);
+
+  const handleSubmit = useCallback(async () => {
     const next = {};
     if (!title.trim()) next.title = 'Give your listing a title.';
     if (!province) next.province = 'Pick a province.';
@@ -61,9 +100,9 @@ export default function ListPropertyScreen({ navigation }) {
     if (Object.keys(next).length) return;
 
     setIsSaving(true);
-    setTimeout(() => {
-      addProperty({
-        listingType: 'rent',
+    try {
+      await addProperty({
+        listingType,
         title: title.trim(),
         province,
         district,
@@ -75,28 +114,19 @@ export default function ListPropertyScreen({ navigation }) {
         phone: phone.trim(),
         description: description.trim(),
         features,
+        photos: photos.filter((p) => p.url),
       });
+      navigation.replace('ListingPlans', {
+        listingType,
+        price: Number(price),
+        title: title.trim(),
+      });
+    } catch {
+      setErrors({ _global: 'Could not save your listing. Please try again.' });
+    } finally {
       setIsSaving(false);
-      setDone(true);
-    }, 400);
-  }, [title, province, district, sector, price, bedrooms, bathrooms, sizeSqm, phone, description, features, addProperty]);
-
-  if (done) {
-    return (
-      <GradientBackground>
-        <View style={[styles.doneWrap, { paddingTop: insets.top + spacing.xxl }]}>
-          <EmptyState
-            tone="dark"
-            icon="check-circle-outline"
-            title="Your house is listed!"
-            message={`${title} now shows up in Inzu zamacye.`}
-            actionLabel="Back to Inzu zamacye"
-            onActionPress={() => navigation.goBack()}
-          />
-        </View>
-      </GradientBackground>
-    );
-  }
+    }
+  }, [listingType, title, province, district, sector, price, bedrooms, bathrooms, sizeSqm, phone, description, features, addProperty, navigation]);
 
   const districts = province ? getDistricts(province) : [];
   const sectors = province && district ? getSectors(province, district) : [];
@@ -109,7 +139,7 @@ export default function ListPropertyScreen({ navigation }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <SettingsHeader title="List your house for rent" onBack={() => navigation.goBack()} />
+          <SettingsHeader title={listingType === 'sale' ? 'List your house for sale' : 'List your house for rent'} onBack={() => navigation.goBack()} />
 
           <TextField
             label="Title"
@@ -215,7 +245,49 @@ export default function ListPropertyScreen({ navigation }) {
             multiline
           />
 
-          <PrimaryButton label="List my house" icon="check" onPress={handleSubmit} loading={isSaving} style={styles.submit} />
+          {/* Photos */}
+          <Text style={styles.label}>Photos (optional, up to {MAX_PHOTOS})</Text>
+          <Text style={styles.photoHint}>Add photos of each room — living room, bedroom, kitchen, etc.</Text>
+          {photos.map((photo, idx) => (
+            <View key={idx} style={styles.photoRow}>
+              <Pressable onPress={() => handlePickPhoto(idx)} style={styles.photoThumb} accessibilityRole="button" accessibilityLabel="Change photo">
+                {uploadingIdx === idx
+                  ? <ActivityIndicator size="small" color={colors.blue300} />
+                  : photo.url
+                    ? <Image source={{ uri: photo.url }} style={styles.photoThumbImg} resizeMode="cover" />
+                    : <MaterialCommunityIcons name="image-outline" size={28} color={colors.blue300} />}
+              </Pressable>
+              <View style={styles.photoMeta}>
+                <TextField
+                  value={photo.label}
+                  onChangeText={(t) => handlePhotoLabel(idx, t)}
+                  placeholder={`e.g. Living room, Bedroom ${idx + 1}`}
+                />
+              </View>
+              <Pressable onPress={() => handleRemovePhoto(idx)} style={styles.photoRemove} accessibilityRole="button" accessibilityLabel="Remove photo">
+                <MaterialCommunityIcons name="close-circle" size={20} color={colors.breaking} />
+              </Pressable>
+            </View>
+          ))}
+          {photos.length < MAX_PHOTOS && (
+            <Pressable
+              onPress={() => handlePickPhoto(photos.length)}
+              style={styles.addPhotoBtn}
+              accessibilityRole="button"
+              disabled={uploadingIdx != null}
+            >
+              {uploadingIdx === photos.length
+                ? <ActivityIndicator size="small" color={colors.white} />
+                : <MaterialCommunityIcons name="camera-plus-outline" size={18} color={colors.white} />}
+              <Text style={styles.addPhotoBtnLabel}>
+                {photos.length === 0 ? 'Add photos' : 'Add another photo'}
+              </Text>
+            </Pressable>
+          )}
+          {errors.photos ? <Text style={styles.errorText}>{errors.photos}</Text> : null}
+
+          {errors._global ? <Text style={styles.errorGlobal}>{errors._global}</Text> : null}
+          <PrimaryButton label={listingType === 'sale' ? 'List my house for sale' : 'List my house for rent'} icon="check" onPress={handleSubmit} loading={isSaving} style={styles.submit} />
         </ScrollView>
       </KeyboardAvoidingView>
     </GradientBackground>
@@ -225,7 +297,7 @@ export default function ListPropertyScreen({ navigation }) {
 const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: gutter },
-  doneWrap: { flex: 1, paddingHorizontal: gutter },
+  errorGlobal: { fontSize: 13, color: colors.breaking, marginBottom: spacing.md, textAlign: 'center' },
   label: {
     ...typography.caption,
     fontWeight: '600',
@@ -252,4 +324,31 @@ const styles = StyleSheet.create({
   row3: { flexDirection: 'row' },
   row3Item: { flex: 1, marginRight: spacing.sm },
   submit: { marginTop: spacing.md, marginBottom: spacing.xl },
+
+  photoHint: { fontSize: 12, color: colors.textOnNavyFaint, marginBottom: spacing.sm },
+  photoRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.sm },
+  photoThumb: {
+    width: 58, height: 58,
+    borderRadius: radius.md,
+    backgroundColor: 'rgba(55,138,221,0.14)',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(133,183,235,0.3)',
+    alignItems: 'center', justifyContent: 'center',
+    marginRight: spacing.sm,
+    overflow: 'hidden',
+  },
+  photoThumbImg: { width: '100%', height: '100%' },
+  photoMeta: { flex: 1 },
+  photoRemove: { padding: spacing.xs, marginLeft: spacing.xs },
+  addPhotoBtn: {
+    flexDirection: 'row', alignItems: 'center', justifyContent: 'center',
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: 'rgba(133,183,235,0.4)',
+    borderRadius: radius.md,
+    paddingVertical: spacing.md,
+    backgroundColor: 'rgba(55,138,221,0.14)',
+    marginBottom: spacing.sm,
+    gap: spacing.sm,
+  },
+  addPhotoBtnLabel: { fontSize: 13.5, fontWeight: '600', color: colors.white },
 });

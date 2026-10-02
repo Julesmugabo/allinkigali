@@ -25,7 +25,11 @@ const bookingsRoutes = require('./routes/bookings');
 const ordersRoutes = require('./routes/orders');
 const adsRoutes = require('./routes/ads');
 const fliersRoutes = require('./routes/fliers');
-const adminRoutes = require('./routes/admin');
+const adminRoutes    = require('./routes/admin');
+const landRoutes     = require('./routes/land');
+const propertiesRoutes = require('./routes/properties');
+const productsRoutes = require('./routes/products');
+const uploadRoutes   = require('./routes/upload');
 
 const app = express();
 app.use(cors());
@@ -40,7 +44,11 @@ app.use('/bookings', bookingsRoutes);
 app.use('/orders', ordersRoutes);
 app.use('/ads', adsRoutes);
 app.use('/fliers', fliersRoutes);
-app.use('/admin', adminRoutes);
+app.use('/admin',      adminRoutes);
+app.use('/land',       landRoutes);
+app.use('/properties', propertiesRoutes);
+app.use('/products',   productsRoutes);
+app.use('/upload',     uploadRoutes);
 
 // Last-resort handler so a route bug returns JSON, not an HTML stack trace,
 // to a client that only ever expects JSON.

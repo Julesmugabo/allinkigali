@@ -1,28 +1,32 @@
 /**
- * adminAuth.js — Kwinjira mu buyobozi (admin access).
+ * adminAuth.js — Admin roles and route metadata.
  *
- * There's no separate admin login screen any more — everyone signs in
- * through the same form in the Me tab (AccountScreen.js / SignInForm.js),
- * which talks to our Express + Postgres backend (server/src/routes/auth.js).
- * The signed-in account's `role` (from the `users` table) decides whether
- * an "Ubuyobozi" row even appears, and which dashboard it opens.
- * A News/Sellers role can only ever be granted by a director, from inside
- * the Director Dashboard (server/src/routes/admin.js's /assign-role) — the
- * one thing that never changed is that nobody can grant themselves an admin
- * role through ordinary sign-up; a director account itself is still only
- * ever created directly against the database (see server/src/createAdmin.js).
+ * Original 3 roles (news, sellers, director) + 5 marketplace admin roles
+ * added for the marketplace dashboards. Director accounts are still only ever
+ * created directly against the database via createAdmin.js. All other roles
+ * are granted by the director through the Director Dashboard → Admins tab.
  */
 
 export const ADMIN_ROLES = {
-  NEWS: 'news',
-  SELLERS: 'sellers',
-  DIRECTOR: 'director',
+  NEWS:        'news',
+  SELLERS:     'sellers',
+  DIRECTOR:    'director',
+  IBIBANZA:    'ibibanza',
+  INZUZAMACYE: 'inzuzamacye',
+  SALEHOUSE:   'salehouse',
+  ALLINGADGET: 'allingadget',
+  URUHURWIZA:  'uruhurwiza',
 };
 
 export const ROLE_META = {
-  [ADMIN_ROLES.NEWS]: { label: 'News Dashboard', icon: 'newspaper-variant-outline', route: 'NewsAdminDashboard' },
-  [ADMIN_ROLES.SELLERS]: { label: 'Sales Partners Dashboard', icon: 'storefront-outline', route: 'SellersAdminDashboard' },
-  [ADMIN_ROLES.DIRECTOR]: { label: 'Managing Director Dashboard', icon: 'chart-box-outline', route: 'DirectorAdminDashboard' },
+  [ADMIN_ROLES.NEWS]:        { label: 'News Dashboard',           icon: 'newspaper-variant-outline', route: 'NewsAdminDashboard'      },
+  [ADMIN_ROLES.SELLERS]:     { label: 'Sales Partners Dashboard', icon: 'storefront-outline',        route: 'SellersAdminDashboard'   },
+  [ADMIN_ROLES.DIRECTOR]:    { label: 'Director Dashboard',       icon: 'chart-box-outline',         route: 'DirectorAdminDashboard'  },
+  [ADMIN_ROLES.IBIBANZA]:    { label: 'Ibibanza Dashboard',       icon: 'terrain',                   route: 'IbibanzaDashboard'       },
+  [ADMIN_ROLES.INZUZAMACYE]: { label: 'Inzu Zamacye Dashboard',   icon: 'home-search-outline',       route: 'InzuZamacyeDashboard'    },
+  [ADMIN_ROLES.SALEHOUSE]:   { label: 'House for Sale Dashboard', icon: 'home-city-outline',         route: 'SaleHouseDashboard'      },
+  [ADMIN_ROLES.ALLINGADGET]: { label: 'Allingadget Dashboard',    icon: 'laptop',                    route: 'AllingadgetDashboard'    },
+  [ADMIN_ROLES.URUHURWIZA]:  { label: 'Uruhu Rwiza Dashboard',    icon: 'face-woman-outline',        route: 'UruhuRwizaDashboard'     },
 };
 
 export default { ADMIN_ROLES, ROLE_META };

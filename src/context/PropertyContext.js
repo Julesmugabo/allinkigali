@@ -1,48 +1,83 @@
 /**
- * PropertyContext.js — Inzu zamacye / House for Sale listings.
- *
- * Front-end-only for now (per explicit instruction — build the browsing
- * experience first, wire a real backend later): starts from the seed mock
- * data and keeps anything a seller "registers" in memory for the rest of the
- * session, the same pattern CartContext uses. Nothing here is persisted or
- * sent to a server yet.
+ * PropertyContext.js — Inzu zamacye / House for Sale listings, backed by the
+ * real API. Falls back to seed data on network failure.
  */
-import React, { createContext, useContext, useMemo, useState, useCallback } from 'react';
+import React, {
+  createContext, useContext, useState, useCallback, useEffect, useMemo,
+} from 'react';
+import { apiFetch } from '../services/apiClient';
 import { SEED_PROPERTIES } from '../data/propertyListings';
 
 const PropertyContext = createContext(null);
 
 export function PropertyProvider({ children }) {
-  const [properties, setProperties] = useState(SEED_PROPERTIES);
+  const [properties,  setProperties]  = useState(SEED_PROPERTIES);
+  const [isLoading,   setIsLoading]   = useState(true);
+  const [loadFailed,  setLoadFailed]  = useState(false);
 
-  const addProperty = useCallback((data) => {
-    const newProperty = {
-      id: `rt-${Date.now()}`,
-      listingType: 'rent',
-      features: [],
-      createdAt: new Date().toISOString(),
-      ...data,
-    };
-    setProperties((current) => [newProperty, ...current]);
-    return newProperty;
+  const load = useCallback(async () => {
+    setIsLoading(true);
+    setLoadFailed(false);
+    try {
+      const data = await apiFetch('/properties');
+      if (data && data.length > 0) setProperties(data);
+    } catch {
+      setLoadFailed(true);
+    } finally {
+      setIsLoading(false);
+    }
   }, []);
 
-  const getPropertyById = useCallback((id) => properties.find((p) => p.id === id) || null, [properties]);
+  useEffect(() => { load(); }, [load]);
 
-  const value = useMemo(
-    () => ({ properties, addProperty, getPropertyById }),
-    [properties, addProperty, getPropertyById]
+  const getPropertyById = useCallback(
+    (id) => properties.find((p) => p.id === id) || null,
+    [properties],
   );
+
+  // Owner self-listing — POSTs to /properties then refreshes
+  const addProperty = useCallback(async (data) => {
+    const created = await apiFetch('/properties', { method: 'POST', body: data });
+    await load();
+    return created;
+  }, [load]);
+
+  // Admin mutations
+  const pinProperty = useCallback(async (id) => {
+    await apiFetch(`/properties/${id}/pin`, { method: 'PATCH' });
+    await load();
+  }, [load]);
+
+  const toggleStatus = useCallback(async (id) => {
+    await apiFetch(`/properties/${id}/status`, { method: 'PATCH' });
+    await load();
+  }, [load]);
+
+  const removeProperty = useCallback(async (id) => {
+    await apiFetch(`/properties/${id}`, { method: 'DELETE' });
+    setProperties((prev) => prev.filter((p) => p.id !== id));
+  }, []);
+
+  const updatePropertyPhotos = useCallback(async (id, photos) => {
+    const updated = await apiFetch(`/properties/${id}/photos`, { method: 'PATCH', body: { photos } });
+    setProperties((prev) => prev.map((p) => (p.id === id ? updated : p)));
+  }, []);
+
+  const value = useMemo(() => ({
+    properties, isLoading, loadFailed,
+    reload: load,
+    getPropertyById,
+    addProperty,
+    pinProperty, toggleStatus, removeProperty, updatePropertyPhotos,
+  }), [properties, isLoading, loadFailed, load, getPropertyById, addProperty, pinProperty, toggleStatus, removeProperty, updatePropertyPhotos]);
 
   return <PropertyContext.Provider value={value}>{children}</PropertyContext.Provider>;
 }
 
 export function useProperties() {
-  const context = useContext(PropertyContext);
-  if (!context) {
-    throw new Error('useProperties must be used inside <PropertyProvider>.');
-  }
-  return context;
+  const ctx = useContext(PropertyContext);
+  if (!ctx) throw new Error('useProperties must be used inside <PropertyProvider>.');
+  return ctx;
 }
 
 export default PropertyContext;

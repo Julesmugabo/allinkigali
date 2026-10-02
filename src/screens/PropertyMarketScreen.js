@@ -4,7 +4,7 @@
  * style of Zillow: photo-led cards, price, beds/baths, filter by location.
  */
 import React, { useMemo, useState } from 'react';
-import { View, Text, FlatList, Pressable, StyleSheet } from 'react-native';
+import { View, Text, FlatList, Pressable, ScrollView, StyleSheet, Image } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,9 +13,11 @@ import EmptyState from '../components/common/EmptyState';
 import PrimaryButton from '../components/common/PrimaryButton';
 import SettingsHeader from '../components/account/SettingsHeader';
 import LocationFilter from '../components/shop/LocationFilter';
+import PropertyMap from '../components/shop/PropertyMap';
 
 import { useProperties } from '../context/PropertyContext';
 import { PROVINCES } from '../data/rwandaLocations';
+import { getDistrictCoords } from '../data/districtCoords';
 import { formatPrice } from '../utils/format';
 import { colors, typography, spacing, radius, gutter } from '../theme';
 
@@ -38,6 +40,7 @@ export default function PropertyMarketScreen({ route, navigation }) {
   const [district, setDistrict] = useState(null);
   const [sector, setSector] = useState(null);
   const [minBeds, setMinBeds] = useState(null);
+  const [viewMode, setViewMode] = useState('list'); // 'list' | 'map'
 
   const listings = useMemo(() => {
     return properties.filter((p) => {
@@ -50,19 +53,35 @@ export default function PropertyMarketScreen({ route, navigation }) {
     });
   }, [properties, mode, province, district, sector, minBeds]);
 
+  // Listings with approximate coordinates for the map
+  const mappableListings = useMemo(() => {
+    return listings.map((p) => {
+      const coords = getDistrictCoords(p.district);
+      return coords ? { ...p, lat: coords.lat, lng: coords.lng } : p;
+    });
+  }, [listings]);
+
   const header = (
     <View>
       <SettingsHeader title={meta.title} onBack={() => navigation.goBack()} />
       <Text style={styles.subtitle}>{meta.subtitle}</Text>
 
-      {mode === 'rent' ? (
+      <View style={styles.ctaRow}>
         <PrimaryButton
-          label="List your house for rent"
+          label={mode === 'sale' ? 'List your house' : 'List your house'}
           icon="plus"
-          onPress={() => navigation.navigate('ListProperty')}
+          onPress={() => navigation.navigate('ListProperty', { listingType: mode })}
           style={styles.listButton}
         />
-      ) : null}
+        <Pressable
+          onPress={() => navigation.navigate('ListingPlans', { listingType: mode, locked: true })}
+          accessibilityRole="button"
+          style={styles.plansBtn}
+        >
+          <MaterialCommunityIcons name="tag-outline" size={16} color={colors.blue300} />
+          <Text style={styles.plansBtnLabel}>View plans</Text>
+        </Pressable>
+      </View>
 
       <LocationFilter
         province={province}
@@ -87,9 +106,48 @@ export default function PropertyMarketScreen({ route, navigation }) {
         })}
       </View>
 
-      <Text style={styles.resultsLabel}>{listings.length} {listings.length === 1 ? 'house' : 'houses'} found</Text>
+      {/* List / Map toggle */}
+      <View style={styles.viewToggleRow}>
+        <Text style={styles.resultsLabel}>{listings.length} {listings.length === 1 ? 'house' : 'houses'} found</Text>
+        <View style={styles.viewToggle}>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setViewMode('list')}
+            style={[styles.toggleBtn, viewMode === 'list' && styles.toggleBtnActive]}
+          >
+            <MaterialCommunityIcons name="view-list-outline" size={14} color={viewMode === 'list' ? colors.white : colors.blue300} />
+            <Text style={[styles.toggleLabel, viewMode === 'list' && styles.toggleLabelActive]}>List</Text>
+          </Pressable>
+          <Pressable
+            accessibilityRole="button"
+            onPress={() => setViewMode('map')}
+            style={[styles.toggleBtn, viewMode === 'map' && styles.toggleBtnActive]}
+          >
+            <MaterialCommunityIcons name="map-outline" size={14} color={viewMode === 'map' ? colors.white : colors.blue300} />
+            <Text style={[styles.toggleLabel, viewMode === 'map' && styles.toggleLabelActive]}>Map</Text>
+          </Pressable>
+        </View>
+      </View>
     </View>
   );
+
+  if (viewMode === 'map') {
+    return (
+      <GradientBackground>
+        <ScrollView
+          showsVerticalScrollIndicator={false}
+          contentContainerStyle={{ paddingBottom: insets.bottom + spacing.huge }}
+        >
+          {header}
+          <PropertyMap
+            listings={mappableListings}
+            onSelect={(id) => navigation.navigate('PropertyDetail', { id })}
+            style={styles.mapFull}
+          />
+        </ScrollView>
+      </GradientBackground>
+    );
+  }
 
   return (
     <GradientBackground>
@@ -107,23 +165,48 @@ export default function PropertyMarketScreen({ route, navigation }) {
             accessibilityRole="button"
             accessibilityLabel={item.title}
           >
-            <View style={styles.cardIconWell}>
-              <MaterialCommunityIcons name="home-outline" size={22} color={colors.blue300} />
+            {/* Photo well */}
+            <View style={styles.photoWell}>
+              {item.photos?.[0]?.url
+                ? <Image source={{ uri: item.photos[0].url }} style={styles.photoWellImage} resizeMode="cover" />
+                : <MaterialCommunityIcons name={mode === 'rent' ? 'home-search-outline' : 'home-city-outline'} size={40} color={colors.blue300} />}
+              {/* Status badge */}
+              <View style={styles.statusBadge}>
+                <Text style={styles.statusBadgeLabel}>{mode === 'rent' ? 'For rent' : 'For sale'}</Text>
+              </View>
+              {/* Heart */}
+              <View style={styles.heartBtn}>
+                <MaterialCommunityIcons name="heart-outline" size={16} color={colors.white} />
+              </View>
             </View>
+
+            {/* Card body */}
             <View style={styles.cardBody}>
-              <Text style={styles.cardTitle} numberOfLines={2}>
-                {item.title}
-              </Text>
-              <Text style={styles.cardMeta}>
-                {item.bedrooms} bed · {item.bathrooms} bath · {item.sizeSqm} m²
-              </Text>
-              <Text style={styles.cardMeta}>
-                {item.sector}, {provinceLabel(item.province)}
-              </Text>
               <Text style={styles.cardPrice}>
                 {formatPrice(item.price)}
-                {meta.priceSuffix}
+                {meta.priceSuffix ? <Text style={styles.cardPriceSuffix}>{meta.priceSuffix}</Text> : null}
               </Text>
+              {/* Stats strip */}
+              <View style={styles.statsStrip}>
+                <Text style={styles.statItem}>
+                  <Text style={styles.statValue}>{item.bedrooms}</Text>
+                  <Text style={styles.statUnit}> bds</Text>
+                </Text>
+                <Text style={styles.statSep}>|</Text>
+                <Text style={styles.statItem}>
+                  <Text style={styles.statValue}>{item.bathrooms}</Text>
+                  <Text style={styles.statUnit}> ba</Text>
+                </Text>
+                <Text style={styles.statSep}>|</Text>
+                <Text style={styles.statItem}>
+                  <Text style={styles.statValue}>{item.sizeSqm}</Text>
+                  <Text style={styles.statUnit}> m²</Text>
+                </Text>
+              </View>
+              <Text style={styles.cardAddress} numberOfLines={1}>
+                {item.sector}, {provinceLabel(item.province)}
+              </Text>
+              <Text style={styles.cardTitle} numberOfLines={2}>{item.title}</Text>
             </View>
           </Pressable>
         )}
@@ -137,7 +220,10 @@ export default function PropertyMarketScreen({ route, navigation }) {
 const styles = StyleSheet.create({
   content: { paddingHorizontal: gutter },
   subtitle: { ...typography.body, color: colors.textOnNavyFaint, marginBottom: spacing.lg },
-  listButton: { marginBottom: spacing.lg },
+  ctaRow: { flexDirection: 'row', alignItems: 'stretch', gap: spacing.sm, marginBottom: spacing.lg },
+  listButton: { flex: 1, marginBottom: 0 },
+  plansBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: colors.blue500, borderRadius: radius.md, paddingHorizontal: spacing.lg },
+  plansBtnLabel: { fontSize: 14, fontWeight: '600', color: colors.blue300, marginLeft: spacing.sm },
   label: {
     ...typography.caption,
     fontWeight: '600',
@@ -160,28 +246,65 @@ const styles = StyleSheet.create({
   bedsChipActive: { backgroundColor: colors.blue500, borderColor: colors.blue500 },
   bedsChipLabel: { fontSize: 12, color: colors.textOnNavy },
   bedsChipLabelActive: { color: colors.white, fontWeight: '600' },
-  resultsLabel: { ...typography.caption, color: colors.textOnNavyFaint, marginBottom: spacing.md },
+  viewToggleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md },
+  resultsLabel: { ...typography.caption, color: colors.textOnNavyFaint },
+  viewToggle: { flexDirection: 'row', backgroundColor: 'rgba(255,255,255,0.08)', borderRadius: radius.pill, padding: 2 },
+  toggleBtn: { flexDirection: 'row', alignItems: 'center', borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 5, gap: 4 },
+  toggleBtnActive: { backgroundColor: colors.blue500 },
+  toggleLabel: { fontSize: 11.5, color: colors.blue300, fontWeight: '600' },
+  toggleLabelActive: { color: colors.white },
+  mapFull: { height: 500 },
+  // Zillow-style card: full width, photo at top
   card: {
-    flexDirection: 'row',
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(133,183,235,0.22)',
     borderRadius: radius.md,
-    padding: spacing.md,
-    marginBottom: spacing.sm,
+    marginBottom: spacing.md,
+    overflow: 'hidden',
   },
-  cardPressed: { backgroundColor: 'rgba(255,255,255,0.14)' },
-  cardIconWell: {
-    width: 48,
-    height: 48,
-    borderRadius: radius.sm,
-    backgroundColor: 'rgba(55,138,221,0.18)',
+  cardPressed: { opacity: 0.85 },
+
+  photoWell: {
+    height: 180,
+    backgroundColor: 'rgba(55,138,221,0.14)',
     alignItems: 'center',
     justifyContent: 'center',
-    marginRight: spacing.md,
+    overflow: 'hidden',
   },
-  cardBody: { flex: 1 },
-  cardTitle: { ...typography.bodyStrong, fontSize: 13.5, color: colors.white },
-  cardMeta: { ...typography.caption, color: colors.textOnNavyFaint, marginTop: 2 },
-  cardPrice: { ...typography.bodyStrong, fontSize: 14, color: colors.blue300, marginTop: spacing.xs },
+  photoWellImage: { width: '100%', height: '100%' },
+  statusBadge: {
+    position: 'absolute',
+    top: spacing.sm,
+    left: spacing.sm,
+    backgroundColor: 'rgba(4,44,83,0.88)',
+    borderRadius: radius.sm,
+    paddingHorizontal: spacing.sm,
+    paddingVertical: 4,
+  },
+  statusBadgeLabel: { fontSize: 10.5, fontWeight: '700', color: colors.blue300 },
+  heartBtn: {
+    position: 'absolute',
+    top: spacing.sm,
+    right: spacing.sm,
+    width: 32,
+    height: 32,
+    borderRadius: 16,
+    backgroundColor: 'rgba(0,0,0,0.4)',
+    alignItems: 'center',
+    justifyContent: 'center',
+  },
+
+  cardBody: { padding: spacing.md },
+  cardPrice: { fontSize: 20, fontWeight: '800', color: colors.white, marginBottom: spacing.xs },
+  cardPriceSuffix: { fontSize: 13, fontWeight: '400', color: colors.textOnNavyFaint },
+
+  statsStrip: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xs },
+  statItem: {},
+  statValue: { fontSize: 13.5, fontWeight: '700', color: colors.white },
+  statUnit: { fontSize: 12, color: colors.textOnNavyFaint },
+  statSep: { fontSize: 13, color: colors.textOnNavyFaint, marginHorizontal: spacing.sm },
+
+  cardAddress: { fontSize: 12, color: colors.textOnNavyFaint, marginBottom: 2 },
+  cardTitle: { fontSize: 12.5, color: colors.textOnNavy },
 });
