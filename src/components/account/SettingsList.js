@@ -20,23 +20,17 @@ const ADMIN_ROW_LABEL = {
   news:        'Access the News dashboard',
   sellers:     'Access the Sales Partners dashboard',
   director:    'Access the Director dashboard',
-  ibibanza:    'Manage Ibibanza (land listings)',
-  inzuzamacye: 'Manage Inzu Zamacye (rentals)',
-  salehouse:   'Manage House for Sale listings',
-  allingadget: 'Manage Allingadget products',
-  uruhurwiza:  'Manage Uruhu Rwiza products',
+  restaurant:  'Manage Restaurants',
+  coffeeshop:  'Manage Coffee Shops',
 };
 
 // Which dashboard rows each role gets. Director sees everything.
 const ROLE_DASHBOARDS = {
   news:        ['news'],
   sellers:     ['sellers'],
-  director:    ['director', 'news', 'sellers', 'ibibanza', 'inzuzamacye', 'salehouse', 'allingadget', 'uruhurwiza'],
-  ibibanza:    ['ibibanza'],
-  inzuzamacye: ['inzuzamacye'],
-  salehouse:   ['salehouse'],
-  allingadget: ['allingadget'],
-  uruhurwiza:  ['uruhurwiza'],
+  director:    ['director', 'news', 'sellers', 'restaurant', 'coffeeshop'],
+  restaurant:  ['restaurant'],
+  coffeeshop:  ['coffeeshop'],
 };
 
 function Group({ label, children }) {
@@ -99,11 +93,6 @@ export default function SettingsList({ user, navigation, myBusiness, waitingRequ
                 { text: 'Log in', onPress: () => navigation.navigate('Login') },
               ])
             }
-          />
-          <MenuRow
-            icon="home-city-outline"
-            label="Property & land listing plans"
-            onPress={() => navigation.navigate('ShopTab', { screen: 'ListingPlans' })}
             isLast
           />
         </Group>
@@ -149,11 +138,6 @@ export default function SettingsList({ user, navigation, myBusiness, waitingRequ
           label="My service requests"
           badgeCount={waitingRequests || null}
           onPress={() => navigation.navigate('MyRequests')}
-        />
-        <MenuRow
-          icon="home-city-outline"
-          label="Property & land listing plans"
-          onPress={() => navigation.navigate('ShopTab', { screen: 'ListingPlans' })}
           isLast
         />
       </Group>

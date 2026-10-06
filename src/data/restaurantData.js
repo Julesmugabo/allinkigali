@@ -1,0 +1,361 @@
+/**
+ * restaurantData.js — Static seed data for restaurants + cuisine/food taxonomy.
+ *
+ * CUISINE_FOODS: maps cuisine key → array of food names.
+ * RESTAURANTS: 11 real Kigali restaurants with full attributes.
+ * All filter arrays use the same keys as FILTER_OPTIONS below.
+ */
+
+// ── Cuisine → Food mapping ────────────────────────────────────────────────────
+
+export const CUISINE_FOODS = {
+  rwandan:      ['Isombe', 'Ibihaza', 'Brochettes', 'Ugali', 'Matoke', 'Beans', 'Tilapia', 'Goat', 'Beef', 'Chicken', 'Grilled Meat'],
+  ugandan:      ['Matoke', 'Rolex', 'Luwombo', 'Posho', 'Chapati', 'Tilapia', 'Beef', 'Chicken', 'Beans'],
+  kenyan:       ['Nyama Choma', 'Ugali', 'Sukuma Wiki', 'Pilau', 'Chapati', 'Samosa', 'Grilled Meat', 'Beef', 'Chicken'],
+  ethiopian:    ['Injera', 'Doro Wat', 'Tibs', 'Kitfo', 'Shiro', 'Sambusa', 'Vegetarian Platter'],
+  nigerian:     ['Jollof Rice', 'Egusi Soup', 'Pounded Yam', 'Suya', 'Pepper Soup', 'Fried Plantain'],
+  congolese:    ['Fufu', 'Saka Saka', 'Moambe', 'Grilled Fish', 'Plantain', 'Goat', 'Beef', 'Chicken'],
+  italian:      ['Pizza', 'Pasta', 'Lasagna', 'Ravioli', 'Risotto', 'Gnocchi', 'Bruschetta', 'Tiramisu'],
+  french:       ['Crêpes', 'Croissants', 'Ratatouille', 'Quiche', 'Steak Frites', 'Soufflé', 'French Pastries'],
+  spanish:      ['Paella', 'Tapas', 'Gazpacho', 'Tortilla Española', 'Churros', 'Croquetas'],
+  greek:        ['Moussaka', 'Souvlaki', 'Gyros', 'Greek Salad', 'Tzatziki', 'Grilled Fish'],
+  japanese:     ['Sushi', 'Sashimi', 'Ramen', 'Tempura', 'Udon', 'Yakitori', 'Donburi'],
+  chinese:      ['Dumplings', 'Fried Rice', 'Noodles', 'Dim Sum', 'Hot Pot', 'Spring Rolls', 'Sweet & Sour'],
+  indian:       ['Biryani', 'Curry', 'Tandoori', 'Naan', 'Samosa', 'Masala Dosa', 'Butter Chicken'],
+  korean:       ['Korean BBQ', 'Bibimbap', 'Kimchi', 'Bulgogi', 'Japchae', 'Korean Fried Chicken'],
+  thai:         ['Pad Thai', 'Tom Yum', 'Green Curry', 'Red Curry', 'Thai Fried Rice', 'Satay'],
+  vietnamese:   ['Pho', 'Banh Mi', 'Spring Rolls', 'Bun', 'Vietnamese Rice Dishes'],
+  lebanese:     ['Hummus', 'Falafel', 'Shawarma', 'Kibbeh', 'Fattoush', 'Tabouleh', 'Grilled Meat'],
+  turkish:      ['Kebab', 'Döner', 'Pide', 'Lahmacun', 'Köfte', 'Baklava'],
+  american:     ['Burgers', 'Steak', 'BBQ', 'Fried Chicken', 'Hot Dogs', 'Sandwiches', 'Pancakes'],
+  mexican:      ['Tacos', 'Burritos', 'Enchiladas', 'Quesadillas', 'Fajitas', 'Nachos'],
+  brazilian:    ['Churrasco', 'Feijoada', 'Coxinha', 'Pão de Queijo', 'Grilled Meat'],
+  mediterranean:['Grilled Fish', 'Grilled Meat', 'Greek Salad', 'Hummus', 'Seafood', 'Pasta'],
+  international:['Seafood', 'Grill', 'Steak', 'Pasta', 'Pizza', 'Burgers', 'Sushi', 'BBQ', 'Vegetarian', 'Vegan'],
+};
+
+// ── Cuisine labels ─────────────────────────────────────────────────────────────
+
+export const CUISINES = [
+  { key: 'rwandan',      label: 'Rwandan' },
+  { key: 'ugandan',      label: 'Ugandan' },
+  { key: 'kenyan',       label: 'Kenyan' },
+  { key: 'ethiopian',    label: 'Ethiopian' },
+  { key: 'nigerian',     label: 'Nigerian' },
+  { key: 'congolese',    label: 'Congolese' },
+  { key: 'italian',      label: 'Italian' },
+  { key: 'french',       label: 'French' },
+  { key: 'spanish',      label: 'Spanish' },
+  { key: 'greek',        label: 'Greek' },
+  { key: 'japanese',     label: 'Japanese' },
+  { key: 'chinese',      label: 'Chinese' },
+  { key: 'indian',       label: 'Indian' },
+  { key: 'korean',       label: 'Korean' },
+  { key: 'thai',         label: 'Thai' },
+  { key: 'vietnamese',   label: 'Vietnamese' },
+  { key: 'lebanese',     label: 'Lebanese' },
+  { key: 'turkish',      label: 'Turkish' },
+  { key: 'american',     label: 'American' },
+  { key: 'mexican',      label: 'Mexican' },
+  { key: 'brazilian',    label: 'Brazilian' },
+  { key: 'mediterranean',label: 'Mediterranean' },
+  { key: 'international',label: 'International / Fusion' },
+];
+
+// ── Seed restaurants ──────────────────────────────────────────────────────────
+
+export const RESTAURANTS = [
+  {
+    id: 'r1',
+    name: 'Sakae Restaurant',
+    cuisines: ['japanese', 'korean'],
+    foods: ['Sushi', 'Sashimi', 'Ramen', 'Korean BBQ', 'Bibimbap'],
+    occasion: ['date', 'friends', 'business'],
+    price: 3,
+    atmosphere: ['elegant', 'modern', 'cozy'],
+    dietary: ['vegetarian'],
+    seating: ['standard', 'bar', 'private'],
+    features: ['wifi', 'aircon'],
+    location: 'KG 334 St, Kigali',
+    district: 'Gasabo',
+    phone: '+250 796 602 988',
+    rating: 4.6,
+    description: 'Authentic Japanese and Korean cuisine in the heart of Kigali. Known for fresh sushi and lively Korean BBQ.',
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1579871494447-9811cf80d66c?w=800&q=80', label: 'Sushi platter' },
+      { url: 'https://images.unsplash.com/photo-1617196034183-421b4040ed20?w=800&q=80', label: 'Interior' },
+    ],
+    lat: -1.941, lng: 30.092,
+  },
+  {
+    id: 'r2',
+    name: 'Japanda Restaurant',
+    cuisines: ['japanese'],
+    foods: ['Sushi', 'Ramen', 'Tempura', 'Udon', 'Yakitori'],
+    occasion: ['date', 'friends', 'business', 'special'],
+    price: 3,
+    atmosphere: ['elegant', 'modern', 'quiet'],
+    dietary: ['vegetarian', 'glutenfree'],
+    seating: ['standard', 'private', 'bar'],
+    features: ['wifi', 'aircon', 'parking'],
+    location: 'KG 586 Street, Kigali',
+    district: 'Gasabo',
+    phone: '+250 786 257 259',
+    rating: 4.5,
+    description: 'Kigali\'s favourite Japanese restaurant. Exquisite sushi, ramen and a calm, elegant setting.',
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1617196034234-1fcfb38b5e51?w=800&q=80', label: 'Sushi bar' },
+      { url: 'https://images.unsplash.com/photo-1569050467447-ce54b3bbc37d?w=800&q=80', label: 'Ramen bowl' },
+    ],
+    lat: -1.935, lng: 30.089,
+  },
+  {
+    id: 'r3',
+    name: 'Tung Chinese Cuisine',
+    cuisines: ['chinese'],
+    foods: ['Dumplings', 'Fried Rice', 'Noodles', 'Dim Sum', 'Hot Pot', 'Spring Rolls'],
+    occasion: ['family', 'friends', 'groups', 'business'],
+    price: 2,
+    atmosphere: ['casual', 'lively', 'traditional'],
+    dietary: ['vegetarian', 'vegan'],
+    seating: ['standard', 'private', 'group'],
+    features: ['wifi', 'aircon', 'parking', 'familyfriendly'],
+    location: 'KG 13 Ave, Kigali',
+    district: 'Gasabo',
+    phone: '+250 738 858 888',
+    rating: 4.3,
+    description: 'Generous portions of authentic Chinese dishes. Great for family meals and group dinners.',
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1563245372-f21724e3856d?w=800&q=80', label: 'Dim sum' },
+      { url: 'https://images.unsplash.com/photo-1585032226651-759b368d7246?w=800&q=80', label: 'Noodles' },
+    ],
+    lat: -1.952, lng: 30.095,
+  },
+  {
+    id: 'r4',
+    name: 'Khana Khazana Kiyovu',
+    cuisines: ['indian'],
+    foods: ['Biryani', 'Curry', 'Tandoori', 'Naan', 'Samosa', 'Butter Chicken'],
+    occasion: ['date', 'family', 'friends', 'business'],
+    price: 2,
+    atmosphere: ['casual', 'cozy', 'traditional'],
+    dietary: ['vegetarian', 'vegan', 'halal'],
+    seating: ['standard', 'outdoor'],
+    features: ['wifi', 'aircon'],
+    location: '9 KN 31 St, Kiyovu, Kigali',
+    district: 'Nyarugenge',
+    phone: '+250 788 499 600',
+    rating: 4.4,
+    description: 'Rich flavours from the Indian subcontinent. The butter chicken and biryani are legendary in Kigali.',
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1585937421612-70a008356fbe?w=800&q=80', label: 'Curry spread' },
+      { url: 'https://images.unsplash.com/photo-1574484284002-952d92456975?w=800&q=80', label: 'Tandoori platter' },
+    ],
+    lat: -1.957, lng: 30.058,
+  },
+  {
+    id: 'r5',
+    name: 'Khana Khazana Nyarutarama',
+    cuisines: ['indian'],
+    foods: ['Biryani', 'Curry', 'Tandoori', 'Naan', 'Butter Chicken', 'Masala Dosa'],
+    occasion: ['date', 'family', 'friends', 'business'],
+    price: 2,
+    atmosphere: ['casual', 'cozy', 'modern'],
+    dietary: ['vegetarian', 'vegan', 'halal'],
+    seating: ['standard', 'outdoor', 'private'],
+    features: ['wifi', 'aircon', 'parking'],
+    location: 'KG 9 Ave & KG 13 Ave, Nyarutarama, Kigali',
+    district: 'Gasabo',
+    phone: '+250 781 849 797',
+    rating: 4.5,
+    description: 'The Nyarutarama branch of Kigali\'s top Indian restaurant. Spacious dining room and full menu.',
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1599487488170-d11ec9c172f0?w=800&q=80', label: 'Indian dishes' },
+      { url: 'https://images.unsplash.com/photo-1565557623262-b51c2513a641?w=800&q=80', label: 'Naan & dips' },
+    ],
+    lat: -1.939, lng: 30.104,
+  },
+  {
+    id: 'r6',
+    name: 'Habesha Ethiopian Restaurant',
+    cuisines: ['ethiopian'],
+    foods: ['Injera', 'Doro Wat', 'Tibs', 'Kitfo', 'Shiro', 'Vegetarian Platter'],
+    occasion: ['date', 'friends', 'groups', 'special'],
+    price: 2,
+    atmosphere: ['casual', 'cozy', 'traditional', 'rustic'],
+    dietary: ['vegetarian', 'vegan', 'halal'],
+    seating: ['standard', 'outdoor'],
+    features: ['wifi'],
+    location: '10 KG 617 St, Kigali',
+    district: 'Gasabo',
+    phone: '+250 782 638 043',
+    rating: 4.4,
+    description: 'Communal Ethiopian dining on injera. Vegetarian platters and famous Doro Wat that will bring you back.',
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1518779578993-ec3579fee39f?w=800&q=80', label: 'Injera platter' },
+      { url: 'https://images.unsplash.com/photo-1567620905732-2d1ec7ab7445?w=800&q=80', label: 'Doro Wat' },
+    ],
+    lat: -1.944, lng: 30.087,
+  },
+  {
+    id: 'r7',
+    name: 'Pasta & Basta',
+    cuisines: ['italian'],
+    foods: ['Pasta', 'Pizza', 'Lasagna', 'Risotto', 'Bruschetta', 'Tiramisu'],
+    occasion: ['date', 'friends', 'family', 'birthday', 'anniversary'],
+    price: 2,
+    atmosphere: ['casual', 'cozy', 'relaxed', 'charming'],
+    dietary: ['vegetarian'],
+    seating: ['standard', 'outdoor'],
+    features: ['wifi'],
+    location: 'Kigali, Rwanda',
+    district: 'Gasabo',
+    phone: '+250 795 298 624',
+    rating: 4.3,
+    description: 'Casual Italian trattoria serving homemade pasta and wood-fired pizza. A Kigali favourite for date nights.',
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1555949258-eb67b1ef0ceb?w=800&q=80', label: 'Pasta dish' },
+      { url: 'https://images.unsplash.com/photo-1513104890138-7c749659a591?w=800&q=80', label: 'Pizza' },
+    ],
+    lat: -1.948, lng: 30.080,
+  },
+  {
+    id: 'r8',
+    name: 'Poivre Noir',
+    cuisines: ['french'],
+    foods: ['Steak Frites', 'Crêpes', 'Quiche', 'Ratatouille', 'French Pastries', 'Soufflé'],
+    occasion: ['date', 'anniversary', 'business', 'special'],
+    price: 4,
+    atmosphere: ['elegant', 'fine', 'romantic', 'upscale'],
+    dietary: ['vegetarian', 'glutenfree'],
+    seating: ['standard', 'private', 'outdoor'],
+    features: ['wifi', 'aircon', 'parking', 'livemusic', 'scenicview'],
+    location: 'KG 637 Street No. 5, Kigali',
+    district: 'Gasabo',
+    phone: '+250 787 686 753',
+    rating: 4.8,
+    description: 'Kigali\'s finest French restaurant. Elegant setting, impeccable service, and classic French cuisine at its best.',
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1414235077428-338989a2e8c0?w=800&q=80', label: 'Fine dining' },
+      { url: 'https://images.unsplash.com/photo-1504674900247-0877df9cc836?w=800&q=80', label: 'Steak frites' },
+    ],
+    lat: -1.932, lng: 30.091,
+  },
+  {
+    id: 'r9',
+    name: 'Sole Luna',
+    cuisines: ['italian'],
+    foods: ['Pizza', 'Pasta', 'Lasagna', 'Risotto', 'Gnocchi', 'Tiramisu'],
+    occasion: ['date', 'friends', 'family', 'birthday'],
+    price: 3,
+    atmosphere: ['casual', 'elegant', 'romantic', 'charming'],
+    dietary: ['vegetarian'],
+    seating: ['standard', 'outdoor', 'private'],
+    features: ['wifi', 'aircon', 'parking'],
+    location: 'KG 599 Street, Kigali',
+    district: 'Gasabo',
+    phone: '+250 788 859 593',
+    rating: 4.5,
+    description: 'A slice of Italy in Kigali. Romantic ambience, wood-fired pizza, and handmade pasta.',
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1551183053-bf91798d047e?w=800&q=80', label: 'Wood-fired pizza' },
+      { url: 'https://images.unsplash.com/photo-1567516679974-e7571be0ef81?w=800&q=80', label: 'Restaurant interior' },
+    ],
+    lat: -1.937, lng: 30.086,
+  },
+  {
+    id: 'r10',
+    name: 'Kurry Kingdom',
+    cuisines: ['indian'],
+    foods: ['Biryani', 'Curry', 'Tandoori', 'Naan', 'Butter Chicken', 'Samosa'],
+    occasion: ['date', 'friends', 'family', 'groups'],
+    price: 2,
+    atmosphere: ['casual', 'cozy', 'traditional'],
+    dietary: ['vegetarian', 'vegan', 'halal'],
+    seating: ['standard', 'private'],
+    features: ['wifi', 'aircon'],
+    location: 'House No. 24, KG 5 Ave, Kigali',
+    district: 'Gasabo',
+    phone: '+250 787 605 789',
+    rating: 4.2,
+    description: 'A welcoming Indian restaurant with generous portions and a menu that spans North and South Indian classics.',
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1596797038530-2c107229654b?w=800&q=80', label: 'Curry selection' },
+      { url: 'https://images.unsplash.com/photo-1603894584373-5ac82b2ae398?w=800&q=80', label: 'Biryani' },
+    ],
+    lat: -1.950, lng: 30.098,
+  },
+  {
+    id: 'r11',
+    name: '14th Avenue Wine Bar and Restaurant',
+    cuisines: ['mediterranean', 'international'],
+    foods: ['Grilled Fish', 'Grilled Meat', 'Seafood', 'Hummus', 'Greek Salad', 'Pasta'],
+    occasion: ['date', 'anniversary', 'business', 'friends', 'special'],
+    price: 3,
+    atmosphere: ['elegant', 'relaxed', 'romantic', 'upscale', 'scenicview'],
+    dietary: ['vegetarian', 'glutenfree'],
+    seating: ['standard', 'bar', 'outdoor', 'private'],
+    features: ['wifi', 'aircon', 'parking', 'scenicview', 'livemusic'],
+    location: '39 KN 14 Ave, Kigali',
+    district: 'Nyarugenge',
+    phone: '+250 788 333 130',
+    rating: 4.7,
+    description: 'Sophisticated wine bar and restaurant with Mediterranean seafood, fine wines, and a scenic Kigali view.',
+    photos: [
+      { url: 'https://images.unsplash.com/photo-1510812431401-41d2bd2722f3?w=800&q=80', label: 'Wine bar' },
+      { url: 'https://images.unsplash.com/photo-1544025162-d76694265947?w=800&q=80', label: 'Grilled seafood' },
+    ],
+    lat: -1.962, lng: 30.061,
+  },
+];
+
+// ── Filter option lists ────────────────────────────────────────────────────────
+
+export const OCCASIONS = [
+  'date', 'business', 'family', 'groups', 'birthday',
+  'anniversary', 'special', 'brunch', 'friends', 'celebration', 'happyhour',
+];
+export const OCCASION_LABELS = {
+  date: 'Romantic / Date Night', business: 'Business Meal', family: 'Family',
+  groups: 'Groups', birthday: 'Birthday', anniversary: 'Anniversary',
+  special: 'Special Occasion', brunch: 'Brunch', friends: 'Friends / Socializing',
+  celebration: 'Celebration', happyhour: 'Happy Hour',
+};
+
+export const ATMOSPHERES = [
+  'casual','fine','elegant','cozy','relaxed','romantic','lively','quiet',
+  'trendy','modern','traditional','rustic','upscale','charming','neighbourhood',
+];
+export const ATMOSPHERE_LABELS = {
+  casual:'Casual', fine:'Fine Dining', elegant:'Elegant', cozy:'Cozy',
+  relaxed:'Relaxed', romantic:'Romantic', lively:'Lively', quiet:'Quiet',
+  trendy:'Trendy', modern:'Modern', traditional:'Traditional', rustic:'Rustic',
+  upscale:'Upscale', charming:'Charming', neighbourhood:'Neighbourhood Gem',
+};
+
+export const DIETARY = ['vegetarian','vegan','halal','glutenfree','dairyfree','healthy','organic'];
+export const DIETARY_LABELS = {
+  vegetarian:'Vegetarian', vegan:'Vegan', halal:'Halal',
+  glutenfree:'Gluten-free', dairyfree:'Dairy-free', healthy:'Healthy', organic:'Organic',
+};
+
+export const SEATINGS = ['standard','outdoor','bar','hightop','booth','private','terrace','garden','rooftop'];
+export const SEATING_LABELS = {
+  standard:'Standard Table', outdoor:'Outdoor', bar:'Bar Counter',
+  hightop:'High Top', booth:'Booth', private:'Private Room',
+  terrace:'Terrace', garden:'Garden', rooftop:'Rooftop',
+};
+
+export const FEATURES = [
+  'scenicview','outdoor','livemusic','liveentertainment','wifi','parking',
+  'petfriendly','familyfriendly','wheelchair','privateDining','smoking','aircon','fireplace',
+];
+export const FEATURE_LABELS = {
+  scenicview:'Scenic View', outdoor:'Outdoor Dining', livemusic:'Live Music',
+  liveentertainment:'Live Entertainment', wifi:'Wi-Fi', parking:'Parking',
+  petfriendly:'Pet Friendly', familyfriendly:'Family Friendly',
+  wheelchair:'Wheelchair Accessible', privateDining:'Private Dining',
+  smoking:'Smoking Area', aircon:'Air Conditioning', fireplace:'Fireplace',
+};
+
+export const PRICE_LABELS = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };

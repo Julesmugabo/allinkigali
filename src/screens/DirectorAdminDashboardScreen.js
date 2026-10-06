@@ -44,13 +44,10 @@ const SEGMENTS = [
 ];
 
 const ASSIGNABLE_ROLES = [
-  { key: 'news',        label: 'News admin' },
-  { key: 'sellers',     label: 'Sellers admin' },
-  { key: 'ibibanza',    label: 'Ibibanza admin' },
-  { key: 'inzuzamacye', label: 'Inzu Zamacye admin' },
-  { key: 'salehouse',   label: 'House for Sale admin' },
-  { key: 'allingadget', label: 'Allingadget admin' },
-  { key: 'uruhurwiza',  label: 'Uruhu Rwiza admin' },
+  { key: 'news',       label: 'News admin' },
+  { key: 'sellers',    label: 'Sellers admin' },
+  { key: 'restaurant', label: 'Restaurant admin' },
+  { key: 'coffeeshop', label: 'Coffee Shop admin' },
 ];
 
 // Sellers type this field in free text on their own registration form (see

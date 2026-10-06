@@ -1,12 +1,5 @@
 /**
- * ShopStack.js — Inzira yo kugura (shop tab stack).
- * Shop -> Checkout (products) and Shop -> BusinessDetail -> BusinessBook
- * (services). Payment screens slot in after Checkout/BusinessBook later.
- *
- * Plus the 5 new marketplaces, reached from Shop's entry cards: Ibibanza
- * (land), Inzu zamacye + House for Sale (one PropertyMarket screen, told
- * apart by a mode param), and Allingadget + Uruhu Rwiza (one ProductMarket
- * screen, told apart by a store param).
+ * ShopStack.js — Resto/Coffee Shop tab stack.
  */
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
@@ -15,15 +8,10 @@ import ShopScreen from '../screens/ShopScreen';
 import CheckoutScreen from '../screens/CheckoutScreen';
 import BusinessDetailScreen from '../screens/BusinessDetailScreen';
 import BusinessBookScreen from '../screens/BusinessBookScreen';
-import LandMarketScreen from '../screens/LandMarketScreen';
-import LandDetailScreen from '../screens/LandDetailScreen';
-import PropertyMarketScreen from '../screens/PropertyMarketScreen';
-import PropertyDetailScreen from '../screens/PropertyDetailScreen';
-import ListPropertyScreen from '../screens/ListPropertyScreen';
-import ListLandScreen from '../screens/ListLandScreen';
-import ListingPlansScreen from '../screens/ListingPlansScreen';
-import ProductMarketScreen from '../screens/ProductMarketScreen';
-import ProductDetailScreen from '../screens/ProductDetailScreen';
+import RestaurantMarketScreen from '../screens/RestaurantMarketScreen';
+import RestaurantDetailScreen from '../screens/RestaurantDetailScreen';
+import CoffeeShopMarketScreen from '../screens/CoffeeShopMarketScreen';
+import CoffeeShopDetailScreen from '../screens/CoffeeShopDetailScreen';
 
 const Stack = createNativeStackNavigator();
 
@@ -41,17 +29,11 @@ export default function ShopStack() {
       <Stack.Screen name="BusinessDetail" component={BusinessDetailScreen} />
       <Stack.Screen name="BusinessBook" component={BusinessBookScreen} />
 
-      <Stack.Screen name="LandMarket" component={LandMarketScreen} />
-      <Stack.Screen name="LandDetail" component={LandDetailScreen} />
+      <Stack.Screen name="RestaurantMarket" component={RestaurantMarketScreen} />
+      <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
 
-      <Stack.Screen name="PropertyMarket" component={PropertyMarketScreen} />
-      <Stack.Screen name="PropertyDetail" component={PropertyDetailScreen} />
-      <Stack.Screen name="ListProperty" component={ListPropertyScreen} />
-      <Stack.Screen name="ListLand" component={ListLandScreen} />
-      <Stack.Screen name="ListingPlans" component={ListingPlansScreen} />
-
-      <Stack.Screen name="ProductMarket" component={ProductMarketScreen} />
-      <Stack.Screen name="ProductDetail" component={ProductDetailScreen} />
+      <Stack.Screen name="CoffeeShopMarket" component={CoffeeShopMarketScreen} />
+      <Stack.Screen name="CoffeeShopDetail" component={CoffeeShopDetailScreen} />
     </Stack.Navigator>
   );
 }

@@ -47,7 +47,7 @@ export default function ServicesPanel({ navigation, topPadding }) {
 
   const header = (
     <View>
-      <Text style={styles.title}>Service Market</Text>
+      <Text style={styles.title}>Resto/Coffee Shop</Text>
       <MarketplaceMenu navigation={navigation} />
       <FlierCarousel
         fliers={fliers}
