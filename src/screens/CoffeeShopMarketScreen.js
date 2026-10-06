@@ -8,7 +8,7 @@
  */
 import React, { useState, useMemo, useCallback } from 'react';
 import {
-  View, Text, ScrollView, Pressable, Image, FlatList, StyleSheet, Platform,
+  View, Text, ScrollView, Pressable, Image, FlatList, StyleSheet,
 } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -269,14 +269,15 @@ export default function CoffeeShopMarketScreen({ navigation }) {
         </View>
 
         <View style={styles.body}>
-          {(sidebarOpen || Platform.OS === 'web') && (
-            <View style={[styles.sidebarPane, Platform.OS !== 'web' && styles.sidebarPaneMobile]}>
+          {sidebarOpen && (
+            <Pressable style={styles.backdrop} onPress={() => setSidebarOpen(false)} />
+          )}
+          {sidebarOpen && (
+            <View style={styles.sidebarPane}>
               {sidebar}
-              {Platform.OS !== 'web' && (
-                <Pressable onPress={() => setSidebarOpen(false)} style={styles.applyBtn}>
-                  <Text style={styles.applyBtnLabel}>Show {results.length} coffee shop{results.length !== 1 ? 's' : ''}</Text>
-                </Pressable>
-              )}
+              <Pressable onPress={() => setSidebarOpen(false)} style={styles.applyBtn}>
+                <Text style={styles.applyBtnLabel}>Show {results.length} coffee shop{results.length !== 1 ? 's' : ''}</Text>
+              </Pressable>
             </View>
           )}
 
@@ -366,9 +367,14 @@ const styles = StyleSheet.create({
   filterBtn: { width: 36, height: 36, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center' },
   filterBtnActive: { backgroundColor: colors.blue500 },
   filterDot: { position: 'absolute', top: 6, right: 6, width: 7, height: 7, borderRadius: 3.5, backgroundColor: '#F5C518' },
-  body: { flex: 1, flexDirection: 'row' },
-  sidebarPane: { width: 240, borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: 'rgba(133,183,235,0.2)' },
-  sidebarPaneMobile: { position: 'absolute', top: 0, left: 0, bottom: 0, zIndex: 10, width: '85%', maxWidth: 320, backgroundColor: '#042C53' },
+  body: { flex: 1 },
+  backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9, backgroundColor: 'rgba(0,0,0,0.45)' },
+  sidebarPane: {
+    position: 'absolute', top: 0, left: 0, bottom: 0, zIndex: 10,
+    width: 300, maxWidth: '88%',
+    backgroundColor: '#042C53',
+    borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: 'rgba(133,183,235,0.2)',
+  },
   results: { flex: 1 },
   chipsRow: { maxHeight: 44 },
   chipsContent: { paddingHorizontal: gutter, paddingVertical: spacing.xs, gap: spacing.xs },
