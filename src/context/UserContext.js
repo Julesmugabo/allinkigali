@@ -168,6 +168,7 @@ export function UserProvider({ children }) {
   }, []);
 
   const signOut = useCallback(async () => {
+    try { await apiFetch('/notifications/push-token', { method: 'DELETE' }); } catch {}
     await setToken(null);
     setUser(null);
     setError(null);

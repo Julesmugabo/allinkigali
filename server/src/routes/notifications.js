@@ -40,4 +40,28 @@ router.put('/read-all', requireAuth, async (req, res) => {
   res.json({ ok: true });
 });
 
+// POST /notifications/push-token — register an Expo push token
+router.post('/push-token', requireAuth, async (req, res) => {
+  const { token, platform } = req.body || {};
+  if (!token) return res.status(400).json({ error: 'token is required.' });
+  await query(
+    `INSERT INTO push_tokens (user_id, token, platform, updated_at)
+     VALUES ($1, $2, $3, NOW())
+     ON CONFLICT (user_id, token) DO UPDATE SET updated_at = NOW(), platform = $3`,
+    [req.user.sub, token, platform || 'unknown']
+  );
+  res.json({ ok: true });
+});
+
+// DELETE /notifications/push-token — unregister (on logout)
+router.delete('/push-token', requireAuth, async (req, res) => {
+  const { token } = req.body || {};
+  if (token) {
+    await query('DELETE FROM push_tokens WHERE user_id = $1 AND token = $2', [req.user.sub, token]);
+  } else {
+    await query('DELETE FROM push_tokens WHERE user_id = $1', [req.user.sub]);
+  }
+  res.json({ ok: true });
+});
+
 module.exports = router;

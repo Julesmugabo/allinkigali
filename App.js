@@ -6,11 +6,11 @@
  * them because both the customer screens and the admin dashboards read from
  * those stores.
  */
-import React, { useEffect, useMemo } from 'react';
+import React, { useEffect, useMemo, useRef } from 'react';
 import { View, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
-import { NavigationContainer } from '@react-navigation/native';
+import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
 
 import AppNavigator from './src/navigation/AppNavigator';
 import InstallAppBanner from './src/components/common/InstallAppBanner';
@@ -23,6 +23,16 @@ import { FliersProvider } from './src/context/FliersContext';
 import { NewsProvider } from './src/context/NewsContext';
 import { AdsProvider } from './src/context/AdsContext';
 import { navTheme, colors } from './src/theme';
+import { useUser } from './src/context/UserContext';
+import usePushNotifications from './src/hooks/usePushNotifications';
+
+const navigationRef = createNavigationContainerRef();
+
+function PushNotificationSetup() {
+  const { user } = useUser();
+  usePushNotifications(user, navigationRef);
+  return null;
+}
 
 const linking = {
   prefixes: [],
@@ -127,7 +137,8 @@ export default function App() {
                       <View style={{ flex: 1, backgroundColor: colors.navy800 }}>
                         <StatusBar style="light" />
                         <InstallAppBanner />
-                        <NavigationContainer theme={navTheme} linking={linking}>
+                        <PushNotificationSetup />
+                        <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>
                           <AppNavigator />
                         </NavigationContainer>
                       </View>

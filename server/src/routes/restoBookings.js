@@ -3,16 +3,15 @@ const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 
+const { notifyUser } = require('../pushNotifications');
+
 const router = express.Router();
 
 // ── Helpers ───────────────────────────────────────────────────────────────────
 
 async function pushNotification(userId, title, body, type, data = {}) {
   if (!userId) return;
-  await query(
-    'INSERT INTO notifications (user_id, title, body, type, data) VALUES ($1,$2,$3,$4,$5)',
-    [userId, title, body, type, JSON.stringify(data)]
-  );
+  notifyUser(userId, { title, body, data: { ...data, type } }).catch(() => {});
 }
 
 // Find the user_id of any admin who has the given role assigned to them.

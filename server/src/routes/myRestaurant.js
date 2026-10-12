@@ -7,6 +7,7 @@ const express = require('express');
 const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
+const { notifyUser } = require('../pushNotifications');
 
 const router = express.Router();
 const guard = [requireAuth, requireRole('restaurant', 'coffeeshop', 'director')];
@@ -132,13 +133,8 @@ router.put('/bookings/:id/status', ...guard, async (req, res) => {
       cancelled: `Booking cancelled — ${booking.place_name}`,
     };
     if (msgMap[status]) {
-      await query(
-        `INSERT INTO notifications (user_id, title, body, type, ref_id)
-         VALUES ($1,$2,$3,$4,$5)`,
-        [booking.user_id, titleMap[status], msgMap[status],
-         status === 'confirmed' ? 'booking_confirmed' : status === 'rejected' ? 'booking_rejected' : 'booking_cancelled',
-         booking.id]
-      );
+      const type = status === 'confirmed' ? 'booking_confirmed' : status === 'rejected' ? 'booking_rejected' : 'booking_cancelled';
+      notifyUser(booking.user_id, { title: titleMap[status], body: msgMap[status], data: { type, bookingId: booking.id } }).catch(() => {});
     }
   }
 

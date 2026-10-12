@@ -2,6 +2,7 @@ const express = require('express');
 const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
+const { notifyUser } = require('../pushNotifications');
 
 const router = express.Router();
 
@@ -54,14 +55,11 @@ router.post('/', requireAuth, async (req, res) => {
     `SELECT id FROM users WHERE restaurant_id=$1 OR coffee_shop_id=$1`, [placeId]
   );
   if (ownerRows[0]) {
-    await query(
-      `INSERT INTO notifications (user_id, title, body, type, ref_id)
-       VALUES ($1,$2,$3,'new_order',$4)`,
-      [ownerRows[0].id,
-       'New delivery order!',
-       `Order #${order.id.slice(-6).toUpperCase()} — ${items.length} item(s) to ${deliveryAddress}`,
-       order.id]
-    );
+    notifyUser(ownerRows[0].id, {
+      title: 'New delivery order!',
+      body: `Order #${order.id.slice(-6).toUpperCase()} — ${items.length} item(s) to ${deliveryAddress}`,
+      data: { type: 'new_order', orderId: order.id },
+    }).catch(() => {});
   }
 
   res.status(201).json(order);
@@ -123,14 +121,9 @@ router.put('/:id/status', requireAuth, requireRole('restaurant', 'coffeeshop', '
     delivered: 'Your order has been delivered. Enjoy!',
     cancelled: 'Your order was cancelled by the restaurant. Please contact them for details.',
   };
-  await query(
-    `INSERT INTO notifications (user_id, title, body, type, ref_id)
-     VALUES ($1,$2,$3,'order_update',$4)`,
-    [rows[0].user_id,
-     `Order ${status}`,
-     msgMap[status] || `Your order status: ${status}`,
-     rows[0].id]
-  );
+  const title = `Order ${status}`;
+  const body = msgMap[status] || `Your order status: ${status}`;
+  notifyUser(rows[0].user_id, { title, body, data: { type: 'order_update', orderId: rows[0].id } }).catch(() => {});
 
   res.json(rows[0]);
 });

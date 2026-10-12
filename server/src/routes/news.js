@@ -10,6 +10,8 @@ const { query } = require('../db');
 const { attachUserIfPresent, requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 
+const { notifyAll } = require('../pushNotifications');
+
 const router = express.Router();
 
 // Labels the news admin can put on an article besides Breaking/Trending.
@@ -188,7 +190,16 @@ router.patch('/articles/:id', requireAuth, requireRole('news', 'director'), asyn
     [...values, req.params.id]
   );
   if (!rows[0]) return res.status(404).json({ error: 'Article not found.' });
-  res.json(articleToJson(rows[0]));
+  const article = articleToJson(rows[0]);
+  res.json(article);
+
+  // Fire-and-forget push notifications
+  if (article.status === 'published' && req.body?.status === 'published') {
+    const pushTitle = article.isBreaking ? `⚡ ${article.title}` : article.title;
+    notifyAll({ title: pushTitle, body: article.source || 'AllInKigali', data: { type: 'article', articleId: article.id } }).catch(() => {});
+  } else if (article.isBreaking && req.body?.isBreaking) {
+    notifyAll({ title: `⚡ ${article.title}`, body: 'Breaking News', data: { type: 'breaking', articleId: article.id } }).catch(() => {});
+  }
 });
 
 router.delete('/articles/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
