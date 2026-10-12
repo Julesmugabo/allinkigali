@@ -6,7 +6,7 @@
 import React, { useState, useEffect, useCallback } from 'react';
 import {
   View, Text, ScrollView, Pressable, TextInput,
-  ActivityIndicator, Alert, StyleSheet, Platform, Linking,
+  ActivityIndicator, Alert, StyleSheet, Platform, Linking, useWindowDimensions,
 } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -758,7 +758,7 @@ function ReviewsTab() {
     if (!text) return;
     setSaving(true);
     try {
-      await apiFetch(`/my-coffeeshop/reviews/${id}/reply`, { method: 'POST', body: JSON.stringify({ reply: text }) });
+      await apiFetch(`/my-coffeeshop/reviews/${id}/reply`, { method: 'POST', body: { reply: text } });
       setReviews(prev => prev.map(r => r.id === id ? { ...r, ownerReply: text } : r));
       setReplyText(p => ({ ...p, [id]: '' }));
       setReplying(null);
@@ -960,6 +960,8 @@ function SettingsTab({ shop, onSave }) {
 export default function CoffeeShopOwnerDashboardScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { user } = useUser();
+  const { width: screenWidth } = useWindowDimensions();
+  const isWide = screenWidth >= 768;
 
   const [section, setSection] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -998,7 +1000,7 @@ export default function CoffeeShopOwnerDashboardScreen({ navigation }) {
     setBusyLevel(level);
     if (busyTimer.current) clearTimeout(busyTimer.current);
     busyTimer.current = setTimeout(() => setBusyLevel(null), 2 * 60 * 60 * 1000); // 2h auto-expire
-    apiFetch('/my-coffeeshop/busy', { method: 'PUT', body: JSON.stringify({ busy: level }) }).catch(() => {});
+    apiFetch('/my-coffeeshop/busy', { method: 'PUT', body: { busy: level } }).catch(() => {});
   }
 
   async function handleBookingStatus(id, status, reason) {
@@ -1009,7 +1011,7 @@ export default function CoffeeShopOwnerDashboardScreen({ navigation }) {
   }
 
   async function handleMenuSave(editId, form) {
-    const body = JSON.stringify({ category: form.category, name: form.name.trim(), description: form.description || '', price: parseInt(form.price, 10) || 0, available: form.available !== false, brewMethod: form.brewMethod || '', origin: form.origin || '' });
+    const body = { category: form.category, name: form.name.trim(), description: form.description || '', price: parseInt(form.price, 10) || 0, available: form.available !== false, brewMethod: form.brewMethod || '', origin: form.origin || '' };
     if (editId) { await apiFetch(`/my-coffeeshop/menu/${editId}`, { method: 'PUT', body }); }
     else { await apiFetch('/my-coffeeshop/menu', { method: 'POST', body }); }
     await loadMenu();
@@ -1025,7 +1027,7 @@ export default function CoffeeShopOwnerDashboardScreen({ navigation }) {
 
   async function handleUpdateAttrs(attrs) {
     try {
-      const d = await apiFetch('/my-coffeeshop', { method: 'PUT', body: JSON.stringify({ attributes: attrs }) });
+      const d = await apiFetch('/my-coffeeshop', { method: 'PUT', body: { attributes: attrs } });
       setShop(d);
     } catch { Alert.alert('Error', 'Could not save attributes.'); }
   }
@@ -1078,14 +1080,31 @@ export default function CoffeeShopOwnerDashboardScreen({ navigation }) {
     </View>
   );
 
+  const content = (
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.main, { paddingBottom: insets.bottom + 80 }]}>
+      {section === 'overview' && <OverviewTab shop={shop} bookings={bookings} menuItems={menuItems} busyLevel={busyLevel} onBusy={handleBusy} onNav={key => { setSection(key); setSidebarOpen(false); }} />}
+      {section === 'bookings' && <BookingsTab bookings={bookings} loading={bookingsLoading} onStatusChange={handleBookingStatus} />}
+      {section === 'orders' && <OrdersTab />}
+      {section === 'menu' && <MenuTab menuItems={menuItems} loading={menuLoading} onSave={handleMenuSave} onDelete={handleMenuDelete} />}
+      {section === 'intents' && <IntentsTab shop={shop} onUpdateAttrs={handleUpdateAttrs} />}
+      {section === 'insights' && <InsightsTab bookings={bookings} shop={shop} />}
+      {section === 'reviews' && <ReviewsTab />}
+      {section === 'finance' && <FinanceTab bookings={bookings} />}
+      {section === 'reports' && <ReportsTab bookings={bookings} menuItems={menuItems} />}
+      {section === 'settings' && <SettingsTab shop={shop} onSave={handleProfileSave} />}
+    </ScrollView>
+  );
+
   return (
     <GradientBackground>
       <View style={[s.root, { paddingTop: insets.top }]}>
         <View style={s.topbar}>
-          <Pressable onPress={() => setSidebarOpen(o => !o)} style={s.menuBtn}>
-            <MaterialCommunityIcons name="menu" size={22} color={colors.white} />
-            {pendingCount > 0 && <View style={s.menuBtnBadge} />}
-          </Pressable>
+          {!isWide && (
+            <Pressable onPress={() => setSidebarOpen(o => !o)} style={s.menuBtn}>
+              <MaterialCommunityIcons name="menu" size={22} color={colors.white} />
+              {pendingCount > 0 && <View style={s.menuBtnBadge} />}
+            </Pressable>
+          )}
           <Text style={s.topbarTitle}>{topbarTitles[section] || ''}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <MaterialCommunityIcons name="coffee-outline" size={14} color={colors.blue300} />
@@ -1093,21 +1112,38 @@ export default function CoffeeShopOwnerDashboardScreen({ navigation }) {
           </View>
         </View>
 
-        {sidebarOpen && <Pressable style={s.backdrop} onPress={() => setSidebarOpen(false)} />}
-        {sidebarOpen && sidebar}
-
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.main, { paddingBottom: insets.bottom + 80 }]}>
-          {section === 'overview' && <OverviewTab shop={shop} bookings={bookings} menuItems={menuItems} busyLevel={busyLevel} onBusy={handleBusy} onNav={key => { setSection(key); setSidebarOpen(false); }} />}
-          {section === 'bookings' && <BookingsTab bookings={bookings} loading={bookingsLoading} onStatusChange={handleBookingStatus} />}
-          {section === 'orders' && <OrdersTab />}
-          {section === 'menu' && <MenuTab menuItems={menuItems} loading={menuLoading} onSave={handleMenuSave} onDelete={handleMenuDelete} />}
-          {section === 'intents' && <IntentsTab shop={shop} onUpdateAttrs={handleUpdateAttrs} />}
-          {section === 'insights' && <InsightsTab bookings={bookings} shop={shop} />}
-          {section === 'reviews' && <ReviewsTab />}
-          {section === 'finance' && <FinanceTab bookings={bookings} />}
-          {section === 'reports' && <ReportsTab bookings={bookings} menuItems={menuItems} />}
-          {section === 'settings' && <SettingsTab shop={shop} onSave={handleProfileSave} />}
-        </ScrollView>
+        {isWide ? (
+          <View style={{ flex: 1, flexDirection: 'row' }}>
+            <ScrollView style={{ width: 230, borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: 'rgba(133,183,235,0.2)' }} contentContainerStyle={{ paddingTop: spacing.sm, paddingBottom: 80 }}>
+              {NAV_ITEMS.map(item => (
+                <Pressable key={item.key} onPress={() => setSection(item.key)} style={[s.navItem, section === item.key && s.navItemActive]}>
+                  <MaterialCommunityIcons name={item.icon} size={18} color={section === item.key ? colors.white : colors.blue300} />
+                  <Text style={[s.navLabel, section === item.key && s.navLabelActive]}>{item.label}</Text>
+                  {item.key === 'bookings' && pendingCount > 0 && (
+                    <View style={s.navBadge}><Text style={s.navBadgeLabel}>{pendingCount}</Text></View>
+                  )}
+                  {item.key === 'intents' && (
+                    <View style={[s.navBadge, { backgroundColor: '#25D366' }]}>
+                      <Text style={s.navBadgeLabel}>★</Text>
+                    </View>
+                  )}
+                </Pressable>
+              ))}
+              <View style={s.sidebarDivider} />
+              <Pressable onPress={() => navigation.goBack()} style={s.navItem}>
+                <MaterialCommunityIcons name="arrow-left" size={18} color={colors.textOnNavyFaint} />
+                <Text style={[s.navLabel, { color: colors.textOnNavyFaint }]}>Back</Text>
+              </Pressable>
+            </ScrollView>
+            <View style={{ flex: 1 }}>{content}</View>
+          </View>
+        ) : (
+          <View style={{ flex: 1 }}>
+            {sidebarOpen && <Pressable style={s.backdrop} onPress={() => setSidebarOpen(false)} />}
+            {sidebarOpen && sidebar}
+            {content}
+          </View>
+        )}
       </View>
     </GradientBackground>
   );

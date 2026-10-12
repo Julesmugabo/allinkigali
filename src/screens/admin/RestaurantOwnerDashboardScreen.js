@@ -5,7 +5,7 @@
 import React, { useState, useEffect, useCallback, useRef } from 'react';
 import {
   View, Text, ScrollView, Pressable, TextInput, Image,
-  ActivityIndicator, Alert, StyleSheet, Platform, Linking,
+  ActivityIndicator, Alert, StyleSheet, Platform, Linking, useWindowDimensions,
 } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
@@ -616,7 +616,7 @@ function MenuTab({ menuItems, loading, onSave, onDelete, isCafe }) {
                 <Pressable onPress={() => onDelete(item.id)} style={{ padding: 8 }}>
                   <MaterialCommunityIcons name="delete-outline" size={16} color="#e05c5c" />
                 </Pressable>
-                <Pressable onPress={() => apiFetch(`/my-restaurant/menu/${item.id}`, { method: 'PUT', body: JSON.stringify({ available: !item.available }) }).catch(() => {})} style={{ padding: 8 }}>
+                <Pressable onPress={() => apiFetch(`/my-restaurant/menu/${item.id}`, { method: 'PUT', body: { available: !item.available } }).catch(() => {})} style={{ padding: 8 }}>
                   <MaterialCommunityIcons name={item.available ? 'eye-off-outline' : 'eye-outline'} size={16} color={colors.textOnNavyFaint} />
                 </Pressable>
               </View>
@@ -754,7 +754,7 @@ function ReviewsTab() {
     if (!text) return;
     setSaving(true);
     try {
-      await apiFetch(`/my-restaurant/reviews/${id}/reply`, { method: 'POST', body: JSON.stringify({ reply: text }) });
+      await apiFetch(`/my-restaurant/reviews/${id}/reply`, { method: 'POST', body: { reply: text } });
       setReviews(prev => prev.map(r => r.id === id ? { ...r, ownerReply: text } : r));
       setReplyText(prev => ({ ...prev, [id]: '' }));
       setReplying(null);
@@ -1012,7 +1012,9 @@ function SettingsTab({ restaurant, onSave, isCafe }) {
 export default function RestaurantOwnerDashboardScreen({ navigation }) {
   const insets = useSafeAreaInsets();
   const { user } = useUser();
+  const { width: screenWidth } = useWindowDimensions();
   const isCafe = user?.role === 'coffeeshop';
+  const isWide = screenWidth >= 768;
 
   const [section, setSection] = useState('overview');
   const [sidebarOpen, setSidebarOpen] = useState(false);
@@ -1061,7 +1063,7 @@ export default function RestaurantOwnerDashboardScreen({ navigation }) {
 
   async function handleMenuSave(editId, form) {
     const defaultCat = isCafe ? 'Drinks' : 'Mains';
-    const body = JSON.stringify({ category: form.category || defaultCat, name: form.name.trim(), description: form.description || '', price: parseInt(form.price, 10) || 0, available: form.available !== false, photoUrl: form.photoUrl?.trim() || null });
+    const body = { category: form.category || defaultCat, name: form.name.trim(), description: form.description || '', price: parseInt(form.price, 10) || 0, available: form.available !== false, photoUrl: form.photoUrl?.trim() || null };
     const base = isCafe ? '/my-restaurant/cs-menu' : '/my-restaurant/menu';
     if (editId) { await apiFetch(`${base}/${editId}`, { method: 'PUT', body }); }
     else { await apiFetch(base, { method: 'POST', body }); }
@@ -1125,14 +1127,30 @@ export default function RestaurantOwnerDashboardScreen({ navigation }) {
     </View>
   );
 
+  const content = (
+    <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.main, { paddingBottom: insets.bottom + 80 }]}>
+      {section === 'overview' && <OverviewTab restaurant={restaurant} bookings={bookings} menuItems={menuItems} onNav={key => { setSection(key); setSidebarOpen(false); }} />}
+      {section === 'bookings' && <BookingsTab bookings={bookings} loading={bookingsLoading} onStatusChange={handleBookingStatus} />}
+      {section === 'orders' && <OrdersTab />}
+      {section === 'menu' && <MenuTab menuItems={menuItems} loading={menuLoading} onSave={handleMenuSave} onDelete={handleMenuDelete} isCafe={isCafe} />}
+      {section === 'insights' && <InsightsTab bookings={bookings} />}
+      {section === 'reviews' && <ReviewsTab />}
+      {section === 'finance' && <FinanceTab bookings={bookings} />}
+      {section === 'reports' && <ReportsTab bookings={bookings} menuItems={menuItems} />}
+      {section === 'settings' && <SettingsTab restaurant={restaurant} onSave={handleProfileSave} isCafe={isCafe} />}
+    </ScrollView>
+  );
+
   return (
     <GradientBackground>
       <View style={[s.root, { paddingTop: insets.top }]}>
         <View style={s.topbar}>
-          <Pressable onPress={() => setSidebarOpen(o => !o)} style={s.menuBtn}>
-            <MaterialCommunityIcons name="menu" size={22} color={colors.white} />
-            {pendingCount > 0 && <View style={s.menuBtnBadge} />}
-          </Pressable>
+          {!isWide && (
+            <Pressable onPress={() => setSidebarOpen(o => !o)} style={s.menuBtn}>
+              <MaterialCommunityIcons name="menu" size={22} color={colors.white} />
+              {pendingCount > 0 && <View style={s.menuBtnBadge} />}
+            </Pressable>
+          )}
           <Text style={s.topbarTitle}>{topbarTitles[section] || ''}</Text>
           <View style={{ flexDirection: 'row', alignItems: 'center', gap: 4 }}>
             <MaterialCommunityIcons name={isCafe ? 'coffee-outline' : 'silverware-fork-knife'} size={14} color={colors.blue300} />
@@ -1140,20 +1158,33 @@ export default function RestaurantOwnerDashboardScreen({ navigation }) {
           </View>
         </View>
 
-        {sidebarOpen && <Pressable style={s.backdrop} onPress={() => setSidebarOpen(false)} />}
-        {sidebarOpen && sidebar}
-
-        <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={[s.main, { paddingBottom: insets.bottom + 80 }]}>
-          {section === 'overview' && <OverviewTab restaurant={restaurant} bookings={bookings} menuItems={menuItems} onNav={key => { setSection(key); setSidebarOpen(false); }} />}
-          {section === 'bookings' && <BookingsTab bookings={bookings} loading={bookingsLoading} onStatusChange={handleBookingStatus} />}
-          {section === 'orders' && <OrdersTab />}
-          {section === 'menu' && <MenuTab menuItems={menuItems} loading={menuLoading} onSave={handleMenuSave} onDelete={handleMenuDelete} isCafe={isCafe} />}
-          {section === 'insights' && <InsightsTab bookings={bookings} />}
-          {section === 'reviews' && <ReviewsTab />}
-          {section === 'finance' && <FinanceTab bookings={bookings} />}
-          {section === 'reports' && <ReportsTab bookings={bookings} menuItems={menuItems} />}
-          {section === 'settings' && <SettingsTab restaurant={restaurant} onSave={handleProfileSave} isCafe={isCafe} />}
-        </ScrollView>
+        {isWide ? (
+          <View style={{ flex: 1, flexDirection: 'row' }}>
+            <ScrollView style={{ width: 230, borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: 'rgba(133,183,235,0.2)' }} contentContainerStyle={{ paddingTop: spacing.sm, paddingBottom: 80 }}>
+              {NAV_ITEMS.map(item => (
+                <Pressable key={item.key} onPress={() => setSection(item.key)} style={[s.navItem, section === item.key && s.navItemActive]}>
+                  <MaterialCommunityIcons name={item.icon} size={18} color={section === item.key ? colors.white : colors.blue300} />
+                  <Text style={[s.navLabel, section === item.key && s.navLabelActive]}>{item.label}</Text>
+                  {item.key === 'bookings' && pendingCount > 0 && (
+                    <View style={s.navBadge}><Text style={s.navBadgeLabel}>{pendingCount}</Text></View>
+                  )}
+                </Pressable>
+              ))}
+              <View style={s.sidebarDivider} />
+              <Pressable onPress={() => navigation.goBack()} style={s.navItem}>
+                <MaterialCommunityIcons name="arrow-left" size={18} color={colors.textOnNavyFaint} />
+                <Text style={[s.navLabel, { color: colors.textOnNavyFaint }]}>Back</Text>
+              </Pressable>
+            </ScrollView>
+            <View style={{ flex: 1 }}>{content}</View>
+          </View>
+        ) : (
+          <View style={{ flex: 1 }}>
+            {sidebarOpen && <Pressable style={s.backdrop} onPress={() => setSidebarOpen(false)} />}
+            {sidebarOpen && sidebar}
+            {content}
+          </View>
+        )}
       </View>
     </GradientBackground>
   );
