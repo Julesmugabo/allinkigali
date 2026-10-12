@@ -1,15 +1,13 @@
 /**
- * SettingsList.js — The settings groups on the Me tab, for everyone.
+ * SettingsList.js — Me tab content for everyone.
  *
- * Signed out: Log in comes first, then Create an account, My orders (which
- * asks you to log in), Appearance, Help.
- * Signed in: profile-driven groups. Roles stack rather than replace each
- * other — an account that owns a business also gets My business, one with an
- * admin role also gets an Admin group at the top. Every row is something you
- * tap to open a screen.
+ * Signed out: two simple rows (Log in/Sign up, Register business) +
+ *   a collapsible Settings row.
+ * Signed in: My Bookings, My Orders, role-specific rows, collapsible Settings.
  */
-import React from 'react';
-import { Text, View, StyleSheet } from 'react-native';
+import React, { useState } from 'react';
+import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
+import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import MenuRow from './MenuRow';
 import { ROLE_META } from '../../admin/adminAuth';
@@ -17,195 +15,240 @@ import { showAlert } from '../../utils/showAlert';
 import { colors, typography, spacing, radius } from '../../theme';
 
 const ADMIN_ROW_LABEL = {
-  news:        'Access the News dashboard',
-  sellers:     'Access the Sales Partners dashboard',
-  director:    'Access the Director dashboard',
-  restaurant:  'Manage Restaurants',
-  coffeeshop:  'Manage Coffee Shops',
+  news:       'News dashboard',
+  sellers:    'Sales Partners dashboard',
+  director:   'Director dashboard',
+  restaurant: 'Manage Restaurants',
+  coffeeshop: 'Manage Coffee Shops',
+  finance:    'Finance dashboard',
 };
 
-// Which dashboard rows each role gets. Director sees everything.
 const ROLE_DASHBOARDS = {
-  news:        ['news'],
-  sellers:     ['sellers'],
-  director:    ['director', 'news', 'sellers', 'restaurant', 'coffeeshop'],
-  restaurant:  ['restaurant'],
-  coffeeshop:  ['coffeeshop'],
+  news:       ['news'],
+  sellers:    ['sellers'],
+  director:   ['director', 'news', 'sellers', 'restaurant', 'coffeeshop', 'finance'],
+  restaurant: ['restaurant'],
+  coffeeshop: ['coffeeshop'],
+  finance:    ['finance'],
 };
 
-function Group({ label, children }) {
+function Group({ children }) {
   return (
-    <>
-      <Text style={styles.groupLabel}>{label}</Text>
-      <View style={styles.group}>{children}</View>
-    </>
+    <View style={styles.group}>{children}</View>
   );
 }
 
-// Present for everyone on purpose; dark mode itself is built later.
-function AppearanceRow() {
+// Collapsible Settings accordion row
+function SettingsAccordion({ children }) {
+  const [open, setOpen] = useState(false);
   return (
-    <MenuRow
-      icon="theme-light-dark"
-      label="Appearance"
-      value="Light"
-      onPress={() => showAlert('Coming soon', 'Switching between light and dark mode will be available soon.')}
-      isLast
-    />
+    <View style={[styles.group, { marginBottom: spacing.xl }]}>
+      <TouchableOpacity
+        style={styles.accordionHeader}
+        onPress={() => setOpen(o => !o)}
+        activeOpacity={0.7}
+      >
+        <View style={styles.accordionLeft}>
+          <MaterialCommunityIcons name="cog-outline" size={20} color={colors.text} style={{ marginRight: spacing.sm }} />
+          <Text style={styles.accordionLabel}>Settings</Text>
+        </View>
+        <MaterialCommunityIcons
+          name={open ? 'chevron-up' : 'chevron-down'}
+          size={18}
+          color={colors.textMuted}
+        />
+      </TouchableOpacity>
+      {open && <View style={styles.accordionBody}>{children}</View>}
+    </View>
   );
 }
 
-function HelpRows({ navigation }) {
-  return (
-    <>
-      <MenuRow icon="help-circle-outline" label="Help & FAQ" onPress={() => navigation.navigate('Info', { kind: 'help' })} />
-      <MenuRow
-        icon="shield-check-outline"
-        label="Terms & privacy"
-        onPress={() => navigation.navigate('Info', { kind: 'privacy' })}
-        isLast
-      />
-    </>
-  );
-}
+export default function SettingsList({ user, navigation, myBusiness, waitingRequests, onLogOut, unreadNotifications }) {
 
-export default function SettingsList({ user, navigation, myBusiness, waitingRequests, onLogOut }) {
-  // ---------------------------------------------------------------- signed out
+  // ──────────────────────────────────────────── SIGNED OUT
   if (!user) {
     return (
       <>
-        <Group label="Account">
-          <MenuRow icon="login" label="Log in" onPress={() => navigation.navigate('Login')} />
+        <Group>
           <MenuRow
-            icon="account-plus-outline"
-            label="Create an account"
-            onPress={() => navigation.navigate('SignUp')}
+            icon="login"
+            label="Log in / Sign up"
+            value="Access your account"
+            onPress={() => navigation.navigate('Login')}
+          />
+          <MenuRow
+            icon="map-marker-plus-outline"
+            label="Register your spot"
+            value="Restaurant, café, wedding venue & more"
+            onPress={() => navigation.navigate('RegisterListing')}
+          />
+          <MenuRow
+            icon="information-outline"
+            label="About Us"
+            onPress={() => navigation.navigate('AboutUs')}
             isLast
           />
         </Group>
 
-        <Group label="My activity">
+        <SettingsAccordion>
           <MenuRow
-            icon="clipboard-text-clock-outline"
-            label="My orders"
-            onPress={() =>
-              showAlert('Log in to see your orders', 'Your orders are saved to your account.', [
-                { text: 'Log in', onPress: () => navigation.navigate('Login') },
-              ])
-            }
+            icon="weather-sunny"
+            label="Appearance"
+            value="Light mode"
+            onPress={null}
+          />
+          <MenuRow
+            icon="help-circle-outline"
+            label="Help & FAQ"
+            onPress={() => navigation.navigate('Info', { kind: 'help' })}
+          />
+          <MenuRow
+            icon="shield-check-outline"
+            label="Terms & privacy"
+            onPress={() => navigation.navigate('Info', { kind: 'privacy' })}
             isLast
           />
-        </Group>
-
-        <Group label="Preferences">
-          <AppearanceRow />
-        </Group>
-
-        <Group label="Help">
-          <HelpRows navigation={navigation} />
-        </Group>
+        </SettingsAccordion>
       </>
     );
   }
 
-  // ------------------------------------------------------------------ signed in
+  // ──────────────────────────────────────────── SIGNED IN
   const adminRows = user.role ? ROLE_DASHBOARDS[user.role] || [] : [];
 
   return (
     <>
-      {adminRows.length ? (
-        <Group label="Admin">
+      {/* Admin dashboards */}
+      {adminRows.length > 0 && (
+        <Group>
           {adminRows.map((role, index) => (
             <MenuRow
               key={role}
               icon={ROLE_META[role].icon}
               label={ADMIN_ROW_LABEL[role]}
-              onPress={() => navigation.navigate('Admin', { screen: ROLE_META[role].route })}
+              onPress={() => navigation.navigate(ROLE_META[role].route)}
               isLast={index === adminRows.length - 1}
             />
           ))}
         </Group>
-      ) : null}
+      )}
 
-      <Group label="My activity">
-        <MenuRow
-          icon="clipboard-text-clock-outline"
-          label="My orders"
-          onPress={() => navigation.navigate('Orders')}
-        />
-        <MenuRow
-          icon="inbox-arrow-up-outline"
-          label="My service requests"
-          badgeCount={waitingRequests || null}
-          onPress={() => navigation.navigate('MyRequests')}
-          isLast
-        />
-      </Group>
+      {/* Restaurant / coffee shop owner dashboard */}
+      {user.role === 'restaurant' && (
+        <Group>
+          <MenuRow
+            icon="silverware-fork-knife"
+            label="My Restaurant"
+            value="Bookings, menu & profile"
+            onPress={() => navigation.navigate('RestaurantOwnerDashboard')}
+            isLast
+          />
+        </Group>
+      )}
+      {user.role === 'coffeeshop' && (
+        <Group>
+          <MenuRow
+            icon="coffee-outline"
+            label="My Coffee Shop"
+            value="Bookings & profile"
+            onPress={() => navigation.navigate('RestaurantOwnerDashboard')}
+            isLast
+          />
+        </Group>
+      )}
 
-      <Group label="My business">
-        {myBusiness ? (
-          myBusiness.verified ? (
+      {/* Seller business */}
+      {myBusiness && (
+        <Group>
+          {myBusiness.verified ? (
             <MenuRow
               icon="view-dashboard-outline"
-              label="Business dashboard"
+              label="My Business"
               value={myBusiness.name}
               onPress={() => navigation.navigate('SellerDashboard', { businessId: myBusiness.id })}
               isLast
             />
           ) : (
-            <MenuRow
-              icon="clock-outline"
-              label="Business under review"
-              value={myBusiness.name}
-              onPress={() =>
-                showAlert(
-                  'Under review',
-                  'The platform team is reviewing your business. Your dashboard opens once it is approved.'
-                )
-              }
-              isLast
-            />
-          )
-        ) : (
-          <MenuRow
-            icon="storefront-outline"
-            label="Register a business"
-            value="Become a partner"
-            onPress={() => navigation.navigate('SalesPartner')}
-            isLast
-          />
-        )}
+            <View style={styles.pendingRow}>
+              <MaterialCommunityIcons name="clock-outline" size={20} color={colors.textMuted} style={{ marginRight: spacing.sm }} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.pendingLabel}>{myBusiness.name}</Text>
+                <Text style={styles.pendingValue}>Under review · we'll notify you once approved</Text>
+              </View>
+              <View style={styles.pendingBadge}><Text style={styles.pendingBadgeText}>Pending</Text></View>
+            </View>
+          )}
+        </Group>
+      )}
+
+      {/* My activity */}
+      <Group>
+        <MenuRow
+          icon="bell-outline"
+          label="Notifications"
+          badgeCount={unreadNotifications || null}
+          onPress={() => navigation.navigate('Notifications')}
+        />
+        <MenuRow
+          icon="calendar-check-outline"
+          label="My Bookings"
+          onPress={() => navigation.navigate('MyBookings')}
+        />
+        <MenuRow
+          icon="clipboard-text-clock-outline"
+          label="My Orders"
+          onPress={() => navigation.navigate('Orders')}
+        />
+        <MenuRow
+          icon="information-outline"
+          label="About Us"
+          onPress={() => navigation.navigate('AboutUs')}
+          isLast
+        />
       </Group>
 
-      <Group label="Account">
-        <MenuRow icon="account-edit-outline" label="Edit profile" onPress={() => navigation.navigate('EditProfile')} />
-        <MenuRow icon="key-outline" label="Change password" onPress={() => navigation.navigate('ChangePassword')} isLast />
-      </Group>
 
-      <Group label="Preferences">
-        <AppearanceRow />
-      </Group>
-
-      <Group label="Help">
-        <HelpRows navigation={navigation} />
-      </Group>
-
-      <View style={styles.group}>
-        <MenuRow icon="logout" label="Log out" destructive onPress={onLogOut} isLast />
-      </View>
+      {/* Settings accordion */}
+      <SettingsAccordion>
+        <MenuRow
+          icon="account-edit-outline"
+          label="Edit profile"
+          onPress={() => navigation.navigate('EditProfile')}
+        />
+        <MenuRow
+          icon="key-outline"
+          label="Change password"
+          onPress={() => navigation.navigate('ChangePassword')}
+        />
+        <MenuRow
+          icon="weather-sunny"
+          label="Appearance"
+          value="Light mode"
+          onPress={null}
+        />
+        <MenuRow
+          icon="help-circle-outline"
+          label="Help & FAQ"
+          onPress={() => navigation.navigate('Info', { kind: 'help' })}
+        />
+        <MenuRow
+          icon="shield-check-outline"
+          label="Terms & privacy"
+          onPress={() => navigation.navigate('Info', { kind: 'privacy' })}
+        />
+        <MenuRow
+          icon="logout"
+          label="Log out"
+          destructive
+          onPress={onLogOut}
+          isLast
+        />
+      </SettingsAccordion>
     </>
   );
 }
 
 const styles = StyleSheet.create({
-  groupLabel: {
-    ...typography.caption,
-    fontWeight: '700',
-    color: colors.blue600,
-    letterSpacing: 0.5,
-    marginBottom: spacing.sm,
-    marginLeft: spacing.xs,
-  },
   group: {
     backgroundColor: colors.surface,
     borderRadius: radius.lg,
@@ -214,4 +257,37 @@ const styles = StyleSheet.create({
     overflow: 'hidden',
     marginBottom: spacing.xl,
   },
+  accordionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingHorizontal: spacing.md,
+    paddingVertical: spacing.md + 2,
+  },
+  accordionLeft: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  accordionLabel: {
+    ...typography.body,
+    color: colors.text,
+    fontWeight: '600',
+  },
+  accordionBody: {
+    borderTopWidth: StyleSheet.hairlineWidth,
+    borderTopColor: colors.border,
+  },
+  pendingRow: {
+    flexDirection: 'row', alignItems: 'center',
+    paddingHorizontal: spacing.md, paddingVertical: spacing.md + 2,
+    backgroundColor: colors.surface,
+    borderRadius: radius.lg,
+    borderWidth: StyleSheet.hairlineWidth,
+    borderColor: colors.border,
+    marginBottom: spacing.xl,
+  },
+  pendingLabel: { ...typography.body, color: colors.text, fontWeight: '600' },
+  pendingValue: { ...typography.caption, color: colors.textMuted, marginTop: 2 },
+  pendingBadge: { backgroundColor: 'rgba(245,158,11,0.15)', borderRadius: 8, paddingHorizontal: spacing.sm, paddingVertical: 3 },
+  pendingBadgeText: { fontSize: 11, fontWeight: '700', color: '#f59e0b' },
 });

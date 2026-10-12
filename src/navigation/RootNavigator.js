@@ -53,7 +53,7 @@ export default function RootNavigator() {
   return (
     <Tab.Navigator
       initialRouteName="NewsTab"
-      backBehavior="initialRoute"
+      backBehavior="history"
       tabBar={(props) => <BottomTabBar {...props} />}
       screenOptions={{ headerShown: false }}
     >

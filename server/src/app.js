@@ -30,11 +30,28 @@ const landRoutes     = require('./routes/land');
 const propertiesRoutes = require('./routes/properties');
 const productsRoutes = require('./routes/products');
 const uploadRoutes      = require('./routes/upload');
-const restaurantsRoutes = require('./routes/restaurants');
-const coffeeShopsRoutes = require('./routes/coffeeShops');
+const restaurantsRoutes   = require('./routes/restaurants');
+const coffeeShopsRoutes   = require('./routes/coffeeShops');
+const restoBookingsRoutes = require('./routes/restoBookings');
+const notificationsRoutes = require('./routes/notifications');
+const restaurantMenuRoutes = require('./routes/restaurantMenu');
+const myRestaurantRoutes  = require('./routes/myRestaurant');
+const pendingListingsRoutes = require('./routes/pendingListings');
+const foodOrdersRoutes    = require('./routes/foodOrders');
+const weddingVenuesRoutes = require('./routes/weddingVenues');
+const financeRoutes       = require('./routes/finance');
 
 const app = express();
-app.use(cors());
+app.use(cors({
+  origin: [
+    'https://allinkigali.vercel.app',
+    'https://admin.allinkigali.com',
+    /\.vercel\.app$/,
+    'http://localhost:3000',
+    'http://localhost:19006',
+  ],
+  credentials: true,
+}));
 app.use(express.json());
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
@@ -51,8 +68,16 @@ app.use('/land',       landRoutes);
 app.use('/properties', propertiesRoutes);
 app.use('/products',   productsRoutes);
 app.use('/upload',       uploadRoutes);
-app.use('/restaurants',  restaurantsRoutes);
-app.use('/coffee-shops', coffeeShopsRoutes);
+app.use('/restaurants',    restaurantsRoutes);
+app.use('/coffee-shops',  coffeeShopsRoutes);
+app.use('/resto-bookings', restoBookingsRoutes);
+app.use('/notifications',  notificationsRoutes);
+app.use('/restaurant-menu', restaurantMenuRoutes);
+app.use('/my-restaurant',  myRestaurantRoutes);
+app.use('/pending-listings', pendingListingsRoutes);
+app.use('/food-orders',    foodOrdersRoutes);
+app.use('/wedding-venues', weddingVenuesRoutes);
+app.use('/finance',        financeRoutes);
 
 // Last-resort handler so a route bug returns JSON, not an HTML stack trace,
 // to a client that only ever expects JSON.

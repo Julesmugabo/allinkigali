@@ -15,11 +15,9 @@
  * for you.
  */
 import React, { useCallback, useEffect, useState } from 'react';
-import { Platform, View, Text, Pressable, StyleSheet } from 'react-native';
+import { Platform, View, Text, Pressable, Image, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
-
-import BrandLogo from '../news/BrandLogo';
 import { colors, typography, spacing, radius, shadows } from '../../theme';
 
 const DISMISSED_KEY = 'allinkigali-install-banner-dismissed';
@@ -99,7 +97,7 @@ export default function InstallAppBanner() {
     <View style={[styles.wrap, { paddingTop: insets.top + spacing.sm }]}>
       <View style={styles.row}>
         <View style={styles.logoWell}>
-          <BrandLogo size={26} />
+          <Image source={require('../../../assets/ak-banner.png')} style={{ width: 48, height: 18 }} resizeMode="contain" />
         </View>
 
         <View style={styles.body}>

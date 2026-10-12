@@ -8,18 +8,18 @@
 import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
-import NewsAdminDashboardScreen from '../screens/NewsAdminDashboardScreen';
-import NewsAdminEditorScreen from '../screens/NewsAdminEditorScreen';
-import AdEditorScreen from '../screens/AdEditorScreen';
-import SellersAdminDashboardScreen from '../screens/SellersAdminDashboardScreen';
-import FlierEditorScreen from '../screens/FlierEditorScreen';
-import SalesPartnerScreen from '../screens/SalesPartnerScreen';
-import SellerDashboardScreen from '../screens/SellerDashboardScreen';
-import SellerPlansScreen from '../screens/SellerPlansScreen';
-import BusinessDetailScreen from '../screens/BusinessDetailScreen';
-import DirectorAdminDashboardScreen from '../screens/DirectorAdminDashboardScreen';
-import RestaurantAdminDashboardScreen from '../screens/RestaurantAdminDashboardScreen';
-import CoffeeShopAdminDashboardScreen from '../screens/CoffeeShopAdminDashboardScreen';
+import NewsAdminDashboardScreen from '../screens/news/NewsAdminDashboardScreen';
+import NewsAdminEditorScreen from '../screens/news/NewsAdminEditorScreen';
+import AdEditorScreen from '../screens/news/AdEditorScreen';
+import SellersAdminDashboardScreen from '../screens/admin/SellersAdminDashboardScreen';
+import FlierEditorScreen from '../screens/admin/FlierEditorScreen';
+import SalesPartnerScreen from '../screens/account/SalesPartnerScreen';
+import SellerDashboardScreen from '../screens/account/SellerDashboardScreen';
+import SellerPlansScreen from '../screens/account/SellerPlansScreen';
+import BusinessDetailScreen from '../screens/shop/BusinessDetailScreen';
+import DirectorAdminDashboardScreen from '../screens/admin/DirectorAdminDashboardScreen';
+import RestaurantAdminDashboardScreen from '../screens/admin/RestaurantAdminDashboardScreen';
+import CoffeeShopAdminDashboardScreen from '../screens/admin/CoffeeShopAdminDashboardScreen';
 
 const Stack = createNativeStackNavigator();
 

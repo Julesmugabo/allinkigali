@@ -4,11 +4,10 @@
  * The category strip itself lives in CategoryTabs so this file stays readable.
  */
 import React from 'react';
-import { View, Text, Pressable, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Image, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import BrandLogo from './BrandLogo';
 import CategoryTabs from './CategoryTabs';
 import { colors, typography, spacing, gutter } from '../../theme';
 
@@ -25,14 +24,11 @@ export default function NewsHeader({
     <View style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
       <View style={styles.topRow}>
         <View style={styles.brand}>
-          <BrandLogo size={34} />
-          <View style={styles.wordmarkBlock}>
-            <View style={styles.wordmark}>
-              <Text style={styles.wordmarkAll}>allin</Text>
-              <Text style={styles.wordmarkKigali}>kigali</Text>
-            </View>
-            <Text style={styles.wordmarkSub}>HIRYA NO HINO KWISI</Text>
-          </View>
+          <Image
+            source={require('../../../assets/ak-banner.png')}
+            style={styles.logoImg}
+            resizeMode="contain"
+          />
         </View>
 
         <View style={styles.icons}>
@@ -69,16 +65,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   brand: { flexDirection: 'row', alignItems: 'center' },
-  wordmarkBlock: { marginLeft: spacing.sm },
-  wordmark: { flexDirection: 'row', alignItems: 'baseline' },
-  wordmarkAll: { ...typography.wordmark, color: colors.textOnNavy },
-  wordmarkKigali: { ...typography.wordmark, color: colors.blue300 },
-  wordmarkSub: {
-    ...typography.wordmarkSub,
-    color: colors.blue300,
-    opacity: 0.6,
-    marginTop: -1,
-  },
+  logoImg: { width: 160, height: 40 },
   icons: { flexDirection: 'row', alignItems: 'center' },
   bellDot: {
     position: 'absolute',

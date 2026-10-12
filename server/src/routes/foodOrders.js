@@ -1,0 +1,138 @@
+const express = require('express');
+const { query } = require('../db');
+const { requireAuth } = require('../middleware/auth');
+const requireRole = require('../middleware/requireRole');
+
+const router = express.Router();
+
+// GET /food-orders/delivery-places — restaurants/coffee shops with delivery enabled
+router.get('/delivery-places', async (_req, res) => {
+  const { rows: restos } = await query(
+    `SELECT id, name, location, district, phone, rating,
+            delivery_enabled, delivery_fee, min_order, estimated_time
+     FROM restaurants WHERE delivery_enabled = true ORDER BY name`
+  );
+  const restosMapped = restos.map(r => ({ ...r, place_type: 'restaurant', photos: [] }));
+  const { rows: cafes } = await query(
+    `SELECT id, name, location, district, phone, rating,
+            delivery_enabled, delivery_fee, min_order, estimated_time
+     FROM coffee_shops WHERE delivery_enabled = true ORDER BY name`
+  );
+  const cafesMapped = cafes.map(r => ({ ...r, place_type: 'coffeeshop', photos: [] }));
+  res.json([...restosMapped, ...cafesMapped]);
+});
+
+// GET /food-orders/delivery-places/:id/menu
+router.get('/delivery-places/:id/menu', async (req, res) => {
+  const { rows } = await query(
+    `SELECT * FROM restaurant_menu_items WHERE restaurant_id=$1 AND available=true ORDER BY category, name`,
+    [req.params.id]
+  );
+  res.json(rows);
+});
+
+// POST /food-orders — place an order
+router.post('/', requireAuth, async (req, res) => {
+  const { placeId, placeName, placeType, items, subtotal, deliveryFee, total,
+          deliveryAddress, deliveryPhone, notes, paymentMethod } = req.body || {};
+  if (!placeId || !items?.length || !deliveryAddress || !deliveryPhone) {
+    return res.status(400).json({ error: 'placeId, items, deliveryAddress and deliveryPhone are required.' });
+  }
+  const { rows } = await query(
+    `INSERT INTO food_orders
+      (user_id, place_id, place_name, place_type, items, subtotal, delivery_fee, total,
+       delivery_address, delivery_phone, notes, payment_method)
+     VALUES ($1,$2,$3,$4,$5,$6,$7,$8,$9,$10,$11,$12) RETURNING *`,
+    [req.user.sub, placeId, placeName || '', placeType || 'restaurant',
+     JSON.stringify(items), subtotal || 0, deliveryFee || 0, total || 0,
+     deliveryAddress.trim(), deliveryPhone.trim(), notes?.trim() || '', paymentMethod || 'cash']
+  );
+  const order = rows[0];
+
+  // Notify the restaurant owner
+  const { rows: ownerRows } = await query(
+    `SELECT id FROM users WHERE restaurant_id=$1 OR coffee_shop_id=$1`, [placeId]
+  );
+  if (ownerRows[0]) {
+    await query(
+      `INSERT INTO notifications (user_id, title, body, type, ref_id)
+       VALUES ($1,$2,$3,'new_order',$4)`,
+      [ownerRows[0].id,
+       'New delivery order!',
+       `Order #${order.id.slice(-6).toUpperCase()} — ${items.length} item(s) to ${deliveryAddress}`,
+       order.id]
+    );
+  }
+
+  res.status(201).json(order);
+});
+
+// GET /food-orders/my — customer's own orders
+router.get('/my', requireAuth, async (req, res) => {
+  const { rows } = await query(
+    `SELECT * FROM food_orders WHERE user_id=$1 ORDER BY created_at DESC`,
+    [req.user.sub]
+  );
+  res.json(rows);
+});
+
+// PUT /food-orders/:id/cancel — customer cancels
+router.put('/:id/cancel', requireAuth, async (req, res) => {
+  const { rows } = await query(
+    `UPDATE food_orders SET status='cancelled', updated_at=NOW()
+     WHERE id=$1 AND user_id=$2 AND status IN ('pending','confirmed')
+     RETURNING *`,
+    [req.params.id, req.user.sub]
+  );
+  if (!rows[0]) return res.status(404).json({ error: 'Order not found or cannot be cancelled.' });
+  res.json(rows[0]);
+});
+
+// Restaurant owner views their orders
+router.get('/restaurant-orders', requireAuth, requireRole('restaurant', 'coffeeshop', 'director'), async (req, res) => {
+  const restaurantId = req.user.restaurantId || req.user.restaurant_id;
+  if (!restaurantId) return res.status(400).json({ error: 'No restaurant linked to account.' });
+  const { rows } = await query(
+    `SELECT fo.*, u.first_name, u.last_name, u.email as customer_email
+     FROM food_orders fo
+     LEFT JOIN users u ON fo.user_id = u.id
+     WHERE fo.place_id=$1 ORDER BY fo.created_at DESC`,
+    [restaurantId]
+  );
+  res.json(rows);
+});
+
+// Restaurant owner updates order status
+router.put('/:id/status', requireAuth, requireRole('restaurant', 'coffeeshop', 'director'), async (req, res) => {
+  const { status } = req.body || {};
+  const allowed = ['confirmed','preparing','ready','delivered','cancelled'];
+  if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status.' });
+  const restaurantId = req.user.restaurantId || req.user.restaurant_id;
+  const { rows } = await query(
+    `UPDATE food_orders SET status=$1, updated_at=NOW()
+     WHERE id=$2 AND place_id=$3 RETURNING *`,
+    [status, req.params.id, restaurantId]
+  );
+  if (!rows[0]) return res.status(404).json({ error: 'Order not found.' });
+
+  // Notify customer
+  const msgMap = {
+    confirmed: 'Your order has been confirmed and will be prepared shortly.',
+    preparing: 'Your order is being prepared!',
+    ready: 'Your order is ready and on the way!',
+    delivered: 'Your order has been delivered. Enjoy!',
+    cancelled: 'Your order was cancelled by the restaurant. Please contact them for details.',
+  };
+  await query(
+    `INSERT INTO notifications (user_id, title, body, type, ref_id)
+     VALUES ($1,$2,$3,'order_update',$4)`,
+    [rows[0].user_id,
+     `Order ${status}`,
+     msgMap[status] || `Your order status: ${status}`,
+     rows[0].id]
+  );
+
+  res.json(rows[0]);
+});
+
+module.exports = router;

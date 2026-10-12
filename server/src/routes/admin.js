@@ -72,7 +72,7 @@ router.get('/admins', requireAuth, requireRole('director'), async (_req, res) =>
 router.post('/assign-role', requireAuth, requireRole('director'), async (req, res) => {
   const { email, role } = req.body || {};
   if (!email || !email.trim()) return res.status(400).json({ error: 'email is required.' });
-  const ASSIGNABLE = ['news', 'sellers', 'ibibanza', 'inzuzamacye', 'salehouse', 'allingadget', 'uruhurwiza'];
+  const ASSIGNABLE = ['news', 'sellers', 'restaurant', 'coffeeshop', 'ibibanza', 'inzuzamacye', 'salehouse', 'allingadget', 'uruhurwiza', 'finance'];
   if (role !== null && !ASSIGNABLE.includes(role)) {
     return res.status(400).json({ error: `role must be one of: ${ASSIGNABLE.join(', ')}, or null to revoke.` });
   }
@@ -86,6 +86,78 @@ router.post('/assign-role', requireAuth, requireRole('director'), async (req, re
     return res.status(404).json({ error: 'No account found for that email — they need to create an account first.' });
   }
   res.json(adminToJson(rows[0]));
+});
+
+// Link a restaurant_id or coffee_shop_id to a user account
+router.post('/link-restaurant', requireAuth, requireRole('director'), async (req, res) => {
+  const { email, restaurantId, coffeeShopId } = req.body || {};
+  if (!email || !email.trim()) return res.status(400).json({ error: 'email is required.' });
+  let sql, params;
+  if (coffeeShopId) {
+    sql = `UPDATE users SET coffee_shop_id=$1, restaurant_id=NULL, role='coffeeshop' WHERE email=$2
+           RETURNING id, email, first_name, last_name, role, restaurant_id, coffee_shop_id, created_at`;
+    params = [coffeeShopId, email.trim().toLowerCase()];
+  } else {
+    sql = `UPDATE users SET restaurant_id=$1, coffee_shop_id=NULL, role='restaurant' WHERE email=$2
+           RETURNING id, email, first_name, last_name, role, restaurant_id, coffee_shop_id, created_at`;
+    params = [restaurantId || null, email.trim().toLowerCase()];
+  }
+  const { rows } = await query(sql, params);
+  if (!rows[0]) return res.status(404).json({ error: 'No account found for that email.' });
+  res.json({ ...adminToJson(rows[0]), restaurantId: rows[0].restaurant_id, coffeeShopId: rows[0].coffee_shop_id });
+});
+
+// List all restaurants and coffee shops (for the link picker and admin dashboard)
+router.get('/restaurants-list', requireAuth, requireRole('director', 'sellers'), async (_req, res) => {
+  const { rows: restos } = await query(
+    `SELECT id, name, location, phone, open_status, delivery_enabled, delivery_fee, estimated_time, 'restaurant' as type FROM restaurants ORDER BY name`
+  );
+  const { rows: cafes } = await query(
+    `SELECT id, name, location, phone, open_status, NULL::boolean as delivery_enabled, NULL::numeric as delivery_fee, NULL as estimated_time, 'coffeeshop' as type FROM coffee_shops ORDER BY name`
+  );
+  res.json([...restos, ...cafes]);
+});
+
+// PATCH a restaurant's admin-editable fields (open_status, delivery_enabled, delivery_fee, estimated_time)
+router.patch('/restaurants/:id', requireAuth, requireRole('director', 'sellers'), async (req, res) => {
+  const allowed = ['open_status', 'delivery_enabled', 'delivery_fee', 'estimated_time', 'name', 'location', 'phone'];
+  const sets = [];
+  const params = [];
+  for (const key of allowed) {
+    if (req.body[key] !== undefined) {
+      params.push(req.body[key]);
+      sets.push(`${key}=$${params.length}`);
+    }
+  }
+  if (!sets.length) return res.status(400).json({ error: 'No fields to update.' });
+  params.push(req.params.id);
+  const { rows } = await query(
+    `UPDATE restaurants SET ${sets.join(', ')}, updated_at=NOW() WHERE id=$${params.length} RETURNING *`,
+    params
+  );
+  if (!rows.length) return res.status(404).json({ error: 'Not found.' });
+  res.json(rows[0]);
+});
+
+// PATCH a coffee shop's admin-editable fields
+router.patch('/coffee-shops/:id', requireAuth, requireRole('director', 'sellers'), async (req, res) => {
+  const allowed = ['open_status', 'name', 'location', 'phone'];
+  const sets = [];
+  const params = [];
+  for (const key of allowed) {
+    if (req.body[key] !== undefined) {
+      params.push(req.body[key]);
+      sets.push(`${key}=$${params.length}`);
+    }
+  }
+  if (!sets.length) return res.status(400).json({ error: 'No fields to update.' });
+  params.push(req.params.id);
+  const { rows } = await query(
+    `UPDATE coffee_shops SET ${sets.join(', ')}, updated_at=NOW() WHERE id=$${params.length} RETURNING *`,
+    params
+  );
+  if (!rows.length) return res.status(404).json({ error: 'Not found.' });
+  res.json(rows[0]);
 });
 
 module.exports = router;

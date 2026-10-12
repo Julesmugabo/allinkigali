@@ -23,14 +23,18 @@ function userToJson(row) {
     lastName: row.last_name,
     phone: row.phone,
     role: row.role,
+    restaurantId: row.restaurant_id || null,
+    coffeeShopId: row.coffee_shop_id || null,
     createdAt: row.created_at,
   };
 }
 
 function signToken(user) {
-  return jwt.sign({ sub: user.id, email: user.email, role: user.role }, process.env.JWT_SECRET, {
-    expiresIn: '7d',
-  });
+  return jwt.sign(
+    { sub: user.id, email: user.email, role: user.role, restaurantId: user.restaurant_id || null, coffeeShopId: user.coffee_shop_id || null },
+    process.env.JWT_SECRET,
+    { expiresIn: '7d' }
+  );
 }
 
 router.post('/signup', async (req, res) => {
@@ -123,6 +127,43 @@ router.get('/me', requireAuth, async (req, res) => {
   const { rows } = await query('select * from users where id = $1', [req.user.sub]);
   if (!rows[0]) return res.status(404).json({ error: 'Account not found.' });
   res.json({ user: userToJson(rows[0]) });
+});
+
+// POST /auth/google — verify a Google One Tap credential and sign in / create account
+router.post('/google', async (req, res) => {
+  const { credential } = req.body || {};
+  if (!credential) return res.status(400).json({ error: 'credential required.' });
+
+  // Verify the Google ID token using Google's tokeninfo endpoint
+  const verifyRes = await fetch(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`);
+  if (!verifyRes.ok) return res.status(401).json({ error: 'Invalid Google token.' });
+  const payload = await verifyRes.json();
+
+  const clientId = process.env.GOOGLE_CLIENT_ID;
+  if (clientId && payload.aud !== clientId) {
+    return res.status(401).json({ error: 'Token audience mismatch.' });
+  }
+  if (!payload.email_verified || payload.email_verified === 'false') {
+    return res.status(401).json({ error: 'Google email not verified.' });
+  }
+
+  const email = payload.email.toLowerCase();
+  const firstName = (payload.given_name || payload.name || email.split('@')[0]).trim();
+  const lastName = (payload.family_name || '').trim();
+
+  // Find existing account or create one
+  let { rows } = await query('SELECT * FROM users WHERE email=$1', [email]);
+  let user = rows[0];
+  if (!user) {
+    const { rows: created } = await query(
+      `INSERT INTO users (email, first_name, last_name, phone, role, password_hash)
+       VALUES ($1,$2,$3,'',null,'') RETURNING *`,
+      [email, firstName, lastName || firstName]
+    );
+    user = created[0];
+  }
+
+  res.json({ token: signToken(user), user: userToJson(user) });
 });
 
 module.exports = router;

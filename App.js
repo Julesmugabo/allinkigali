@@ -6,8 +6,8 @@
  * them because both the customer screens and the admin dashboards read from
  * those stores.
  */
-import React from 'react';
-import { View } from 'react-native';
+import React, { useEffect, useMemo } from 'react';
+import { View, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer } from '@react-navigation/native';
@@ -22,11 +22,93 @@ import { BookingProvider } from './src/context/BookingContext';
 import { FliersProvider } from './src/context/FliersContext';
 import { NewsProvider } from './src/context/NewsContext';
 import { AdsProvider } from './src/context/AdsContext';
-import { PropertyProvider } from './src/context/PropertyContext';
-import { LandProvider } from './src/context/LandContext';
 import { navTheme, colors } from './src/theme';
 
+const linking = {
+  prefixes: [],
+  config: {
+    screens: {
+      Main: {
+        path: '',
+        screens: {
+          NewsTab: {
+            path: 'news',
+            screens: {
+              News: '',
+              ArticleDetail: 'article/:id',
+              AllArticles: 'articles',
+              Story: 'story/:id',
+              Notifications: 'notifications',
+            },
+          },
+          ShopTab: {
+            path: 'shop',
+            screens: {
+              Shop: '',
+              RestaurantMarket: 'restaurants',
+              RestaurantDetail: 'restaurant/:id',
+              CoffeeShopMarket: 'coffee-shops',
+              CoffeeShopDetail: 'coffee-shop/:id',
+              OrderFood: 'order-food',
+              WeddingMarket: 'wedding-venues',
+              WeddingDetail: 'wedding-venue/:id',
+              Checkout: 'checkout',
+              BusinessDetail: 'business/:id',
+              BusinessBook: 'book/:id',
+            },
+          },
+          AccountTab: {
+            path: 'me',
+            screens: {
+              Account: '',
+              Orders: 'orders',
+              OrderDetail: 'order/:id',
+              Login: 'login',
+              SignUp: 'signup',
+              EditProfile: 'edit-profile',
+              ChangePassword: 'change-password',
+              SellerDashboard: 'seller',
+              SellerPlans: 'seller-plans',
+              SalesPartner: 'sales-partner',
+              Info: 'info',
+              RestaurantOwnerDashboard: 'restaurant-owner',
+              Notifications: 'my-notifications',
+              MyBookings: 'my-bookings',
+              RegisterListing: 'register-listing',
+              NewsAdminDashboard: 'admin-news',
+              NewsAdminEditor: 'admin-news-editor',
+              AdEditor: 'admin-ad-editor',
+              SellersAdminDashboard: 'admin-sellers',
+              FlierEditor: 'admin-flier-editor',
+              DirectorAdminDashboard: 'admin-director',
+              RestaurantAdminDashboard: 'admin-restaurants',
+              CoffeeShopAdminDashboard: 'admin-coffee-shops',
+              BusinessDetail: 'business/:id',
+              AboutUs: 'about',
+              FinanceDashboard: 'admin-finance',
+            },
+          },
+        },
+      },
+    },
+  },
+};
+
 export default function App() {
+  useEffect(() => {
+    if (Platform.OS === 'web') {
+      const style = document.createElement('style');
+      style.textContent = `
+        input, textarea {
+          outline: none !important;
+          background-color: transparent !important;
+          box-shadow: none !important;
+        }
+      `;
+      document.head.appendChild(style);
+    }
+  }, []);
+
   return (
     <SafeAreaProvider>
       <UserProvider>
@@ -37,22 +119,18 @@ export default function App() {
                 <FliersProvider>
                   <NewsProvider>
                     <AdsProvider>
-                      <PropertyProvider>
-                        <LandProvider>
-                        {/* Fixes a real bug: an elastic/overscroll bounce on a
-                            scrollable screen briefly reveals whatever sits
-                            behind it. With no background here, that was the
-                            page's default white — a jarring flash, especially
-                            on the dark navy screens (Shop, Me, Admin). */}
-                        <View style={{ flex: 1, backgroundColor: colors.navy800 }}>
-                          <StatusBar style="light" />
-                          <InstallAppBanner />
-                          <NavigationContainer theme={navTheme}>
-                            <AppNavigator />
-                          </NavigationContainer>
-                        </View>
-                        </LandProvider>
-                      </PropertyProvider>
+                      {/* Fixes a real bug: an elastic/overscroll bounce on a
+                          scrollable screen briefly reveals whatever sits
+                          behind it. With no background here, that was the
+                          page's default white — a jarring flash, especially
+                          on the dark navy screens (Shop, Me, Admin). */}
+                      <View style={{ flex: 1, backgroundColor: colors.navy800 }}>
+                        <StatusBar style="light" />
+                        <InstallAppBanner />
+                        <NavigationContainer theme={navTheme} linking={linking}>
+                          <AppNavigator />
+                        </NavigationContainer>
+                      </View>
                     </AdsProvider>
                   </NewsProvider>
                 </FliersProvider>

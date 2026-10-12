@@ -43,6 +43,15 @@ function articleToJson(row) {
     publishedAt: row.published_at,
     storyId: row.story_id,
     labels: row.labels || [],
+    authorId: row.author_id,
+    publishAt: row.publish_at,
+    slug: row.slug,
+    metaDescription: row.meta_description,
+    ogImage: row.og_image,
+    breakingExpiresAt: row.breaking_expires_at,
+    isSponsored: row.is_sponsored,
+    readTimeMin: row.read_time_min,
+    shares: row.shares,
   };
 }
 
@@ -75,6 +84,15 @@ function articleFields(data) {
     publishedAt: 'published_at',
     storyId: 'story_id',
     labels: 'labels',
+    authorId: 'author_id',
+    publishAt: 'publish_at',
+    slug: 'slug',
+    metaDescription: 'meta_description',
+    ogImage: 'og_image',
+    breakingExpiresAt: 'breaking_expires_at',
+    isSponsored: 'is_sponsored',
+    readTimeMin: 'read_time_min',
+    shares: 'shares',
   };
   const columns = [];
   const values = [];
@@ -247,6 +265,219 @@ router.post('/articles/:id/view', async (req, res) => {
     [req.params.id]
   );
   res.status(204).end();
+});
+
+// ── Authors ──────────────────────────────────────────────────────────────────
+router.get('/authors', async (_req, res) => {
+  const { rows } = await query('select * from news_authors order by name');
+  res.json(rows);
+});
+
+router.post('/authors', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const { name, bio, avatarUrl, email, role } = req.body || {};
+  if (!name) return res.status(400).json({ error: 'name is required.' });
+  const { rows } = await query(
+    `insert into news_authors (name, bio, avatar_url, email, role)
+     values ($1, $2, $3, $4, $5) returning *`,
+    [name, bio || null, avatarUrl || null, email || null, role || 'reporter']
+  );
+  res.status(201).json(rows[0]);
+});
+
+router.patch('/authors/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const map = { name: 'name', bio: 'bio', avatarUrl: 'avatar_url', email: 'email', role: 'role', isActive: 'is_active' };
+  const cols = [], vals = [];
+  Object.entries(map).forEach(([k, col]) => { if (k in req.body) { cols.push(col); vals.push(req.body[k]); } });
+  if (!cols.length) return res.status(400).json({ error: 'No fields provided.' });
+  const setClause = cols.map((c, i) => `${c} = $${i + 1}`).join(', ');
+  const { rows } = await query(`update news_authors set ${setClause} where id = $${cols.length + 1} returning *`, [...vals, req.params.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Author not found.' });
+  res.json(rows[0]);
+});
+
+router.delete('/authors/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  await query('update news_authors set is_active = false where id = $1', [req.params.id]);
+  res.status(204).end();
+});
+
+// ── Scheduled publishing — publish articles whose publish_at <= now ───────────
+router.post('/articles/publish-scheduled', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const { rows } = await query(
+    `update news_articles set status = 'published', published_at = now()
+     where status = 'draft' and publish_at is not null and publish_at <= now()
+     returning id, title`
+  );
+  res.json({ published: rows });
+});
+
+// ── Breaking flag auto-expiry ─────────────────────────────────────────────────
+router.post('/articles/expire-breaking', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const { rows } = await query(
+    `update news_articles set is_breaking = false
+     where is_breaking and breaking_expires_at is not null and breaking_expires_at <= now()
+     returning id, title`
+  );
+  res.json({ expired: rows });
+});
+
+// ── Advertisers ───────────────────────────────────────────────────────────────
+router.get('/advertisers', requireAuth, requireRole('news', 'director'), async (_req, res) => {
+  const { rows } = await query('select * from news_advertisers order by name');
+  res.json(rows);
+});
+
+router.post('/advertisers', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const { name, contact, email, phone, logoUrl, notes } = req.body || {};
+  if (!name) return res.status(400).json({ error: 'name is required.' });
+  const { rows } = await query(
+    `insert into news_advertisers (name, contact, email, phone, logo_url, notes)
+     values ($1, $2, $3, $4, $5, $6) returning *`,
+    [name, contact || null, email || null, phone || null, logoUrl || null, notes || null]
+  );
+  res.status(201).json(rows[0]);
+});
+
+router.patch('/advertisers/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const map = { name: 'name', contact: 'contact', email: 'email', phone: 'phone', logoUrl: 'logo_url', notes: 'notes', isActive: 'is_active' };
+  const cols = [], vals = [];
+  Object.entries(map).forEach(([k, col]) => { if (k in req.body) { cols.push(col); vals.push(req.body[k]); } });
+  if (!cols.length) return res.status(400).json({ error: 'No fields provided.' });
+  const setClause = cols.map((c, i) => `${c} = $${i + 1}`).join(', ');
+  const { rows } = await query(`update news_advertisers set ${setClause} where id = $${cols.length + 1} returning *`, [...vals, req.params.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Advertiser not found.' });
+  res.json(rows[0]);
+});
+
+router.delete('/advertisers/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const { rowCount } = await query('delete from news_advertisers where id = $1', [req.params.id]);
+  if (!rowCount) return res.status(404).json({ error: 'Advertiser not found.' });
+  res.status(204).end();
+});
+
+// ── Campaigns ─────────────────────────────────────────────────────────────────
+router.get('/campaigns', requireAuth, requireRole('news', 'director'), async (_req, res) => {
+  const { rows } = await query(
+    `select c.*, a.name as advertiser_name
+     from news_campaigns c join news_advertisers a on a.id = c.advertiser_id
+     order by c.created_at desc`
+  );
+  res.json(rows);
+});
+
+router.post('/campaigns', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const { advertiserId, name, budget, startsAt, endsAt, notes } = req.body || {};
+  if (!advertiserId || !name) return res.status(400).json({ error: 'advertiserId and name are required.' });
+  const { rows } = await query(
+    `insert into news_campaigns (advertiser_id, name, budget, starts_at, ends_at, notes)
+     values ($1, $2, $3, $4, $5, $6) returning *`,
+    [advertiserId, name, budget || null, startsAt || null, endsAt || null, notes || null]
+  );
+  res.status(201).json(rows[0]);
+});
+
+router.patch('/campaigns/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const map = { name: 'name', budget: 'budget', startsAt: 'starts_at', endsAt: 'ends_at', status: 'status', notes: 'notes' };
+  const cols = [], vals = [];
+  Object.entries(map).forEach(([k, col]) => { if (k in req.body) { cols.push(col); vals.push(req.body[k]); } });
+  if (!cols.length) return res.status(400).json({ error: 'No fields provided.' });
+  const setClause = cols.map((c, i) => `${c} = $${i + 1}`).join(', ');
+  const { rows } = await query(`update news_campaigns set ${setClause} where id = $${cols.length + 1} returning *`, [...vals, req.params.id]);
+  if (!rows[0]) return res.status(404).json({ error: 'Campaign not found.' });
+  res.json(rows[0]);
+});
+
+router.delete('/campaigns/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const { rowCount } = await query('delete from news_campaigns where id = $1', [req.params.id]);
+  if (!rowCount) return res.status(404).json({ error: 'Campaign not found.' });
+  res.status(204).end();
+});
+
+// ── Ad placement impressions + clicks ────────────────────────────────────────
+router.post('/ads/:id/impression', async (req, res) => {
+  await query(
+    `insert into news_ad_events (placement_id, event_type, article_id)
+     select id, 'impression', $2 from news_ad_placements where ad_id = $1`,
+    [req.params.id, req.body?.articleId || null]
+  );
+  res.status(204).end();
+});
+
+router.post('/ads/:id/click', async (req, res) => {
+  await query(
+    `insert into news_ad_events (placement_id, event_type, article_id)
+     select id, 'click', $2 from news_ad_placements where ad_id = $1`,
+    [req.params.id, req.body?.articleId || null]
+  );
+  res.status(204).end();
+});
+
+// ── Analytics endpoints ──────────────────────────────────────────────────────
+router.get('/analytics/reads-over-time', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const days = parseInt(req.query.days, 10) || 30;
+  const { rows } = await query(
+    `select date_trunc('day', published_at)::date as day, sum(views) as views
+     from news_articles
+     where published_at >= now() - ($1 || ' days')::interval
+       and status = 'published'
+     group by 1 order by 1`,
+    [days]
+  );
+  res.json(rows);
+});
+
+router.get('/analytics/top-articles', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const limit = parseInt(req.query.limit, 10) || 10;
+  const { rows } = await query(
+    `select id, title, category, views, shares, published_at
+     from news_articles where status = 'published'
+     order by views desc limit $1`,
+    [limit]
+  );
+  res.json(rows);
+});
+
+router.get('/analytics/by-category', requireAuth, requireRole('news', 'director'), async (_req, res) => {
+  const { rows } = await query(
+    `select category, count(*) as articles, sum(views) as total_views
+     from news_articles where status = 'published'
+     group by category order by total_views desc`
+  );
+  res.json(rows);
+});
+
+router.get('/analytics/by-author', requireAuth, requireRole('news', 'director'), async (_req, res) => {
+  const { rows } = await query(
+    `select a.id, a.name, count(ar.id) as articles, sum(ar.views) as total_views
+     from news_authors a
+     left join news_articles ar on ar.author_id = a.id and ar.status = 'published'
+     group by a.id, a.name order by total_views desc`
+  );
+  res.json(rows);
+});
+
+// ── Workflow settings ────────────────────────────────────────────────────────
+router.get('/workflow-settings', requireAuth, requireRole('news', 'director'), async (_req, res) => {
+  const { rows } = await query('select * from news_workflow_settings where id = 1');
+  res.json(rows[0] || {});
+});
+
+router.patch('/workflow-settings', requireAuth, requireRole('news', 'director'), async (req, res) => {
+  const map = {
+    breakingExpiryHours: 'breaking_expiry_hours',
+    scheduledCheckInterval: 'scheduled_check_interval',
+    requireEditorApproval: 'require_editor_approval',
+    defaultPublishStatus: 'default_publish_status',
+    adFrequencyEveryN: 'ad_frequency_every_n',
+  };
+  const cols = [], vals = [];
+  Object.entries(map).forEach(([k, col]) => { if (k in req.body) { cols.push(col); vals.push(req.body[k]); } });
+  if (!cols.length) return res.status(400).json({ error: 'No fields provided.' });
+  const setClause = cols.map((c, i) => `${c} = $${i + 1}`).join(', ');
+  const { rows } = await query(
+    `update news_workflow_settings set ${setClause}, updated_at = now() where id = 1 returning *`,
+    vals
+  );
+  res.json(rows[0]);
 });
 
 module.exports = router;

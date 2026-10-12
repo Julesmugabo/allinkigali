@@ -1,6 +1,5 @@
 /**
- * MarketplaceMenu.js — Two entry cards on the Resto/Coffee Shop tab:
- * Book Restaurant and Explore Coffee Shops.
+ * MarketplaceMenu.js — Entry cards on the Resto/Coffee Shop tab.
  */
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
@@ -8,7 +7,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import { colors, typography, spacing, radius } from '../../theme';
 
-const ITEMS = [
+const DISCOVER = [
   {
     key: 'restaurant',
     label: 'Book Restaurant',
@@ -18,10 +17,24 @@ const ITEMS = [
   },
   {
     key: 'coffee',
-    label: 'Explore Coffee Shops',
+    label: 'Coffee Shops',
     subtitle: 'Find the perfect spot',
     icon: 'coffee-outline',
     route: 'CoffeeShopMarket',
+  },
+  {
+    key: 'wedding',
+    label: 'Wedding Venues',
+    subtitle: 'Explore & book a venue',
+    icon: 'flower-outline',
+    route: 'WeddingMarket',
+  },
+  {
+    key: 'order',
+    label: 'Order Food',
+    subtitle: 'Delivered to your door',
+    icon: 'moped',
+    route: 'OrderFood',
   },
 ];
 
@@ -30,17 +43,13 @@ export default function MarketplaceMenu({ navigation }) {
     <View style={styles.container}>
       <Text style={styles.sectionLabel}>DISCOVER</Text>
       <View style={styles.grid}>
-        {ITEMS.map((item, index) => (
+        {DISCOVER.map((item) => (
           <Pressable
             key={item.key}
             onPress={() => navigation.navigate(item.route)}
             accessibilityRole="button"
             accessibilityLabel={item.label}
-            style={({ pressed }) => [
-              styles.card,
-              index === 0 && styles.cardGap,
-              pressed && styles.cardPressed,
-            ]}
+            style={({ pressed }) => [styles.card, pressed && styles.cardPressed]}
           >
             <View style={styles.iconWell}>
               <MaterialCommunityIcons name={item.icon} size={26} color={colors.blue300} />
@@ -63,10 +72,10 @@ const styles = StyleSheet.create({
     letterSpacing: 0.6,
     marginBottom: spacing.sm,
   },
-  grid: { flexDirection: 'row' },
-  cardGap: { marginRight: '4%' },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: 8 },
+  cardGap: {},
   card: {
-    flex: 1,
+    width: '48%',
     backgroundColor: 'rgba(255,255,255,0.08)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(133,183,235,0.22)',

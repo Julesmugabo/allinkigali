@@ -144,6 +144,25 @@ export function UserProvider({ children }) {
     }
   }, []);
 
+  const signInWithGoogle = useCallback(async (credential) => {
+    setIsLoading(true);
+    setError(null);
+    try {
+      const { token, user: signedInUser } = await apiFetch('/auth/google', {
+        method: 'POST',
+        body: { credential },
+      });
+      await setToken(token);
+      setUser(signedInUser);
+      return signedInUser;
+    } catch (e) {
+      setError(e.message);
+      throw e;
+    } finally {
+      setIsLoading(false);
+    }
+  }, []);
+
   const changePassword = useCallback(async ({ currentPassword, newPassword }) => {
     await apiFetch('/auth/change-password', { method: 'POST', body: { currentPassword, newPassword } });
   }, []);
@@ -164,11 +183,12 @@ export function UserProvider({ children }) {
       clearError,
       signUp,
       signIn,
+      signInWithGoogle,
       saveProfile,
       changePassword,
       signOut,
     }),
-    [user, isLoading, isBootstrapping, error, clearError, signUp, signIn, saveProfile, changePassword, signOut]
+    [user, isLoading, isBootstrapping, error, clearError, signUp, signIn, signInWithGoogle, saveProfile, changePassword, signOut]
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

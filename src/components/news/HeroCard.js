@@ -7,7 +7,6 @@ import React from 'react';
 import { View, Text, Pressable, Image, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-import BrandLogo from './BrandLogo';
 import ArticleLabels from './ArticleLabels';
 import ViewCount from './ViewCount';
 import { useNews } from '../../context/NewsContext';
@@ -33,7 +32,7 @@ export default function HeroCard({ article, onPress, onStoryPress }) {
           <Image source={{ uri: article.imageUrl }} style={styles.image} resizeMode="cover" />
         ) : (
           <View style={styles.placeholder}>
-            <BrandLogo size={104} showMeridians opacity={0.13} />
+            <MaterialCommunityIcons name="newspaper-variant-outline" size={64} color="rgba(133,183,235,0.2)" />
           </View>
         )}
 
@@ -96,7 +95,8 @@ const styles = StyleSheet.create({
   },
   pressed: { opacity: 0.92 },
   imageWell: {
-    height: 168,
+    width: '100%',
+    aspectRatio: 16 / 9,
     backgroundColor: colors.navy700,
     alignItems: 'center',
     justifyContent: 'center',
