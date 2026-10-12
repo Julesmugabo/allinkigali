@@ -16,15 +16,15 @@ CREATE TABLE IF NOT EXISTS news_authors (
 );
 
 -- ── Article schema additions ──────────────────────────────────────────────────
-ALTER TABLE articles ADD COLUMN IF NOT EXISTS author_id       INT REFERENCES news_authors(id) ON DELETE SET NULL;
-ALTER TABLE articles ADD COLUMN IF NOT EXISTS publish_at      TIMESTAMPTZ;
-ALTER TABLE articles ADD COLUMN IF NOT EXISTS slug            TEXT;
-ALTER TABLE articles ADD COLUMN IF NOT EXISTS meta_description TEXT;
-ALTER TABLE articles ADD COLUMN IF NOT EXISTS og_image        TEXT;
-ALTER TABLE articles ADD COLUMN IF NOT EXISTS breaking_expires_at TIMESTAMPTZ;
-ALTER TABLE articles ADD COLUMN IF NOT EXISTS is_sponsored    BOOLEAN NOT NULL DEFAULT false;
-ALTER TABLE articles ADD COLUMN IF NOT EXISTS read_time_min   SMALLINT;  -- estimated minutes
-ALTER TABLE articles ADD COLUMN IF NOT EXISTS shares          INT NOT NULL DEFAULT 0;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS author_id       INT REFERENCES news_authors(id) ON DELETE SET NULL;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS publish_at      TIMESTAMPTZ;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS slug            TEXT;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS meta_description TEXT;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS og_image        TEXT;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS breaking_expires_at TIMESTAMPTZ;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS is_sponsored    BOOLEAN NOT NULL DEFAULT false;
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS read_time_min   SMALLINT;  -- estimated minutes
+ALTER TABLE news_articles ADD COLUMN IF NOT EXISTS shares          INT NOT NULL DEFAULT 0;
 
 -- ── Advertisers ──────────────────────────────────────────────────────────────
 CREATE TABLE IF NOT EXISTS news_advertisers (
@@ -57,7 +57,7 @@ CREATE TABLE IF NOT EXISTS news_campaigns (
 CREATE TABLE IF NOT EXISTS news_ad_placements (
   id            SERIAL PRIMARY KEY,
   campaign_id   INT NOT NULL REFERENCES news_campaigns(id) ON DELETE CASCADE,
-  ad_id         INT REFERENCES ads(id) ON DELETE SET NULL,
+  ad_id         TEXT,  -- references ads.id (stored as text to avoid FK type mismatch)
   placement     TEXT NOT NULL DEFAULT 'feed', -- feed | banner | sidebar | breaking
   cpm           NUMERIC(10,4) NOT NULL DEFAULT 0, -- cost per mille
   max_impressions INT,
@@ -69,7 +69,7 @@ CREATE TABLE IF NOT EXISTS news_ad_events (
   id            BIGSERIAL PRIMARY KEY,
   placement_id  INT NOT NULL REFERENCES news_ad_placements(id) ON DELETE CASCADE,
   event_type    TEXT NOT NULL, -- impression | click
-  article_id    INT REFERENCES articles(id) ON DELETE SET NULL,
+  article_id    INT,  -- soft reference to news_articles; no FK to avoid type mismatch
   created_at    TIMESTAMPTZ NOT NULL DEFAULT NOW()
 );
 

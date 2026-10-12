@@ -74,6 +74,7 @@ app.use('/resto-bookings', restoBookingsRoutes);
 app.use('/notifications',  notificationsRoutes);
 app.use('/restaurant-menu', restaurantMenuRoutes);
 app.use('/my-restaurant',  myRestaurantRoutes);
+app.use('/my-coffeeshop',  myRestaurantRoutes); // same handler, getContext() routes by role
 app.use('/pending-listings', pendingListingsRoutes);
 app.use('/food-orders',    foodOrdersRoutes);
 app.use('/wedding-venues', weddingVenuesRoutes);

@@ -18,6 +18,7 @@ import InfoScreen from '../screens/account/InfoScreen';
 import LoginScreen from '../screens/account/LoginScreen';
 import SignUpScreen from '../screens/account/SignUpScreen';
 import RestaurantOwnerDashboardScreen from '../screens/admin/RestaurantOwnerDashboardScreen';
+import CoffeeShopOwnerDashboardScreen from '../screens/admin/CoffeeShopOwnerDashboardScreen';
 import NotificationsScreen from '../screens/account/NotificationsScreen';
 import MyBookingsScreen from '../screens/account/MyBookingsScreen';
 import RegisterListingScreen from '../screens/account/RegisterListingScreen';
@@ -57,6 +58,7 @@ export default function AccountStack() {
       <Stack.Screen name="Login" component={LoginScreen} options={darkScreenOptions} />
       <Stack.Screen name="SignUp" component={SignUpScreen} options={darkScreenOptions} />
       <Stack.Screen name="RestaurantOwnerDashboard" component={RestaurantOwnerDashboardScreen} options={darkScreenOptions} />
+      <Stack.Screen name="CoffeeShopOwnerDashboard" component={CoffeeShopOwnerDashboardScreen} options={darkScreenOptions} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="MyBookings" component={MyBookingsScreen} />
       <Stack.Screen name="RegisterListing" component={RegisterListingScreen} />

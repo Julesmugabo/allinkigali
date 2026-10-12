@@ -150,8 +150,8 @@ export default function SettingsList({ user, navigation, myBusiness, waitingRequ
           <MenuRow
             icon="coffee-outline"
             label="My Coffee Shop"
-            value="Bookings & profile"
-            onPress={() => navigation.navigate('RestaurantOwnerDashboard')}
+            value="Bookings, intents & profile"
+            onPress={() => navigation.navigate('CoffeeShopOwnerDashboard')}
             isLast
           />
         </Group>
