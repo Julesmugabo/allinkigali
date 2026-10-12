@@ -46,13 +46,18 @@ app.use(cors({
   origin: [
     'https://allinkigali.vercel.app',
     'https://admin.allinkigali.com',
+    'https://admin.allinkigali.rw',
     /\.vercel\.app$/,
     'http://localhost:3000',
+    'http://localhost:5173',
     'http://localhost:19006',
   ],
   credentials: true,
 }));
 app.use(express.json());
+
+const path = require('path');
+app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
 
 app.get('/health', (_req, res) => res.json({ ok: true }));
 
