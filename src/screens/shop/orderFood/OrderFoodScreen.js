@@ -9,11 +9,11 @@ import {
 } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
-import { apiFetch } from '../../services/apiClient';
-import { useUser } from '../../context/UserContext';
-import GradientBackground from '../../components/common/GradientBackground';
-import { colors, typography, spacing, radius, gutter } from '../../theme';
-import { menuColors as mc } from '../../theme/colors';
+import { apiFetch } from '../../../services/apiClient';
+import { useUser } from '../../../context/UserContext';
+import GradientBackground from '../../../components/common/GradientBackground';
+import { colors, typography, spacing, radius, gutter } from '../../../theme';
+import { menuColors as mc } from '../../../theme/colors';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 

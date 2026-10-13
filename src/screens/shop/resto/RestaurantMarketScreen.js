@@ -13,8 +13,8 @@ import {
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import GradientBackground from '../../components/common/GradientBackground';
-import PlacesMapView from '../../components/map/PlacesMapView';
+import GradientBackground from '../../../components/common/GradientBackground';
+import PlacesMapView from '../../../components/map/PlacesMapView';
 import {
   RESTAURANTS as LOCAL_RESTAURANTS, CUISINES, CUISINE_FOODS,
   OCCASIONS, OCCASION_LABELS,
@@ -23,10 +23,10 @@ import {
   SEATINGS, SEATING_LABELS,
   FEATURES, FEATURE_LABELS,
   PRICE_LABELS,
-} from '../../data/restaurantData';
-import { apiFetch } from '../../services/apiClient';
-import { colors, typography, spacing, radius, gutter } from '../../theme';
-import { restaurantColors as rc } from '../../theme/colors';
+} from '../../../data/restaurantData';
+import { apiFetch } from '../../../services/apiClient';
+import { colors, typography, spacing, radius, gutter } from '../../../theme';
+import { restaurantColors as rc } from '../../../theme/colors';
 
 const PRICE_OPTIONS = [1, 2, 3, 4];
 

@@ -13,18 +13,18 @@ import {
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import GradientBackground from '../../components/common/GradientBackground';
-import PlacesMapView from '../../components/map/PlacesMapView';
+import GradientBackground from '../../../components/common/GradientBackground';
+import PlacesMapView from '../../../components/map/PlacesMapView';
 import {
   COFFEE_SHOPS as LOCAL_COFFEE_SHOPS, INTENTS, INTENT_ATTRIBUTES,
   COFFEE_TYPES, BREWING_METHODS, COFFEE_ORIGINS,
   FOOD_CATEGORIES, ATMOSPHERES_CS,
   FACILITIES_CS, FACILITY_LABELS,
   SEATINGS_CS, SEATING_LABELS_CS,
-} from '../../data/coffeeShopData';
-import { apiFetch } from '../../services/apiClient';
-import { colors, typography, spacing, radius, gutter } from '../../theme';
-import { coffeeColors as cc } from '../../theme/colors';
+} from '../../../data/coffeeShopData';
+import { apiFetch } from '../../../services/apiClient';
+import { colors, typography, spacing, radius, gutter } from '../../../theme';
+import { coffeeColors as cc } from '../../../theme/colors';
 
 const PRICE_LABELS = { 1: '$', 2: '$$', 3: '$$$' };
 

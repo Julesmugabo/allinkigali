@@ -9,14 +9,14 @@ import {
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import GradientBackground from '../../components/common/GradientBackground';
-import PlacesMapView from '../../components/map/PlacesMapView';
+import GradientBackground from '../../../components/common/GradientBackground';
+import PlacesMapView from '../../../components/map/PlacesMapView';
 import {
   WEDDING_VENUES, FACILITY_LABELS, VIEW_LABELS, PRIVACY_LABELS, PHOTO_LABELS,
-} from '../../data/weddingVenueData';
-import { apiFetch } from '../../services/apiClient';
-import { colors, typography, spacing, radius, gutter } from '../../theme';
-import { weddingColors as wc } from '../../theme/colors';
+} from '../../../data/weddingVenueData';
+import { apiFetch } from '../../../services/apiClient';
+import { colors, typography, spacing, radius, gutter } from '../../../theme';
+import { weddingColors as wc } from '../../../theme/colors';
 
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;

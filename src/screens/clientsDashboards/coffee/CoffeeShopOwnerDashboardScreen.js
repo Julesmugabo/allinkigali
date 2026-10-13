@@ -11,11 +11,11 @@ import {
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import GradientBackground from '../../components/common/GradientBackground';
-import { colors, spacing, radius, gutter } from '../../theme';
-import { apiFetch, getToken } from '../../services/apiClient';
-import { pickAndUpload } from '../../utils/uploadPhoto';
-import { useUser } from '../../context/UserContext';
+import GradientBackground from '../../../components/common/GradientBackground';
+import { colors, spacing, radius, gutter } from '../../../theme';
+import { apiFetch, getToken } from '../../../services/apiClient';
+import { pickAndUpload } from '../../../utils/uploadPhoto';
+import { useUser } from '../../../context/UserContext';
 
 // ── Nav ───────────────────────────────────────────────────────────────────────
 

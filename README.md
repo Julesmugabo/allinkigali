@@ -1,138 +1,162 @@
-# allinkigali — React Native app
+# allinkigali
 
-News, shopping and account in one app. Opens on the news feed.
+A Kinyarwanda news + local marketplace app for Kigali, built with Expo (React
+Native, targets iOS, Android and web from one codebase) and a custom
+Express + PostgreSQL backend (hosted on Vercel + Neon). A separate React +
+Vite admin backoffice (`admin/`) runs at a different domain for staff who
+don't need the mobile app.
 
 ---
 
-## 1. Setup
+## 1. Repo layout
 
-The code targets **Expo** — it's the right choice here: you get iOS and Android
-from one machine, no Xcode or Android Studio needed to start, and you test on
-your own phone by scanning a QR code.
-
-```bash
-# create the project shell
-npx create-expo-app@latest allinkigali --template blank
-cd allinkigali
-
-# native-side packages (expo install picks versions that match your SDK)
-npx expo install react-native-screens react-native-safe-area-context \
-  react-native-svg expo-linear-gradient expo-status-bar
-
-# navigation
-npm install @react-navigation/native @react-navigation/bottom-tabs \
-  @react-navigation/native-stack
-
-# start
-npx expo start
 ```
+allinkigali/                  the Expo app (this folder)
+  App.js                      providers + navigation container + push notification setup
+  app.json                    Expo config (icons, splash, notifications plugin)
+  src/
+    screens/
+      news/                   article feed, article detail, live story grouping
+        dashboard/            news admin dashboard tabs (articles, ads, authors, ...)
+      shop/                   customer-facing marketplace screens
+        resto/                restaurant browse + detail
+        coffee/               coffee shop browse + detail
+        orderFood/            food delivery (cart-based ordering)
+        wedding/              wedding venue browse + detail
+        ShopScreen.js         Shop tab landing (generic sellers via ServicesPanel)
+        BusinessDetailScreen.js / BusinessBookScreen.js
+                              generic seller detail + booking (gas, gyms, rides, ...)
+        CheckoutScreen.js     cart checkout (used by food ordering)
+      clientsDashboards/      owner-facing dashboards, one folder per business type
+        resto/                restaurant owner dashboard (bookings, orders, menu, finance, ...)
+        coffee/                coffee shop owner dashboard (same shape as resto)
+        orderFood/             (not built yet)
+        wedding/               (not built yet)
+      admin/                  staff/director dashboards (news, sellers, restaurants,
+                               coffee shops, finance, director overview, flier editor)
+      account/                sign up/in, profile, orders, bookings, notifications,
+                               seller dashboard + plans, sales partner, info/about
+    context/                  app-wide state: UserContext, CartContext, OrdersContext,
+                               BusinessContext, BookingContext, NewsContext, AdsContext,
+                               FliersContext
+    navigation/                RootNavigator, BottomTabBar, ShopStack, AccountStack
+    components/                shared building blocks, grouped by area (common, news,
+                               shop, account, admin, map, booking)
+    services/                 apiClient.js (the one fetch wrapper, JWT bearer auth)
+    hooks/                    usePushNotifications.js (Expo push registration + routing)
+    theme/                    colors, typography, spacing/radius/shadows
+    utils/                    date/format helpers, photo upload
 
-Then copy `App.js`, `src/` and `assets/` from this folder over the generated
-ones. `package.json` here lists the same dependencies if you prefer to compare.
+server/                       Express + PostgreSQL API (deployed on Vercel, Neon DB)
+  src/
+    routes/                   one file per resource: auth, news, restaurants,
+                               coffeeShops, restoBookings, foodOrders, restaurantMenu,
+                               weddingVenues, businesses, bookings, products, properties,
+                               land, pendingListings, ads, fliers, finance, admin,
+                               notifications, myRestaurant, upload
+    middleware/                requireAuth, requireRole (director bypasses all role checks)
+    pushNotifications.js       Expo Push API sender + in-app notification writer
+    db.js                      pg Pool connection
+    migrate.js                 runs every migrations/*.sql in order, tracked in _migrations
+  migrations/                 numbered .sql files, one per schema change
+
+admin/                        standalone React + Vite backoffice app (admin.allinkigali.rw)
+```
 
 ---
 
 ## 2. What's built
 
-**Amakuru (news)** — the default tab. Your mockup rebuilt in React Native:
-navy header, wordmark, search field, scrolling category strip, hero story,
-"most read" rail, and the feed. Pull down to refresh. Category tabs filter the
-whole feed.
+**Amakuru (news)** — default tab. Feed with category filtering, admin-curated
+hero article, live-story grouping for developing coverage, article detail
+screen, in-app + push notifications on publish and breaking news.
 
-**Ubucuruzi (shop)** — deep blue gradient, search bar at the top. Nothing is
-listed until you search; typing `gaz` reveals six cylinder options, each with
-add-to-cart and a quantity stepper. A floating cart bar appears once something
-is in the basket and leads to checkout: basket review, delivery address, phone,
-note, totals, and **Ohereza icyifuzo**.
+**Ubucuruzi (shop)** — the marketplace tab, split by business type:
+- **Resto** and **Coffee Shop** — browse with map + sidebar filters, detail
+  screens with booking (reservation), and a dedicated owner dashboard each
+  (bookings, delivery orders, menu management, finance, reviews, insights,
+  settings).
+- **Order Food** — delivery ordering from restaurants/coffee shops with
+  delivery enabled; cart-based, goes through `CheckoutScreen`.
+- **Wedding venues** — browse + detail with appointment-style booking.
+- **Generic sellers** (gas, gyms, rides, etc.) — registered via the seller
+  dashboard, discovered through `ShopScreen` → `BusinessDetailScreen` →
+  `BusinessBookScreen`. No owner dashboard per vertical here; sellers manage
+  listings through the general Seller Dashboard.
+- Auto-scrolling flier/ad strip on the Shop tab, curated from the admin
+  Sales Partners dashboard.
 
-**Jyewe (account)** — signed out shows the sign-up form (first name, last name,
-email, optional phone) plus **Komeza na Google**. Signed in shows the profile,
-order counts, and menus. Order tracking lives here, as you asked: a list split
-into "still coming" and "finished", and a detail screen with a four-stage
-timeline (Byakiriwe → Byemejwe → Biri mu nzira → Byatanzwe).
+**Jyewe (account)** — sign up / sign in (incl. Google), profile, order and
+booking history with status tracking, change password. An admin role on the
+account surfaces an **Ubuyobozi** (admin) row leading to the relevant staff
+dashboard — no separate admin login.
 
----
+**Staff / owner dashboards**
+- **Director** — top-level dashboard with access to every other admin area.
+- **News admin** — articles, ads, authors, performance, settings.
+- **Sellers admin** — approves/manages generic seller listings and plans.
+- **Restaurant / Coffee Shop admin** — platform-level oversight of those
+  verticals (separate from the owner's own dashboard).
+- **Finance** — transaction tracking (`txn_type`, `txn_date`, `description`,
+  `amount`).
+- **Restaurant / Coffee Shop owner dashboards** (`clientsDashboards/`) —
+  self-service: bookings, delivery orders, menu CRUD with photo upload,
+  reviews, insights, finance, reports, settings. Responsive: sidebar sits
+  beside content on wide screens, overlays on mobile.
 
-## 3. Where things live
+**Push notifications** — free, via Expo's Push API (no SMS, no API key).
+Tokens are registered on sign-in and cleared on sign-out
+(`src/hooks/usePushNotifications.js`, `server/src/pushNotifications.js`).
+Triggers: article publish/breaking news, booking confirmed/rejected/cancelled,
+food order status changes, new orders/bookings to the owner. Tapping a push
+routes to the relevant screen (article, bookings, orders).
 
-```
-App.js                      providers + navigation container
-
-src/theme/                  every colour, size and shadow in the app
-  colors.js                 the blue ramp, category accents, gradients
-  typography.js             one type scale, roles not raw sizes
-  layout.js                 spacing, radii, shadows, tab bar height
-  index.js                  re-exports + React Navigation theme
-
-src/data/                   mock data — swap for your API, keep the shapes
-  mockNews.js               articles + getFeed(category)
-  mockProducts.js           gas catalogue + searchProducts()
-  orderStatus.js            the order lifecycle, single source of truth
-  mockOrders.js             seeded order history
-
-src/context/                app state
-  UserContext.js            sign up, Google sign-in, sign out
-  CartContext.js            add / quantity / remove, totals, delivery fee
-  OrdersContext.js          placeOrder, cancel, status tracking
-
-src/navigation/
-  RootNavigator.js          the three tabs, opening on news
-  BottomTabBar.js           the custom bar (pill active state, cart badge)
-  ShopStack.js              Shop → Checkout
-  AccountStack.js           Account → Orders → OrderDetail
-
-src/components/common/      Badge, EmptyState, GradientBackground,
-                            PrimaryButton, SectionLabel, TextField
-src/components/news/        BrandLogo, NewsHeader, CategoryTabs,
-                            HeroCard, TrendingRail, NewsListItem
-src/components/shop/        ShopSearchBar, ProductCard, QuantityStepper, CartBar
-src/components/account/     AuthForm, GoogleButton, ProfileHeader,
-                            MenuRow, OrderCard, OrderTimeline
-
-src/screens/                NewsScreen, ShopScreen, CheckoutScreen,
-                            AccountScreen, OrdersScreen, OrderDetailScreen
-src/utils/                  date.js (Kinyarwanda dates), format.js (RWF, validation)
-```
-
-Files are split by responsibility rather than by length, so when something
-breaks you know which file to open: a colour problem is `theme/colors.js`, a
-cart total is `context/CartContext.js`, a product row is `shop/ProductCard.js`.
+**Admin backoffice (`admin/`)** — standalone React + Vite app for staff who
+don't need the mobile app, deployed separately to admin.allinkigali.rw.
 
 ---
 
-## 4. Adding your gas photos
+## 3. Backend
 
-See `assets/products/README.md`. Short version: drop the image in that folder,
-then set `image: require('../../assets/products/gas-12kg-refill.png')` on the
-product in `src/data/mockProducts.js`. Cards show an icon placeholder until you
-do, so nothing looks broken in the meantime.
+Express + PostgreSQL (Neon), deployed on Vercel. JWT auth with role-based
+access (`director`, `news`, `restaurant`, `coffeeshop`, and other staff
+roles) — `director` bypasses every role check. Migrations run automatically
+on deploy (`vercel.json`'s `buildCommand`: `node src/migrate.js`), so a new
+`migrations/0NN_*.sql` file just needs to be committed and pushed.
+
+`src/services/apiClient.js` is the single entry point the app uses to talk to
+the backend: attaches the bearer token, JSON in/out, throws on non-2xx so
+callers just try/catch.
+
+---
+
+## 4. Running it locally
+
+```bash
+npm install
+npx expo start          # app — scan the QR code, or press w for web
+
+cd server
+npm install
+npm run migrate         # applies any pending migrations to DATABASE_URL
+npm start                # API, defaults to port 3000
+
+cd admin
+npm install
+npm run dev              # backoffice, defaults to port 5173
+```
+
+Set `EXPO_PUBLIC_API_URL` (app) and `DATABASE_URL` (server) in your `.env`
+files — see `.env.example` if present, or ask for the current values.
 
 ---
 
 ## 5. What's deliberately left for later
 
-**Payment.** Checkout creates the order with `paymentMethod: null` and status
-"Byakiriwe" so the tracking flow works end to end. The insertion point is
-marked in `CheckoutScreen.js` — put the MoMo call between validation and
-`placeOrder()`.
-
-**Real Google OAuth.** `UserContext.signInWithGoogle` returns a fake profile
-after a short delay. Install `expo-auth-session` and `expo-web-browser`, then
-replace that function's body — it already returns the exact user shape the rest
-of the app expects.
-
-**News API.** `getFeed()` in `mockNews.js` is the only thing to replace. Keep
-the field names and no component needs touching.
-
-**Persistence.** State resets when the app restarts. Add
-`@react-native-async-storage/async-storage` and hydrate the three contexts.
-
----
-
-## 6. Two development helpers
-
-- Order detail has a **DEV: intambwe ikurikira** button (only visible in dev)
-  that pushes an order to the next stage, so you can watch the timeline fill in
-  without a backend. Delete it once real status updates arrive.
-- `gas-25kg-refill` is marked out of stock on purpose, so you can see that
-  state on a real card.
+- **Payment.** Checkout and bookings record `paymentMethod: null` so the
+  tracking flow works end to end; the MoMo/card step slots in before the
+  final "place order"/"confirm" call.
+- **Order Food and Wedding owner dashboards** — not built yet
+  (`src/screens/clientsDashboards/orderFood/` and `wedding/` are placeholders).
+- **Postgres migration off Neon** — plan is to move the database onto the
+  Contabo VPS alongside the API.

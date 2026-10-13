@@ -8,13 +8,13 @@ import ShopScreen from '../screens/shop/ShopScreen';
 import CheckoutScreen from '../screens/shop/CheckoutScreen';
 import BusinessDetailScreen from '../screens/shop/BusinessDetailScreen';
 import BusinessBookScreen from '../screens/shop/BusinessBookScreen';
-import RestaurantMarketScreen from '../screens/shop/RestaurantMarketScreen';
-import RestaurantDetailScreen from '../screens/shop/RestaurantDetailScreen';
-import CoffeeShopMarketScreen from '../screens/shop/CoffeeShopMarketScreen';
-import CoffeeShopDetailScreen from '../screens/shop/CoffeeShopDetailScreen';
-import OrderFoodScreen from '../screens/shop/OrderFoodScreen';
-import WeddingMarketScreen from '../screens/shop/WeddingMarketScreen';
-import WeddingDetailScreen from '../screens/shop/WeddingDetailScreen';
+import RestaurantMarketScreen from '../screens/shop/resto/RestaurantMarketScreen';
+import RestaurantDetailScreen from '../screens/shop/resto/RestaurantDetailScreen';
+import CoffeeShopMarketScreen from '../screens/shop/coffee/CoffeeShopMarketScreen';
+import CoffeeShopDetailScreen from '../screens/shop/coffee/CoffeeShopDetailScreen';
+import OrderFoodScreen from '../screens/shop/orderFood/OrderFoodScreen';
+import WeddingMarketScreen from '../screens/shop/wedding/WeddingMarketScreen';
+import WeddingDetailScreen from '../screens/shop/wedding/WeddingDetailScreen';
 
 const Stack = createNativeStackNavigator();
 

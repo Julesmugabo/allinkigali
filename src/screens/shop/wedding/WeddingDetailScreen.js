@@ -9,12 +9,12 @@ import {
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
-import GradientBackground from '../../components/common/GradientBackground';
-import { WEDDING_VENUES, FACILITY_LABELS, VIEW_LABELS, PRIVACY_LABELS, PHOTO_LABELS } from '../../data/weddingVenueData';
-import { apiFetch } from '../../services/apiClient';
-import { useUser } from '../../context/UserContext';
-import { colors, typography, spacing, radius, gutter } from '../../theme';
-import { weddingColors as wc } from '../../theme/colors';
+import GradientBackground from '../../../components/common/GradientBackground';
+import { WEDDING_VENUES, FACILITY_LABELS, VIEW_LABELS, PRIVACY_LABELS, PHOTO_LABELS } from '../../../data/weddingVenueData';
+import { apiFetch } from '../../../services/apiClient';
+import { useUser } from '../../../context/UserContext';
+import { colors, typography, spacing, radius, gutter } from '../../../theme';
+import { weddingColors as wc } from '../../../theme/colors';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 const PRICE_LABELS = { 1: 'Budget-friendly', 2: 'Mid-range', 3: 'Luxury' };
