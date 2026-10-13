@@ -20,7 +20,7 @@
       "package": "rw.allinkigali.app",
       "adaptiveIcon": {
         "foregroundImage": "./assets/adaptive-icon.png",
-        "backgroundColor": "#042C53"
+        "backgroundColor": "#B0E9FD"
       },
       "useNextNotificationsApi": true
     },
