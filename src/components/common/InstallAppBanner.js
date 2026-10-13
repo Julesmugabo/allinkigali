@@ -97,7 +97,7 @@ export default function InstallAppBanner() {
     <View style={[styles.wrap, { paddingTop: insets.top + spacing.sm }]}>
       <View style={styles.row}>
         <View style={styles.logoWell}>
-          <Image source={require('../../../assets/ak-banner.png')} style={{ width: 48, height: 18 }} resizeMode="contain" />
+          <Image source={require('../../../assets/ak-banner.png')} style={{ width: 32, height: 32, borderRadius: 8 }} resizeMode="contain" />
         </View>
 
         <View style={styles.body}>

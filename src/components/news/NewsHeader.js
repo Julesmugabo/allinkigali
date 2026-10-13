@@ -65,7 +65,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   brand: { flexDirection: 'row', alignItems: 'center' },
-  logoImg: { width: 160, height: 40 },
+  logoImg: { width: 36, height: 36, borderRadius: 8 },
   icons: { flexDirection: 'row', alignItems: 'center' },
   bellDot: {
     position: 'absolute',

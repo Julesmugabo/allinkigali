@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     height: TOP_NAV_HEIGHT,
   },
   brand: { marginRight: spacing.xxl },
-  logo: { width: 136, height: 32 },
+  logo: { width: 36, height: 36, borderRadius: 8 },
   sections: { flex: 1, flexDirection: 'row', alignItems: 'center', height: '100%' },
   sectionItem: {
     flexDirection: 'row',
