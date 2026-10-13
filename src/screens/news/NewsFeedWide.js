@@ -13,7 +13,6 @@ import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import WebContainer from '../../web/layout/WebContainer';
-import CategoryTabs from '../../components/news/CategoryTabs';
 import HeroCard from '../../components/news/HeroCard';
 import NewsListItem from '../../components/news/NewsListItem';
 import AdBox from '../../components/news/AdBox';
@@ -72,7 +71,25 @@ export default function NewsFeedWide({
     <View style={styles.container}>
       <View style={styles.subBar}>
         <WebContainer style={styles.subBarRow}>
-          <CategoryTabs categories={categories} activeKey={activeCategory} onChange={onCategoryChange} />
+          <View style={styles.categoryRow}>
+            {categories.map((category) => {
+              const isActive = category.key === activeCategory;
+              return (
+                <Pressable
+                  key={category.key}
+                  onPress={() => onCategoryChange(category.key)}
+                  accessibilityRole="tab"
+                  accessibilityState={{ selected: isActive }}
+                  style={styles.categoryTab}
+                >
+                  <Text style={[styles.categoryLabel, isActive && styles.categoryLabelActive]}>
+                    {category.label}
+                  </Text>
+                  {isActive ? <View style={styles.categoryUnderline} /> : null}
+                </Pressable>
+              );
+            })}
+          </View>
           <Text style={styles.dateLabel}>{formatLongDate()}</Text>
         </WebContainer>
       </View>
@@ -189,7 +206,33 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     justifyContent: 'space-between',
-    paddingTop: spacing.sm,
+  },
+  categoryRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+  },
+  categoryTab: {
+    position: 'relative',
+    paddingVertical: spacing.md,
+    paddingHorizontal: spacing.md,
+  },
+  categoryLabel: {
+    ...typography.body,
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.textOnNavyFaint,
+  },
+  categoryLabelActive: {
+    color: colors.blue300,
+  },
+  categoryUnderline: {
+    position: 'absolute',
+    bottom: 0,
+    left: spacing.md,
+    right: spacing.md,
+    height: 2.5,
+    borderRadius: 2,
+    backgroundColor: colors.blue500,
   },
   dateLabel: {
     ...typography.caption,

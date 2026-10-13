@@ -5,7 +5,7 @@
  * the tabLabel / tabIcon / showsCartBadge options declared below.
  */
 import React, { useRef, useCallback } from 'react';
-import { BackHandler, ToastAndroid, Platform } from 'react-native';
+import { View, BackHandler, ToastAndroid, Platform } from 'react-native';
 import { createBottomTabNavigator } from '@react-navigation/bottom-tabs';
 import { getFocusedRouteNameFromRoute, useFocusEffect } from '@react-navigation/native';
 
@@ -53,47 +53,56 @@ export default function RootNavigator() {
   useExitGuard();
   const isWideWeb = useIsWideWeb();
 
+  // Reserving the top nav's height with sceneContainerStyle's paddingTop
+  // doesn't survive the nested native-stack navigators inside each tab (an
+  // absolutely-positioned descendant ignores an ancestor's padding, a plain
+  // CSS mechanic, not a react-navigation quirk) — so every tab's content
+  // would render underneath/behind the fixed TopNavBar instead of below it.
+  // A real sibling spacer in normal flex flow sidesteps that entirely: it
+  // reserves the space outside the navigator tree, where nothing can ignore
+  // it, while TopNavBar itself still visually pins to the very top via
+  // position: fixed.
   return (
-    <Tab.Navigator
-      initialRouteName="NewsTab"
-      backBehavior="history"
-      tabBar={(props) => (isWideWeb ? <TopNavBar {...props} /> : <BottomTabBar {...props} />)}
-      screenOptions={{
-        headerShown: false,
-        sceneContainerStyle: isWideWeb ? { paddingTop: TOP_NAV_HEIGHT } : undefined,
-      }}
-    >
-      <Tab.Screen
-        name="NewsTab"
-        component={NewsStack}
-        options={{
-          tabLabel: 'News',
-          tabIcon: 'newspaper-variant-outline',
-          tabIconActive: 'newspaper-variant',
-        }}
-      />
+    <View style={{ flex: 1 }}>
+      {isWideWeb ? <View style={{ height: TOP_NAV_HEIGHT }} /> : null}
+      <Tab.Navigator
+        initialRouteName="NewsTab"
+        backBehavior="history"
+        tabBar={(props) => (isWideWeb ? <TopNavBar {...props} /> : <BottomTabBar {...props} />)}
+        screenOptions={{ headerShown: false }}
+      >
+        <Tab.Screen
+          name="NewsTab"
+          component={NewsStack}
+          options={{
+            tabLabel: 'News',
+            tabIcon: 'newspaper-variant-outline',
+            tabIconActive: 'newspaper-variant',
+          }}
+        />
 
-      <Tab.Screen
-        name="ShopTab"
-        component={ShopStack}
-        options={({ route }) => ({
-          tabLabel: 'Resto/Coffee',
-          tabIcon: 'shopping-outline',
-          tabIconActive: 'shopping',
-          showsCartBadge: true,
-          tabBarHidden: hideTabBarOn(route),
-        })}
-      />
+        <Tab.Screen
+          name="ShopTab"
+          component={ShopStack}
+          options={({ route }) => ({
+            tabLabel: 'Resto/Coffee',
+            tabIcon: 'shopping-outline',
+            tabIconActive: 'shopping',
+            showsCartBadge: true,
+            tabBarHidden: hideTabBarOn(route),
+          })}
+        />
 
-      <Tab.Screen
-        name="AccountTab"
-        component={AccountStack}
-        options={{
-          tabLabel: 'Me',
-          tabIcon: 'account-outline',
-          tabIconActive: 'account',
-        }}
-      />
-    </Tab.Navigator>
+        <Tab.Screen
+          name="AccountTab"
+          component={AccountStack}
+          options={{
+            tabLabel: 'Me',
+            tabIcon: 'account-outline',
+            tabIconActive: 'account',
+          }}
+        />
+      </Tab.Navigator>
+    </View>
   );
 }
