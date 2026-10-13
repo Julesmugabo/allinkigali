@@ -13,6 +13,7 @@
  * auth-state-change event to listen for here.
  */
 import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
+import { AppState } from 'react-native';
 import { apiFetch } from '../services/apiClient';
 
 const NewsContext = createContext(null);
@@ -121,6 +122,40 @@ export function NewsProvider({ children }) {
   useEffect(() => {
     reload();
   }, [reload]);
+
+  // Quiet background refresh so a reader with the app already open still
+  // gets newly published stories: when they come back to the app/tab, and
+  // every couple of minutes while it's in front of them. No loading
+  // skeleton — the list just updates in place. AppState also covers web
+  // (react-native-web maps it to the page's visibility).
+  useEffect(() => {
+    const quietRefresh = () => {
+      refreshArticles();
+      refreshStories();
+    };
+    let timer = null;
+    const start = () => {
+      if (!timer) timer = setInterval(quietRefresh, 2 * 60 * 1000);
+    };
+    const stop = () => {
+      clearInterval(timer);
+      timer = null;
+    };
+
+    if (AppState.currentState === 'active') start();
+    const sub = AppState.addEventListener('change', (state) => {
+      if (state === 'active') {
+        quietRefresh();
+        start();
+      } else {
+        stop();
+      }
+    });
+    return () => {
+      stop();
+      sub.remove();
+    };
+  }, [refreshArticles, refreshStories]);
 
   const addArticle = useCallback(async (data) => {
     try {
