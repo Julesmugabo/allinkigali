@@ -9,7 +9,7 @@
  * design change to either one applies to both layouts automatically.
  */
 import React, { useMemo } from 'react';
-import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Image, ScrollView, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import WebContainer from '../../web/layout/WebContainer';
@@ -121,14 +121,27 @@ export default function NewsFeedWide({
             {/* Left: timestamped headline stream */}
             <View style={styles.leftCol}>
               <Text style={styles.colTitle}>AMAKURU MASHYA</Text>
-              {timeline.map((article) => (
-                <Pressable key={article.id} onPress={() => handleArticlePress(article)} style={styles.timelineRow}>
-                  <Text style={styles.timelineTime}>{timeAgo(article.publishedAt)}</Text>
-                  <Text style={styles.timelineTitle} numberOfLines={2}>
-                    {article.title}
-                  </Text>
-                </Pressable>
-              ))}
+              {timeline.map((article) => {
+                const tint = colors.categoryTint[article.category] || colors.blue100;
+                const accent = colors.category[article.category] || colors.blue600;
+                return (
+                  <Pressable key={article.id} onPress={() => handleArticlePress(article)} style={styles.timelineRow}>
+                    <View style={[styles.timelineThumb, { backgroundColor: tint }]}>
+                      {article.imageUrl ? (
+                        <Image source={{ uri: article.imageUrl }} style={styles.timelineThumbImage} resizeMode="cover" />
+                      ) : (
+                        <MaterialCommunityIcons name={article.icon || 'newspaper-variant'} size={16} color={accent} />
+                      )}
+                    </View>
+                    <View style={styles.timelineBody}>
+                      <Text style={styles.timelineTime}>{timeAgo(article.publishedAt)}</Text>
+                      <Text style={styles.timelineTitle} numberOfLines={2}>
+                        {article.title}
+                      </Text>
+                    </View>
+                  </Pressable>
+                );
+              })}
             </View>
 
             {/* Center: hero + top stories + grid */}
@@ -277,10 +290,22 @@ const styles = StyleSheet.create({
 
   leftCol: { width: 280 },
   timelineRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
     borderBottomColor: colors.border,
   },
+  timelineThumb: {
+    width: 44,
+    height: 44,
+    borderRadius: radius.sm,
+    alignItems: 'center',
+    justifyContent: 'center',
+    overflow: 'hidden',
+  },
+  timelineThumbImage: { width: '100%', height: '100%' },
+  timelineBody: { flex: 1, marginLeft: spacing.sm, minWidth: 0 },
   timelineTime: {
     ...typography.meta,
     color: colors.blue600,
