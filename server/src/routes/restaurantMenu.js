@@ -35,7 +35,7 @@ router.get('/:restaurantId', async (req, res) => {
 });
 
 // POST /restaurant-menu — admin only
-router.post('/', requireAuth, requireRole(['restaurant', 'director']), async (req, res) => {
+router.post('/', requireAuth, requireRole('sellers'), async (req, res) => {
   const { restaurantId, category, name, description, price, sortOrder } = req.body;
   if (!restaurantId || !name || price == null) return res.status(400).json({ error: 'restaurantId, name and price required' });
   try {
@@ -51,7 +51,7 @@ router.post('/', requireAuth, requireRole(['restaurant', 'director']), async (re
 });
 
 // PUT /restaurant-menu/:id — admin only
-router.put('/:id', requireAuth, requireRole(['restaurant', 'director']), async (req, res) => {
+router.put('/:id', requireAuth, requireRole('sellers'), async (req, res) => {
   const { category, name, description, price, available, sortOrder } = req.body;
   try {
     const { rows } = await query(
@@ -68,7 +68,7 @@ router.put('/:id', requireAuth, requireRole(['restaurant', 'director']), async (
 });
 
 // DELETE /restaurant-menu/:id — admin only
-router.delete('/:id', requireAuth, requireRole(['restaurant', 'director']), async (req, res) => {
+router.delete('/:id', requireAuth, requireRole('sellers'), async (req, res) => {
   try {
     await query('DELETE FROM restaurant_menu_items WHERE id=$1', [req.params.id]);
     res.status(204).end();

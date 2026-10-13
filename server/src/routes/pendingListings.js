@@ -44,10 +44,11 @@ router.get('/mine', requireAuth, async (req, res) => {
 });
 
 // Director routes
-const directorGuard = [requireAuth, requireRole('director')];
+// Reviewing new listings is the Sales Partners admin's job (director too).
+const staffGuard = [requireAuth, requireRole('sellers')];
 
 // GET /pending-listings — all applications
-router.get('/', ...directorGuard, async (_req, res) => {
+router.get('/', ...staffGuard, async (_req, res) => {
   const { rows } = await query(
     `SELECT pl.*, u.email as user_email, u.first_name, u.last_name
      FROM pending_listings pl
@@ -58,7 +59,7 @@ router.get('/', ...directorGuard, async (_req, res) => {
 });
 
 // POST /pending-listings/:id/approve — approve and create the listing
-router.post('/:id/approve', ...directorGuard, async (req, res) => {
+router.post('/:id/approve', ...staffGuard, async (req, res) => {
   const { rows: pending } = await query('SELECT * FROM pending_listings WHERE id=$1', [req.params.id]);
   if (!pending[0]) return res.status(404).json({ error: 'Application not found.' });
   const p = pending[0];
@@ -108,7 +109,7 @@ router.post('/:id/approve', ...directorGuard, async (req, res) => {
 });
 
 // POST /pending-listings/:id/decline
-router.post('/:id/decline', ...directorGuard, async (req, res) => {
+router.post('/:id/decline', ...staffGuard, async (req, res) => {
   const { reason } = req.body || {};
   const { rows: pending } = await query('SELECT * FROM pending_listings WHERE id=$1', [req.params.id]);
   if (!pending[0]) return res.status(404).json({ error: 'Not found.' });

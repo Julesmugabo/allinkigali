@@ -111,20 +111,30 @@ router.delete('/:id', requireAuth, async (req, res) => {
 
 // ── Admin routes ──────────────────────────────────────────────────────────────
 
+// Sales Partners admin and director manage every booking; a restaurant or
+// coffee-shop owner only the bookings of the place linked to their account.
+const isPlatformStaff = (user) => user.role === 'director' || user.role === 'sellers';
+function ownPlace(user) {
+  if (user.role === 'restaurant' && (user.restaurantId || user.restaurant_id)) return { type: 'restaurant', id: user.restaurantId || user.restaurant_id };
+  if (user.role === 'coffeeshop' && (user.coffeeShopId || user.coffee_shop_id)) return { type: 'coffee_shop', id: user.coffeeShopId || user.coffee_shop_id };
+  return null;
+}
+
+
 // GET /resto-bookings/admin?type=restaurant&placeId=r1
 router.get('/admin', requireAuth, async (req, res) => {
   const { type, placeId } = req.query;
   // Check the caller has the right role
-  const role = req.user.role;
-  const allowed = (type === 'restaurant' && role === 'restaurant')
-               || (type === 'coffee_shop' && role === 'coffeeshop')
-               || role === 'director';
-  if (!allowed) return res.status(403).json({ error: 'Forbidden.' });
+  const own = ownPlace(req.user);
+  if (!isPlatformStaff(req.user) && !own) return res.status(403).json({ error: 'Forbidden.' });
 
   let sql = 'SELECT * FROM resto_bookings WHERE 1=1';
   const params = [];
-  if (type) { params.push(type); sql += ` AND type=$${params.length}`; }
-  if (placeId) { params.push(placeId); sql += ` AND place_id=$${params.length}`; }
+  // Owners are pinned to their own place whatever they ask for.
+  const scopeType = own ? own.type : type;
+  const scopePlace = own ? own.id : placeId;
+  if (scopeType) { params.push(scopeType); sql += ` AND type=$${params.length}`; }
+  if (scopePlace) { params.push(scopePlace); sql += ` AND place_id=$${params.length}`; }
   sql += ' ORDER BY created_at DESC';
 
   const { rows } = await query(sql, params);
@@ -141,11 +151,10 @@ router.put('/:id/status', requireAuth, async (req, res) => {
   if (!rows.length) return res.status(404).json({ error: 'Not found.' });
   const booking = rows[0];
 
-  // Role check
-  const role = req.user.role;
-  const ok = (booking.type === 'restaurant' && role === 'restaurant')
-           || (booking.type === 'coffee_shop' && role === 'coffeeshop')
-           || role === 'director';
+  // Platform staff may update any booking; an owner only their own place's.
+  const own = ownPlace(req.user);
+  const ok = isPlatformStaff(req.user)
+           || (own && booking.type === own.type && String(booking.place_id) === String(own.id));
   if (!ok) return res.status(403).json({ error: 'Forbidden.' });
 
   const updates = ['status=$1', 'updated_at=NOW()'];

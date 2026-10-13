@@ -10,73 +10,98 @@ const requireRole = require('../middleware/requireRole');
 const { notifyUser } = require('../pushNotifications');
 
 const router = express.Router();
-const guard = [requireAuth, requireRole('restaurant', 'coffeeshop', 'director')];
+const guard = [requireAuth, requireRole('restaurant', 'coffeeshop', 'sellers')];
 
 // Derive context from the JWT: which table, which id, which booking type.
-function getContext(user) {
+// Which place this request acts on. Owners always get their own linked
+// place. The Sales Partners admin and the director may open any place's
+// dashboard by passing ?placeType=restaurant|coffee_shop&placeId=… (the
+// staff portal's "Open Dashboard"); without those, the director keeps the
+// old behaviour of using a place linked to their own account.
+function getContext(req) {
+  const user = req.user;
+  const staff = user.role === 'director' || user.role === 'sellers';
+  const { placeType, placeId } = req.query || {};
+  if (staff && placeId && (placeType === 'restaurant' || placeType === 'coffee_shop')) {
+    return placeType === 'restaurant'
+      ? { table: 'restaurants', idField: 'restaurantId', placeId, bookingType: 'restaurant' }
+      : { table: 'coffee_shops', idField: 'coffeeShopId', placeId, bookingType: 'coffee_shop' };
+  }
   const isRestaurant = user.role === 'restaurant' || (user.role === 'director' && user.restaurantId);
   if (isRestaurant) {
-    return {
-      table: 'restaurants',
-      idField: 'restaurantId',
-      placeId: user.restaurantId || user.restaurant_id,
-      bookingType: 'restaurant',
-    };
+    return { table: 'restaurants', idField: 'restaurantId', placeId: user.restaurantId || user.restaurant_id, bookingType: 'restaurant' };
   }
-  return {
-    table: 'coffee_shops',
-    idField: 'coffeeShopId',
-    placeId: user.coffeeShopId || user.coffee_shop_id,
-    bookingType: 'coffee_shop',
-  };
+  return { table: 'coffee_shops', idField: 'coffeeShopId', placeId: user.coffeeShopId || user.coffee_shop_id, bookingType: 'coffee_shop' };
 }
 
 // GET /my-restaurant — get the owner's own listing
-router.get('/', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
-  if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked to this account.' });
+// Profile fields an owner (or platform staff) may change, per kind of place:
+// request key → column. Only keys present in the request are written, so a
+// partial save never blanks other fields.
+const PROFILE_FIELDS = {
+  common: {
+    name: 'name', description: 'description', location: 'location', district: 'district',
+    phone: 'phone', website: 'website', openStatus: 'open_status', price: 'price',
+    atmosphere: 'atmosphere', seating: 'seating',
+    deliveryEnabled: 'delivery_enabled', deliveryFee: 'delivery_fee', minOrder: 'min_order', estimatedTime: 'estimated_time',
+  },
+  restaurants: { cuisines: 'cuisines', foods: 'foods', occasion: 'occasion', dietary: 'dietary', features: 'features' },
+  coffee_shops: {
+    coffeeTypes: 'coffee_types', brewingMethods: 'brewing_methods', origins: 'origins', food: 'food',
+    facilities: 'facilities', attributes: 'attributes', services: 'services',
+  },
+};
+const PHOTOS = {
+  restaurants: { table: 'restaurant_photos', fk: 'restaurant_id' },
+  coffee_shops: { table: 'coffee_shop_photos', fk: 'coffee_shop_id' },
+};
+
+async function loadProfile(ctx) {
   const { rows } = await query(`SELECT * FROM ${ctx.table} WHERE id=$1`, [ctx.placeId]);
-  if (!rows.length) return res.status(404).json({ error: 'Listing not found.' });
-  res.json(rows[0]);
+  if (!rows.length) return null;
+  const ph = PHOTOS[ctx.table];
+  const { rows: photos } = await query(`SELECT id, url, label, sort_order FROM ${ph.table} WHERE ${ph.fk}=$1 ORDER BY sort_order`, [ctx.placeId]);
+  return { ...rows[0], type: ctx.bookingType, photos };
+}
+
+// GET /my-restaurant — the place's profile (with photos)
+router.get('/', ...guard, async (req, res) => {
+  const ctx = getContext(req);
+  if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked to this account.' });
+  const profile = await loadProfile(ctx);
+  if (!profile) return res.status(404).json({ error: 'Listing not found.' });
+  res.json(profile);
 });
 
-// PUT /my-restaurant — update profile
+// PUT /my-restaurant — update the profile. (The old version wrote columns
+// that don't exist — restaurants.photos, coffee_shops.specialties/features —
+// so every save failed.)
 router.put('/', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
+  const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
-
-  let sql, params;
-  if (ctx.table === 'restaurants') {
-    const { name, description, location, district, phone, website, openStatus, openHours,
-            cuisines, foods, occasion, price, atmosphere, dietary, seating, features, photos } = req.body;
-    sql = `UPDATE restaurants SET
-             name=$1, description=$2, location=$3, district=$4, phone=$5,
-             website=$6, open_status=$7, cuisines=$8, foods=$9,
-             occasion=$10, price=$11, atmosphere=$12, dietary=$13, seating=$14,
-             features=$15, photos=$16, updated_at=NOW()
-           WHERE id=$17 RETURNING *`;
-    params = [name, description, location, district, phone, website, openStatus,
-              cuisines || [], foods || [], occasion || [], price || 2,
-              atmosphere || [], dietary || [], seating || [], features || [], photos || [], ctx.placeId];
-  } else {
-    const { name, description, location, district, phone, website, openStatus,
-            specialties, features, atmosphere, price, photos } = req.body;
-    sql = `UPDATE coffee_shops SET
-             name=$1, description=$2, location=$3, district=$4, phone=$5,
-             website=$6, open_status=$7, specialties=$8, features=$9,
-             atmosphere=$10, price=$11, updated_at=NOW()
-           WHERE id=$12 RETURNING *`;
-    params = [name, description, location, district, phone, website, openStatus,
-              specialties || [], features || [], atmosphere || [], price || 2, ctx.placeId];
+  const map = { ...PROFILE_FIELDS.common, ...PROFILE_FIELDS[ctx.table] };
+  const sets = [];
+  const vals = [];
+  Object.entries(map).forEach(([key, col]) => {
+    if (key in req.body) { vals.push(req.body[key]); sets.push(`${col}=$${vals.length}`); }
+  });
+  if (sets.length) {
+    vals.push(ctx.placeId);
+    await query(`UPDATE ${ctx.table} SET ${sets.join(', ')}, updated_at=NOW() WHERE id=$${vals.length}`, vals);
   }
-
-  const { rows } = await query(sql, params);
-  res.json(rows[0]);
+  if (Array.isArray(req.body.photos)) {
+    const ph = PHOTOS[ctx.table];
+    await query(`DELETE FROM ${ph.table} WHERE ${ph.fk}=$1`, [ctx.placeId]);
+    for (const [i, photo] of req.body.photos.filter((x) => x && x.url).entries()) {
+      await query(`INSERT INTO ${ph.table} (${ph.fk}, url, label, sort_order) VALUES ($1,$2,$3,$4)`, [ctx.placeId, photo.url, photo.label || '', i]);
+    }
+  }
+  res.json(await loadProfile(ctx));
 });
 
 // GET /my-restaurant/bookings
 router.get('/bookings', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
+  const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
 
   const joinTable = ctx.table === 'restaurants' ? 'restaurants' : 'coffee_shops';
@@ -97,7 +122,7 @@ router.get('/bookings', ...guard, async (req, res) => {
 
 // PUT /my-restaurant/bookings/:id/status
 router.put('/bookings/:id/status', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
+  const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
   const { status } = req.body;
   const allowed = ['confirmed', 'rejected', 'completed', 'noshow', 'cancelled'];
@@ -141,139 +166,71 @@ router.put('/bookings/:id/status', ...guard, async (req, res) => {
   res.json({ ok: true });
 });
 
-// Menu routes — restaurants only (coffee shops don't have a menu in this system)
+// ── Menu (restaurants and coffee shops) ──────────────────────────────────────
+// Previously registered twice: the restaurant-only version answered first, so
+// coffee-shop owners could never list or add menu items.
+const MENU = {
+  restaurants: { table: 'restaurant_menu_items', fk: 'restaurant_id', defaultCategory: 'Main' },
+  coffee_shops: { table: 'coffee_shop_menu_items', fk: 'coffee_shop_id', defaultCategory: 'Espresso drinks' },
+};
+
 router.get('/menu', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
-  if (ctx.table !== 'restaurants') return res.json([]);
+  const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
-  const { rows } = await query(
-    'SELECT * FROM restaurant_menu_items WHERE restaurant_id=$1 ORDER BY category, sort_order, name',
-    [ctx.placeId]
-  );
-  res.json(rows);
+  const m = MENU[ctx.table];
+  const { rows } = await query(`SELECT * FROM ${m.table} WHERE ${m.fk}=$1 ORDER BY category, sort_order, name`, [ctx.placeId]);
+  res.json(rows.map((r) => ({ ...r, brewMethod: r.brew_method, origin: r.origin, photoUrl: r.photo_url })));
 });
 
 router.post('/menu', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
-  if (ctx.table !== 'restaurants') return res.status(400).json({ error: 'Menu is for restaurants only.' });
+  const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
-  const { category, name, description, price, photoUrl, sortOrder } = req.body;
+  const m = MENU[ctx.table];
+  const { category, name, description, price, available, photoUrl, sortOrder, brewMethod, origin } = req.body;
   if (!name || price == null) return res.status(400).json({ error: 'name and price required.' });
+  const cols = [m.fk, 'category', 'name', 'description', 'price', 'available', 'photo_url', 'sort_order'];
+  const vals = [ctx.placeId, category || m.defaultCategory, name, description || '', price, available !== false, photoUrl || null, sortOrder || 0];
+  if (ctx.table === 'coffee_shops') { cols.push('brew_method', 'origin'); vals.push(brewMethod || null, origin || null); }
   const { rows } = await query(
-    `INSERT INTO restaurant_menu_items (restaurant_id, category, name, description, price, photo_url, sort_order)
-     VALUES ($1,$2,$3,$4,$5,$6,$7) RETURNING *`,
-    [ctx.placeId, category || 'Main', name, description || '', price, photoUrl || null, sortOrder || 0]
+    `INSERT INTO ${m.table} (${cols.join(', ')}) VALUES (${vals.map((_, i) => `$${i + 1}`).join(', ')}) RETURNING *`,
+    vals
   );
   res.status(201).json(rows[0]);
 });
 
 router.put('/menu/:id', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
-  if (ctx.table !== 'restaurants') return res.status(400).json({ error: 'Menu is for restaurants only.' });
-  const { category, name, description, price, available, photoUrl, sortOrder } = req.body;
+  const ctx = getContext(req);
+  if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
+  const m = MENU[ctx.table];
+  const { category, name, description, price, available, photoUrl, sortOrder, brewMethod, origin } = req.body;
+  const sets = ['category=$1', 'name=$2', 'description=$3', 'price=$4', 'available=$5', 'photo_url=$6', 'sort_order=$7'];
+  const vals = [category, name, description, price, available !== false, photoUrl || null, sortOrder ?? 0];
+  if (ctx.table === 'coffee_shops') { sets.push(`brew_method=$${vals.length + 1}`, `origin=$${vals.length + 2}`); vals.push(brewMethod || null, origin || null); }
+  vals.push(req.params.id, ctx.placeId);
   const { rows } = await query(
-    `UPDATE restaurant_menu_items
-     SET category=$1, name=$2, description=$3, price=$4, available=$5, photo_url=$6, sort_order=$7, updated_at=NOW()
-     WHERE id=$8 AND restaurant_id=$9 RETURNING *`,
-    [category, name, description, price, available !== false, photoUrl || null, sortOrder ?? 0, req.params.id, ctx.placeId]
+    `UPDATE ${m.table} SET ${sets.join(', ')}, updated_at=NOW() WHERE id=$${vals.length - 1} AND ${m.fk}=$${vals.length} RETURNING *`,
+    vals
   );
   if (!rows.length) return res.status(404).json({ error: 'Not found.' });
   res.json(rows[0]);
 });
 
 router.delete('/menu/:id', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
-  if (ctx.table !== 'restaurants') return res.status(400).json({ error: 'Menu is for restaurants only.' });
-  await query('DELETE FROM restaurant_menu_items WHERE id=$1 AND restaurant_id=$2', [req.params.id, ctx.placeId]);
-  res.status(204).end();
-});
-
-// ── Coffee-shop /menu alias (mirrors cs-menu, used by CoffeeShopOwnerDashboard) ─
-
-router.get('/menu', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
-  if (ctx.table !== 'coffee_shops') {
-    // For restaurants, fall through to the restaurant menu endpoint already registered above
-    // This path is reached only when the same route file is mounted at /my-coffeeshop
-    if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
-    const { rows } = await query(
-      'SELECT * FROM restaurant_menu_items WHERE restaurant_id=$1 ORDER BY category, sort_order, name',
-      [ctx.placeId]
-    );
-    return res.json(rows);
-  }
+  const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
-  const { rows } = await query(
-    'SELECT * FROM coffee_shop_menu_items WHERE coffee_shop_id=$1 ORDER BY category, sort_order, name',
-    [ctx.placeId]
-  );
-  res.json(rows.map(r => ({ ...r, brewMethod: r.brew_method, origin: r.origin })));
-});
-
-router.post('/menu', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
-  if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
-  const { category, name, description, price, available, brewMethod, origin } = req.body;
-  if (!name || price == null) return res.status(400).json({ error: 'name and price required.' });
-  if (ctx.table === 'coffee_shops') {
-    const { rows } = await query(
-      `INSERT INTO coffee_shop_menu_items (coffee_shop_id, category, name, description, price, available, brew_method, origin)
-       VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
-      [ctx.placeId, category || 'Espresso drinks', name, description || '', price, available !== false, brewMethod || null, origin || null]
-    );
-    return res.status(201).json(rows[0]);
-  }
-  const { rows } = await query(
-    `INSERT INTO restaurant_menu_items (restaurant_id, category, name, description, price, available)
-     VALUES ($1,$2,$3,$4,$5,$6) RETURNING *`,
-    [ctx.placeId, category || 'Mains', name, description || '', price, available !== false]
-  );
-  res.status(201).json(rows[0]);
-});
-
-router.put('/menu/:id', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
-  if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
-  const { category, name, description, price, available, brewMethod, origin } = req.body;
-  if (ctx.table === 'coffee_shops') {
-    const { rows } = await query(
-      `UPDATE coffee_shop_menu_items
-       SET category=$1, name=$2, description=$3, price=$4, available=$5, brew_method=$6, origin=$7, updated_at=NOW()
-       WHERE id=$8 AND coffee_shop_id=$9 RETURNING *`,
-      [category, name, description, price, available !== false, brewMethod || null, origin || null, req.params.id, ctx.placeId]
-    );
-    if (!rows.length) return res.status(404).json({ error: 'Not found.' });
-    return res.json(rows[0]);
-  }
-  const { rows } = await query(
-    `UPDATE restaurant_menu_items
-     SET category=$1, name=$2, description=$3, price=$4, available=$5, updated_at=NOW()
-     WHERE id=$6 AND restaurant_id=$7 RETURNING *`,
-    [category, name, description, price, available !== false, req.params.id, ctx.placeId]
-  );
-  if (!rows.length) return res.status(404).json({ error: 'Not found.' });
-  res.json(rows[0]);
-});
-
-router.delete('/menu/:id', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
-  if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
-  if (ctx.table === 'coffee_shops') {
-    await query('DELETE FROM coffee_shop_menu_items WHERE id=$1 AND coffee_shop_id=$2', [req.params.id, ctx.placeId]);
-  } else {
-    await query('DELETE FROM restaurant_menu_items WHERE id=$1 AND restaurant_id=$2', [req.params.id, ctx.placeId]);
-  }
+  const m = MENU[ctx.table];
+  await query(`DELETE FROM ${m.table} WHERE id=$1 AND ${m.fk}=$2`, [req.params.id, ctx.placeId]);
   res.status(204).end();
 });
 
 // ── Reviews ───────────────────────────────────────────────────────────────────
 
 router.get('/reviews', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
+  const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
   try {
     const { rows } = await query(
-      `SELECT r.*, u.name as "guestName"
+      `SELECT r.*, COALESCE(NULLIF(TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')), ''), u.email) as "guestName"
        FROM reviews r
        LEFT JOIN users u ON r.user_id = u.id
        WHERE r.place_id = $1 AND r.place_type = $2
@@ -291,7 +248,7 @@ router.get('/reviews', ...guard, async (req, res) => {
 });
 
 router.post('/reviews/:id/reply', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
+  const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
   const { reply } = req.body;
   if (!reply?.trim()) return res.status(400).json({ error: 'reply required.' });
@@ -306,52 +263,56 @@ router.post('/reviews/:id/reply', ...guard, async (req, res) => {
   }
 });
 
-// ── Orders (pipeline board) ───────────────────────────────────────────────────
-// Returns [] until an orders table is added; the dashboard renders an empty state.
+// ── Orders ────────────────────────────────────────────────────────────────────
+// Customer delivery orders live in food_orders (written by routes/foodOrders.js).
+// This used to read a resto_orders table nothing ever writes to, so owners
+// always saw an empty board.
+const ORDER_MESSAGES = {
+  confirmed: 'Your order has been confirmed and will be prepared shortly.',
+  preparing: 'Your order is being prepared!',
+  ready: 'Your order is ready and on the way!',
+  delivered: 'Your order has been delivered. Enjoy!',
+  cancelled: 'Your order was cancelled by the restaurant. Please contact them for details.',
+};
 
 router.get('/orders', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
+  const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
-  try {
-    const { rows } = await query(
-      `SELECT * FROM resto_orders WHERE place_id=$1 AND place_type=$2 ORDER BY created_at DESC LIMIT 100`,
-      [ctx.placeId, ctx.bookingType]
-    );
-    res.json(rows.map(o => ({
-      id: o.id, code: o.code, status: o.status,
-      total: o.total, items: o.items || [],
-      customerPhone: o.customer_phone, address: o.address,
-      prepMinutes: o.prep_minutes, createdAt: o.created_at,
-    })));
-  } catch {
-    res.json([]);
-  }
+  const { rows } = await query(
+    `SELECT fo.*, COALESCE(NULLIF(TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')), ''), u.email) AS customer_name
+     FROM food_orders fo LEFT JOIN users u ON u.id = fo.user_id
+     WHERE fo.place_id = $1 ORDER BY fo.created_at DESC LIMIT 200`,
+    [ctx.placeId]
+  );
+  res.json(rows.map((o) => ({
+    id: o.id, code: String(o.id).slice(-6).toUpperCase(), status: o.status,
+    items: o.items || [], subtotal: Number(o.subtotal || 0), deliveryFee: Number(o.delivery_fee || 0), total: Number(o.total || 0),
+    customerName: o.customer_name, customerPhone: o.delivery_phone, address: o.delivery_address,
+    paymentMethod: o.payment_method, notes: o.notes, createdAt: o.created_at,
+  })));
 });
 
 router.put('/orders/:id/status', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
+  const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
-  const { status, prepMinutes } = req.body;
-  const allowed = ['accepted','preparing','ready','delivered','cancelled'];
-  if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status.' });
-  try {
-    const updates = ['status=$1', 'updated_at=NOW()'];
-    const params = [status];
-    if (prepMinutes) { updates.push(`prep_minutes=$${params.length + 1}`); params.push(prepMinutes); }
-    await query(
-      `UPDATE resto_orders SET ${updates.join(',')} WHERE id=$${params.length + 1} AND place_id=$${params.length + 2}`,
-      [...params, req.params.id, ctx.placeId]
-    );
-    res.json({ ok: true });
-  } catch {
-    res.status(500).json({ error: 'Could not update order.' });
+  // The mobile owner app's board says "accepted"; the orders table says "confirmed".
+  const status = req.body.status === 'accepted' ? 'confirmed' : req.body.status;
+  if (!ORDER_MESSAGES[status]) return res.status(400).json({ error: 'Invalid status.' });
+  const { rows } = await query(
+    'UPDATE food_orders SET status=$1, updated_at=NOW() WHERE id=$2 AND place_id=$3 RETURNING *',
+    [status, req.params.id, ctx.placeId]
+  );
+  if (!rows.length) return res.status(404).json({ error: 'Order not found.' });
+  if (rows[0].user_id) {
+    notifyUser(rows[0].user_id, { title: `Order ${status}`, body: ORDER_MESSAGES[status], data: { type: 'order_update', orderId: rows[0].id } }).catch(() => {});
   }
+  res.json({ ok: true });
 });
 
 // ── Busy-now (coffee shops) ───────────────────────────────────────────────────
 
 router.put('/busy', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
+  const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
   const { busy } = req.body;
   if (!['quiet','moderate','full',null].includes(busy)) return res.status(400).json({ error: 'Invalid busy level.' });
@@ -372,7 +333,7 @@ router.put('/busy', ...guard, async (req, res) => {
 
 // Coffee shop menu routes
 router.get('/cs-menu', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
+  const ctx = getContext(req);
   if (ctx.table !== 'coffee_shops') return res.json([]);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
   const { rows } = await query(
@@ -383,7 +344,7 @@ router.get('/cs-menu', ...guard, async (req, res) => {
 });
 
 router.post('/cs-menu', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
+  const ctx = getContext(req);
   if (ctx.table !== 'coffee_shops') return res.status(400).json({ error: 'CS menu is for coffee shops only.' });
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
   const { category, name, description, price, photoUrl, sortOrder } = req.body;
@@ -397,7 +358,7 @@ router.post('/cs-menu', ...guard, async (req, res) => {
 });
 
 router.put('/cs-menu/:id', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
+  const ctx = getContext(req);
   if (ctx.table !== 'coffee_shops') return res.status(400).json({ error: 'CS menu is for coffee shops only.' });
   const { category, name, description, price, available, photoUrl, sortOrder } = req.body;
   const { rows } = await query(
@@ -411,7 +372,7 @@ router.put('/cs-menu/:id', ...guard, async (req, res) => {
 });
 
 router.delete('/cs-menu/:id', ...guard, async (req, res) => {
-  const ctx = getContext(req.user);
+  const ctx = getContext(req);
   if (ctx.table !== 'coffee_shops') return res.status(400).json({ error: 'CS menu is for coffee shops only.' });
   await query('DELETE FROM coffee_shop_menu_items WHERE id=$1 AND coffee_shop_id=$2', [req.params.id, ctx.placeId]);
   res.status(204).end();

@@ -68,7 +68,7 @@ router.get('/:id', async (req, res) => {
 });
 
 // POST /coffee-shops — admin only
-router.post('/', requireAuth, requireRole('coffeeshop'), async (req, res) => {
+router.post('/', requireAuth, requireRole('sellers'), async (req, res) => {
   const {
     name, description, location, district, phone, website,
     coffeeTypes, brewingMethods, origins, food, atmosphere,
@@ -106,7 +106,7 @@ router.post('/', requireAuth, requireRole('coffeeshop'), async (req, res) => {
 });
 
 // PUT /coffee-shops/:id — admin only
-router.put('/:id', requireAuth, requireRole('coffeeshop'), async (req, res) => {
+router.put('/:id', requireAuth, requireRole('sellers'), async (req, res) => {
   const {
     name, description, location, district, phone, website,
     coffeeTypes, brewingMethods, origins, food, atmosphere,
@@ -144,7 +144,7 @@ router.put('/:id', requireAuth, requireRole('coffeeshop'), async (req, res) => {
 });
 
 // DELETE /coffee-shops/:id — admin only
-router.delete('/:id', requireAuth, requireRole('coffeeshop'), async (req, res) => {
+router.delete('/:id', requireAuth, requireRole('sellers'), async (req, res) => {
   await query('DELETE FROM coffee_shops WHERE id = $1', [req.params.id]);
   res.json({ ok: true });
 });
