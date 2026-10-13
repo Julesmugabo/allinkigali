@@ -15,7 +15,7 @@ import Contracts    from './pages/Contracts';
 
 // Role-specific dashboards
 import Overview            from './pages/Overview';
-import NewsDashboard       from './pages/NewsDashboard';
+import NewsDashboard       from './dashboards/news/NewsDashboard';
 import SellersDashboard    from './pages/SellersDashboard';
 import RestaurantsDashboard from './pages/RestaurantsDashboard';
 import CoffeeShopsDashboard from './pages/CoffeeShopsDashboard';
@@ -77,7 +77,7 @@ export default function App() {
             {/* ── Director dashboards ── */}
             {isDirector && <>
               <Route path="/overview"      element={<Overview />} />
-              <Route path="/news"          element={<NewsDashboard />} />
+              <Route path="/news/:section?" element={<NewsDashboard />} />
               <Route path="/sellers"       element={<SellersDashboard />} />
               <Route path="/restaurants"   element={<RestaurantsDashboard />} />
               <Route path="/coffee-shops"  element={<CoffeeShopsDashboard />} />
@@ -86,7 +86,7 @@ export default function App() {
             </>}
 
             {/* ── Role-specific dashboards ── */}
-            {role === 'news'        && <Route path="/news"         element={<NewsDashboard />} />}
+            {role === 'news'        && <Route path="/news/:section?" element={<NewsDashboard />} />}
             {role === 'sellers'     && <>
               <Route path="/sellers"      element={<SellersDashboard />} />
               <Route path="/restaurants"  element={<RestaurantsDashboard />} />

@@ -5,6 +5,10 @@
  * manages the listening/routing itself).
  */
 const app = require('./app');
+const newsScheduler = require('./jobs/newsScheduler');
 
 const port = process.env.PORT || 4000;
 app.listen(port, () => console.log(`allinkigali-server listening on http://localhost:${port}`));
+
+// Scheduled publishing + breaking-flag expiry (needs a long-running process).
+newsScheduler.start();

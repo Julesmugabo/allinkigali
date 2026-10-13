@@ -4,7 +4,9 @@
  * A dashboard without an entry shows as a single sidebar link.
  */
 import { financeNav } from '../dashboards/finance/nav';
+import { newsNav } from '../dashboards/news/nav';
 
 export const SUB_NAV = {
   '/finance': financeNav,
+  '/news': newsNav,
 };

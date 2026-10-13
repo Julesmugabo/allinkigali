@@ -7,8 +7,8 @@
  */
 import React from 'react';
 import { Navigate, useParams } from 'react-router-dom';
-import { t } from '../../theme';
 import { PageHeader } from '../../components/PageShell';
+import { Toast } from '../../components/ui';
 import { FinanceProvider, useFinance } from './FinanceContext';
 import { SECTIONS } from './constants';
 import PeriodPicker from './components/PeriodPicker';
@@ -51,10 +51,9 @@ const VIEWS = {
 // Sections whose numbers depend on the selected period.
 const PERIOD_SECTIONS = new Set(['overview', 'transactions', 'income', 'expenses', 'reports', 'import']);
 
-function Toast() {
+function FinanceToast() {
   const { toast } = useFinance();
-  if (!toast) return null;
-  return <div style={s.toast}>{toast.text}</div>;
+  return <Toast toast={toast} />;
 }
 
 function Shell() {
@@ -70,7 +69,7 @@ function Shell() {
       {PERIOD_SECTIONS.has(section) && <PeriodPicker />}
       <View />
       <TransactionModals />
-      <Toast />
+      <FinanceToast />
     </div>
   );
 }
@@ -82,11 +81,3 @@ export default function FinanceDashboard() {
     </FinanceProvider>
   );
 }
-
-const s = {
-  toast: {
-    position: 'fixed', bottom: 24, right: 24, zIndex: 300,
-    background: t.success, color: '#052E16', fontWeight: 600, fontSize: 14,
-    padding: '12px 18px', borderRadius: 10, boxShadow: t.shadowLg,
-  },
-};

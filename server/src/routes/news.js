@@ -107,6 +107,19 @@ function articleFields(data) {
   return { columns, values };
 }
 
+// When an article is flagged Breaking without an explicit expiry, give it
+// one from the newsroom setting so the scheduler can drop the flag later;
+// clearing Breaking clears the expiry too.
+async function withBreakingExpiry(body) {
+  if (body.isBreaking === false) return { ...body, breakingExpiresAt: null };
+  if (body.isBreaking === true && !body.breakingExpiresAt) {
+    const { rows } = await query('select breaking_expiry_hours from news_workflow_settings where id = 1');
+    const hours = Number(rows[0]?.breaking_expiry_hours) || 6;
+    return { ...body, breakingExpiresAt: new Date(Date.now() + hours * 3600 * 1000).toISOString() };
+  }
+  return body;
+}
+
 router.get('/categories', async (_req, res) => {
   const { rows } = await query('select key, label from news_categories order by label');
   res.json(rows);
@@ -142,9 +155,9 @@ router.delete('/categories/:key', requireAuth, requireRole('news', 'director'), 
     if (!rowCount) return res.status(404).json({ error: 'Category not found.' });
     res.status(204).end();
   } catch (err) {
-    // foreign_key_violation — the FK "on delete restrict" caught a category
-    // still in use, same guarantee the old RLS-backed version had.
-    if (err.code === '23503') return res.status(409).json({ error: 'Category is still in use.' });
+    // The FK is "on delete restrict", which Postgres reports as
+    // restrict_violation (23001); 23503 covers a plain foreign_key_violation.
+    if (err.code === '23001' || err.code === '23503') return res.status(409).json({ error: 'Category is still in use.' });
     throw err;
   }
 });
@@ -158,7 +171,7 @@ router.get('/articles', attachUserIfPresent, async (req, res) => {
 });
 
 router.post('/articles', requireAuth, requireRole('news', 'director'), async (req, res) => {
-  const body = req.body || {};
+  const body = await withBreakingExpiry(req.body || {});
   if ('labels' in body) body.labels = cleanLabels(body.labels);
   const { columns, values } = articleFields(body);
   if (!columns.length) return res.status(400).json({ error: 'No fields provided.' });
@@ -177,7 +190,7 @@ router.post('/articles', requireAuth, requireRole('news', 'director'), async (re
 });
 
 router.patch('/articles/:id', requireAuth, requireRole('news', 'director'), async (req, res) => {
-  const body = req.body || {};
+  const body = await withBreakingExpiry(req.body || {});
   if ('labels' in body) body.labels = cleanLabels(body.labels);
   const { columns, values } = articleFields(body);
   if (!columns.length) return res.status(400).json({ error: 'No fields provided.' });
