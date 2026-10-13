@@ -50,7 +50,7 @@ export default function TopNavBar({ state, descriptors, navigation }) {
           style={styles.brand}
         >
           <Image
-            source={require('../../../assets/ak-banner.png')}
+            source={require('../../../assets/logo-wordmark.png')}
             style={styles.logo}
             resizeMode="contain"
           />
@@ -157,7 +157,7 @@ const styles = StyleSheet.create({
     height: TOP_NAV_HEIGHT,
   },
   brand: { marginRight: spacing.xxl },
-  logo: { width: 36, height: 36, borderRadius: 8 },
+  logo: { width: 80, height: 28 },
   sections: { flex: 1, flexDirection: 'row', alignItems: 'center', height: '100%' },
   sectionItem: {
     flexDirection: 'row',
