@@ -26,9 +26,8 @@ export default function Login({ onLogin }) {
     <div style={styles.wrapper}>
       <form onSubmit={handleSubmit} style={styles.card}>
         <div style={styles.logo}>
-          <div style={styles.logoIcon}>A</div>
-          <h1 style={styles.title}>AllInKigali</h1>
-          <p style={styles.subtitle}>Admin Backoffice</p>
+          <img src="/logo-icon.png" alt="AllInKigali" style={styles.logoIcon} />
+          <p style={styles.subtitle}>Staff Portal</p>
         </div>
 
         {error && <div style={styles.error}>{error}</div>}
@@ -75,12 +74,10 @@ const styles = {
     textAlign: 'center', marginBottom: 12,
   },
   logoIcon: {
-    width: 56, height: 56, borderRadius: 16, background: t.accent,
-    color: t.bg, fontSize: 28, fontWeight: 700,
-    display: 'inline-flex', alignItems: 'center', justifyContent: 'center',
-    marginBottom: 12,
+    width: 88, height: 88, borderRadius: 20,
+    objectFit: 'contain', marginBottom: 12,
+    display: 'block', margin: '0 auto 12px',
   },
-  title: { color: t.text, fontSize: 22, fontWeight: 700, margin: 0 },
   subtitle: { color: t.textSecondary, fontSize: 14, marginTop: 4 },
   label: { color: t.textSecondary, fontSize: 13, fontWeight: 500 },
   input: { width: '100%' },

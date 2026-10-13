@@ -61,11 +61,8 @@ export default function Sidebar({ user, onLogout, open, onToggle, unreadCount })
       <aside style={{ ...styles.sidebar, ...(open ? styles.sidebarOpen : {}) }}>
         {/* Brand */}
         <div style={styles.brand}>
-          <div style={styles.brandIcon}>A</div>
-          <div>
-            <div style={styles.brandText}>AllInKigali</div>
-            <div style={styles.brandSub}>Staff Portal</div>
-          </div>
+          <img src="/logo-wordmark.png" alt="AllInKigali" style={styles.brandWordmark} />
+          <div style={styles.brandSub}>Staff Portal</div>
         </div>
 
         <nav style={styles.nav}>
@@ -150,17 +147,14 @@ const styles = {
     padding: 0, border: `1px solid ${t.border}`,
   },
   brand: {
-    display: 'flex', alignItems: 'center', gap: 10,
-    padding: '20px 20px 16px',
+    padding: '20px 20px 12px',
   },
-  brandIcon: {
-    width: 36, height: 36, borderRadius: 10, background: t.accent,
-    color: t.bg, fontSize: 18, fontWeight: 700,
-    display: 'flex', alignItems: 'center', justifyContent: 'center',
-    flexShrink: 0,
+  brandWordmark: {
+    width: 120, height: 'auto',
+    objectFit: 'contain', display: 'block',
+    marginBottom: 4,
   },
-  brandText: { color: t.text, fontSize: 15, fontWeight: 700, lineHeight: 1.2 },
-  brandSub: { color: t.textMuted, fontSize: 11, fontWeight: 500, letterSpacing: 0.3 },
+  brandSub: { color: t.textMuted, fontSize: 11, fontWeight: 500, letterSpacing: 0.3, paddingLeft: 2 },
 
   nav: { flex: 1, padding: '8px 12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 },
   sectionLabel: {
