@@ -14,6 +14,11 @@ const STATUS_COLORS = {
   published: t.success, draft: t.warning, pending: '#F59E0B', archived: t.textMuted,
 };
 
+// Google Images (and similar) inline their result thumbnails as data: URLs,
+// so "Copy image address" on a search result yields a ~200px preview instead
+// of a link to the real photo.
+const isEmbeddedPreview = (url) => typeof url === 'string' && url.trim().startsWith('data:');
+
 export default function NewsDashboard() {
   const [articles, setArticles] = useState([]);
   const [categories, setCategories] = useState([]);
@@ -90,6 +95,10 @@ export default function NewsDashboard() {
   const save = async () => {
     if (!form.title.trim()) { alert('Title is required.'); return; }
     if (!form.category) { alert('Select a category.'); return; }
+    if (isEmbeddedPreview(form.imageUrl)) {
+      alert('The cover image is a small search-page preview, not the real photo. Replace it with the full image link or upload the photo.');
+      return;
+    }
     setSaving(true);
     try {
       const payload = { ...form };
@@ -361,6 +370,14 @@ export default function NewsDashboard() {
                       style={s.input}
                       placeholder="Image URL or upload below"
                     />
+                    {isEmbeddedPreview(form.imageUrl) && (
+                      <div style={s.imageWarning}>
+                        This is a small preview copied from a search page (like Google Images), not the
+                        real photo — it will look blurry. Click the image in Google to open it, then
+                        right-click the large version and choose "Copy image address", or save the
+                        photo and use Upload Image.
+                      </div>
+                    )}
                     <div style={{ marginTop: 8 }}>
                       <input ref={fileRef} type="file" accept="image/*" onChange={handleImageUpload} style={{ display: 'none' }} />
                       <button
@@ -461,6 +478,10 @@ const s = {
     display: 'flex', alignItems: 'center', gap: 6,
   },
   cancelBtn: { background: t.bgHover, color: t.text },
+  imageWarning: {
+    marginTop: 6, padding: '8px 10px', borderRadius: 6,
+    background: 'rgba(251,191,36,0.12)', color: t.warning, fontSize: 12, lineHeight: 1.5,
+  },
   uploadBtn: {
     background: t.bgHover, color: t.textSecondary, fontSize: 13,
     display: 'inline-flex', alignItems: 'center', gap: 6, padding: '8px 14px',
