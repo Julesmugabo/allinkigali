@@ -19,7 +19,7 @@ import NewsDashboard       from './pages/NewsDashboard';
 import SellersDashboard    from './pages/SellersDashboard';
 import RestaurantsDashboard from './pages/RestaurantsDashboard';
 import CoffeeShopsDashboard from './pages/CoffeeShopsDashboard';
-import FinanceDashboard    from './pages/FinanceDashboard';
+import FinanceDashboard    from './dashboards/finance/FinanceDashboard';
 import AdminUsers          from './pages/AdminUsers';
 
 export default function App() {
@@ -81,7 +81,7 @@ export default function App() {
               <Route path="/sellers"       element={<SellersDashboard />} />
               <Route path="/restaurants"   element={<RestaurantsDashboard />} />
               <Route path="/coffee-shops"  element={<CoffeeShopsDashboard />} />
-              <Route path="/finance"       element={<FinanceDashboard />} />
+              <Route path="/finance/:section?" element={<FinanceDashboard />} />
               <Route path="/admins"        element={<AdminUsers />} />
             </>}
 
@@ -94,7 +94,7 @@ export default function App() {
             </>}
             {role === 'restaurant'  && <Route path="/restaurants"  element={<RestaurantsDashboard />} />}
             {role === 'coffeeshop'  && <Route path="/coffee-shops" element={<CoffeeShopsDashboard />} />}
-            {role === 'finance'     && <Route path="/finance"      element={<FinanceDashboard />} />}
+            {role === 'finance'     && <Route path="/finance/:section?" element={<FinanceDashboard />} />}
 
             {/* ── Client dashboard (Sellers Admin + director) ── */}
             {canManageClients && <Route path="/client-dashboard" element={<ClientDashboard />} />}

@@ -18,6 +18,25 @@ async function nextRef(client, prefix) {
 
 const TYPE_PREFIX = { income: 'INC', expense: 'EXP', transfer: 'TRF', journal: 'JNL' };
 
+// Double-entry lines for a simple income/expense once it is posted:
+// income  -> debit bank ledger, credit income account
+// expense -> debit expense account, credit bank ledger
+async function writeLedgerLines(client, txn) {
+  if (!txn.category_account_id || !txn.bank_account_id) return;
+  if (!['income', 'expense'].includes(txn.txn_type)) return;
+  const { rows: existing } = await client.query('SELECT 1 FROM fin_journal_lines WHERE transaction_id = $1 LIMIT 1', [txn.id]);
+  if (existing.length) return;
+  const { rows: ba } = await client.query('SELECT ledger_account_id FROM fin_bank_accounts WHERE id = $1', [txn.bank_account_id]);
+  const bankLedger = ba[0]?.ledger_account_id || txn.category_account_id;
+  const [debitAcc, creditAcc] = txn.txn_type === 'income'
+    ? [bankLedger, txn.category_account_id]
+    : [txn.category_account_id, bankLedger];
+  await client.query(
+    'INSERT INTO fin_journal_lines (transaction_id, account_id, debit, credit) VALUES ($1, $2, $3, 0), ($1, $4, 0, $3)',
+    [txn.id, debitAcc, txn.amount, creditAcc]
+  );
+}
+
 // ─── Dashboard summary ───
 router.get('/dashboard/summary', ...finAuth, async (req, res) => {
   const { from, to } = req.query;
@@ -187,6 +206,16 @@ router.post('/transactions', ...finAuth, async (req, res) => {
   }
 });
 
+router.post('/transactions/:id/submit', ...finAuth, async (req, res) => {
+  const { rows } = await query(
+    `UPDATE fin_transactions SET status = 'pending_approval', updated_at = NOW() WHERE id = $1 AND status = 'draft' RETURNING *`,
+    [req.params.id]
+  );
+  if (!rows.length) return res.status(400).json({ error: 'Only draft transactions can be submitted' });
+  await query(`INSERT INTO fin_audit_log (user_id, action, entity_type, entity_id, new_values) VALUES ($1, 'submit', 'transaction', $2, '{"status":"pending_approval"}')`, [userId(req), req.params.id]);
+  res.json(rows[0]);
+});
+
 router.post('/transactions/:id/approve', ...finAuth, async (req, res) => {
   const client = await getClient();
   try {
@@ -208,7 +237,10 @@ router.post('/transactions/:id/post', ...finAuth, async (req, res) => {
     const { rows } = await client.query('SELECT * FROM fin_transactions WHERE id = $1', [req.params.id]);
     if (!rows.length) return res.status(404).json({ error: 'Not found' });
     const txn = rows[0];
+    if (txn.status === 'posted') return res.status(400).json({ error: 'Already posted' });
+    if (txn.status === 'voided') return res.status(400).json({ error: 'Cannot post a voided transaction' });
     await client.query(`UPDATE fin_transactions SET status = 'posted', posted_at = NOW(), updated_at = NOW() WHERE id = $1`, [req.params.id]);
+    await writeLedgerLines(client, txn);
     if (txn.bank_account_id) {
       const change = txn.txn_type === 'income' ? txn.amount : -txn.amount;
       await client.query('UPDATE fin_bank_accounts SET current_balance = current_balance + $1 WHERE id = $2', [change, txn.bank_account_id]);
@@ -348,8 +380,8 @@ router.get('/reports/income-expenditure', ...finAuth, async (req, res) => {
 router.get('/reports/trial-balance', ...finAuth, async (req, res) => {
   const { rows } = await query(`
     SELECT a.code, a.name, a.account_type, COALESCE(SUM(jl.debit), 0) AS total_debit, COALESCE(SUM(jl.credit), 0) AS total_credit
-    FROM fin_accounts a LEFT JOIN fin_journal_lines jl ON a.id = jl.account_id
-    LEFT JOIN fin_transactions t ON jl.transaction_id = t.id AND t.status = 'posted'
+    FROM fin_accounts a LEFT JOIN (fin_journal_lines jl JOIN fin_transactions t ON jl.transaction_id = t.id AND t.status = 'posted')
+      ON a.id = jl.account_id
     WHERE a.is_active = TRUE
     GROUP BY a.code, a.name, a.account_type HAVING COALESCE(SUM(jl.debit), 0) > 0 OR COALESCE(SUM(jl.credit), 0) > 0
     ORDER BY a.code
@@ -651,8 +683,8 @@ router.get('/export/report/:type', ...finAuth, async (req, res) => {
   if (reportType === 'trial-balance') {
     const { rows } = await query(`
       SELECT a.code, a.name, a.account_type, COALESCE(SUM(jl.debit), 0) AS total_debit, COALESCE(SUM(jl.credit), 0) AS total_credit
-      FROM fin_accounts a LEFT JOIN fin_journal_lines jl ON a.id = jl.account_id
-      LEFT JOIN fin_transactions t ON jl.transaction_id = t.id AND t.status = 'posted'
+      FROM fin_accounts a LEFT JOIN (fin_journal_lines jl JOIN fin_transactions t ON jl.transaction_id = t.id AND t.status = 'posted')
+        ON a.id = jl.account_id
       WHERE a.is_active = TRUE GROUP BY a.code, a.name, a.account_type
       HAVING COALESCE(SUM(jl.debit), 0) > 0 OR COALESCE(SUM(jl.credit), 0) > 0 ORDER BY a.code
     `);
@@ -804,7 +836,9 @@ router.post('/reconciliation/import', ...finAuth, async (req, res) => {
     const imported = [];
     for (const row of csvRows) {
       const { date, description, debit, credit, reference } = row;
-      const amount = parseFloat(debit || 0) - parseFloat(credit || 0);
+      // Bank-statement convention: credit = money in, debit = money out, so a
+      // deposit is positive like the ledger balance it's reconciled against.
+      const amount = parseFloat(credit || 0) - parseFloat(debit || 0);
       const { rows: dup } = await client.query(
         `SELECT id FROM fin_bank_statement_lines WHERE bank_account_id=$1 AND stmt_date=$2 AND amount=$3 AND reference=$4`,
         [bank_account_id, date, amount, reference || null]
@@ -885,8 +919,8 @@ router.get('/reports/balance-sheet', ...finAuth, async (req, res) => {
       COALESCE(SUM(jl.debit), 0) AS total_debit, COALESCE(SUM(jl.credit), 0) AS total_credit,
       CASE WHEN a.normal_balance = 'debit' THEN COALESCE(SUM(jl.debit),0) - COALESCE(SUM(jl.credit),0)
            ELSE COALESCE(SUM(jl.credit),0) - COALESCE(SUM(jl.debit),0) END AS balance
-    FROM fin_accounts a LEFT JOIN fin_journal_lines jl ON a.id = jl.account_id
-    LEFT JOIN fin_transactions t ON jl.transaction_id = t.id AND t.status = 'posted'
+    FROM fin_accounts a LEFT JOIN (fin_journal_lines jl JOIN fin_transactions t ON jl.transaction_id = t.id AND t.status = 'posted')
+      ON a.id = jl.account_id
     WHERE a.is_active = TRUE AND a.account_type IN ('asset','liability','equity')
     GROUP BY a.code, a.name, a.account_type, a.normal_balance ORDER BY a.code
   `);
@@ -1042,7 +1076,7 @@ router.get('/documents', ...finAuth, async (req, res) => {
   if (transaction_id) { params.push(transaction_id); where += ` AND d.transaction_id = $${params.length}`; }
   if (invoice_id) { params.push(invoice_id); where += ` AND d.invoice_id = $${params.length}`; }
   if (project_id) { params.push(project_id); where += ` AND d.project_id = $${params.length}`; }
-  const { rows } = await query(`SELECT d.*, u.full_name AS uploader_name FROM fin_documents d LEFT JOIN users u ON u.id::text = d.uploaded_by ${where} ORDER BY d.created_at DESC`, params);
+  const { rows } = await query(`SELECT d.*, COALESCE(u.first_name || ' ' || u.last_name, u.email) AS uploader_name FROM fin_documents d LEFT JOIN users u ON u.id::text = d.uploaded_by::text ${where} ORDER BY d.created_at DESC`, params);
   res.json(rows);
 });
 

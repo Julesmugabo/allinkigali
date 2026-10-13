@@ -1,4 +1,4 @@
-import React, { useEffect, useState } from 'react';
+import React from 'react';
 import { NavLink } from 'react-router-dom';
 import {
   Home, Bell, FolderOpen, FileText,
@@ -6,6 +6,8 @@ import {
   Coffee, Wallet, Users, LogOut, Menu, X,
 } from 'lucide-react';
 import { t } from '../theme';
+import DashboardLink from './sidebar/DashboardLink';
+import { SUB_NAV } from '../navigation/subNav';
 
 // ─── Portal links (visible to ALL staff) ───────────────────────────────────
 const PORTAL_LINKS = [
@@ -50,17 +52,17 @@ export default function Sidebar({ user, onLogout, open, onToggle, unreadCount })
 
   return (
     <>
-      {/* Mobile toggle */}
-      <button onClick={onToggle} style={styles.toggle}>
+      {/* Mobile toggle — on desktop the sidebar is always shown */}
+      {window.innerWidth < 768 && <button onClick={onToggle} style={styles.toggle}>
         {open ? <X size={20} /> : <Menu size={20} />}
-      </button>
+      </button>}
 
       {/* Overlay on mobile only — not on desktop where sidebar sits beside content */}
       {open && window.innerWidth < 768 && <div onClick={onToggle} style={styles.overlay} />}
 
       <aside style={{ ...styles.sidebar, ...(open ? styles.sidebarOpen : {}) }}>
         {/* Brand */}
-        <div style={styles.brand}>
+        <div style={{ ...styles.brand, ...(window.innerWidth < 768 ? { paddingLeft: 64 } : {}) }}>
           <img src="/logo-wordmark.png" alt="AllInKigali" style={styles.brandWordmark} />
           <div style={styles.brandSub}>Staff Portal</div>
         </div>
@@ -91,16 +93,12 @@ export default function Sidebar({ user, onLogout, open, onToggle, unreadCount })
                 {user.role === 'director' ? 'DASHBOARDS' : 'MY DASHBOARD'}
               </div>
               {dashboardLinks.map((link) => (
-                <NavLink
+                <DashboardLink
                   key={link.to}
-                  to={link.to}
-                  end={link.to === '/overview'}
-                  onClick={() => window.innerWidth < 768 && onToggle()}
-                  style={({ isActive }) => ({ ...styles.navLink, ...(isActive ? styles.navLinkActive : {}) })}
-                >
-                  <link.icon size={17} />
-                  <span>{link.label}</span>
-                </NavLink>
+                  link={{ ...link, end: link.to === '/overview' }}
+                  children={SUB_NAV[link.to]}
+                  onNavigate={onToggle}
+                />
               ))}
             </>
           )}

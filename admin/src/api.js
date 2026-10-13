@@ -40,6 +40,28 @@ export async function apiFetch(path, { method = 'GET', body } = {}) {
   return data;
 }
 
+// Authenticated file download (CSV exports etc.) — a plain link can't carry
+// the bearer token, so fetch the file and hand the browser a blob instead.
+export async function apiDownload(path, filename) {
+  const token = getToken();
+  const res = await fetch(`${API_URL}${path}`, {
+    headers: token ? { Authorization: `Bearer ${token}` } : {},
+  });
+  if (!res.ok) {
+    const data = await res.json().catch(() => null);
+    throw new Error(data?.error || `Download failed (${res.status})`);
+  }
+  const blob = await res.blob();
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url;
+  a.download = filename;
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+}
+
 export async function login(email, password) {
   const data = await apiFetch('/auth/login', {
     method: 'POST',
