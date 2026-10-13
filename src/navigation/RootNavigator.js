@@ -13,6 +13,8 @@ import NewsStack from './NewsStack';
 import ShopStack from './ShopStack';
 import AccountStack from './AccountStack';
 import BottomTabBar from './BottomTabBar';
+import TopNavBar, { TOP_NAV_HEIGHT } from '../web/navigation/TopNavBar';
+import useIsWideWeb from '../web/hooks/useIsWideWeb';
 
 const Tab = createBottomTabNavigator();
 
@@ -49,13 +51,17 @@ function useExitGuard() {
 
 export default function RootNavigator() {
   useExitGuard();
+  const isWideWeb = useIsWideWeb();
 
   return (
     <Tab.Navigator
       initialRouteName="NewsTab"
       backBehavior="history"
-      tabBar={(props) => <BottomTabBar {...props} />}
-      screenOptions={{ headerShown: false }}
+      tabBar={(props) => (isWideWeb ? <TopNavBar {...props} /> : <BottomTabBar {...props} />)}
+      screenOptions={{
+        headerShown: false,
+        sceneContainerStyle: isWideWeb ? { paddingTop: TOP_NAV_HEIGHT } : undefined,
+      }}
     >
       <Tab.Screen
         name="NewsTab"

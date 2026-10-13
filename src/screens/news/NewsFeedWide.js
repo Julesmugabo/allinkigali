@@ -1,0 +1,282 @@
+/**
+ * NewsFeedWide.js — the desktop-shaped feed: category strip + date under the
+ * top nav, a breaking strip when something is flagged, then a 3-column body
+ * (timestamped latest on the left, hero + top stories + a grid in the
+ * center, trending + an ad in the right rail). Only ever rendered from
+ * NewsFeed.web.js once the viewport is wide — see useIsWideWeb.
+ *
+ * Reuses the same cards as the phone feed (HeroCard, NewsListItem) so a
+ * design change to either one applies to both layouts automatically.
+ */
+import React, { useMemo } from 'react';
+import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+
+import WebContainer from '../../web/layout/WebContainer';
+import CategoryTabs from '../../components/news/CategoryTabs';
+import HeroCard from '../../components/news/HeroCard';
+import NewsListItem from '../../components/news/NewsListItem';
+import AdBox from '../../components/news/AdBox';
+import FeedSkeleton from '../../components/news/FeedSkeleton';
+import EmptyState from '../../components/common/EmptyState';
+
+import { formatLongDate, timeAgo } from '../../utils/date';
+import { colors, typography, spacing, radius } from '../../theme';
+
+export default function NewsFeedWide({
+  categories,
+  activeCategory,
+  onCategoryChange,
+  feed,
+  heroAd,
+  handleArticlePress,
+  handleStoryPress,
+  isLoading,
+  loadFailed,
+  articles,
+  reload,
+  onSeeAllPress,
+}) {
+  const breaking = useMemo(() => articles.filter((a) => a.isBreaking), [articles]);
+
+  if (isLoading) {
+    return (
+      <View style={styles.container}>
+        <WebContainer style={styles.skeletonPad}>
+          <FeedSkeleton />
+        </WebContainer>
+      </View>
+    );
+  }
+
+  if (loadFailed && !articles.length) {
+    return (
+      <View style={styles.container}>
+        <WebContainer style={styles.skeletonPad}>
+          <EmptyState
+            icon="wifi-off"
+            title="Ntibyashoboye gufungura amakuru"
+            message="Reba internet yawe hanyuma ongera ugerageze."
+            actionLabel="Ongera ugerageze"
+            onActionPress={reload}
+          />
+        </WebContainer>
+      </View>
+    );
+  }
+
+  const [topStory1, topStory2, ...restLatest] = feed.latest;
+  const timeline = feed.latest.slice(0, 8);
+
+  return (
+    <View style={styles.container}>
+      <View style={styles.subBar}>
+        <WebContainer style={styles.subBarRow}>
+          <CategoryTabs categories={categories} activeKey={activeCategory} onChange={onCategoryChange} />
+          <Text style={styles.dateLabel}>{formatLongDate()}</Text>
+        </WebContainer>
+      </View>
+
+      {breaking.length ? (
+        <View style={styles.breakingBar}>
+          <WebContainer style={styles.breakingRow}>
+            <View style={styles.breakingTag}>
+              <View style={styles.breakingDot} />
+              <Text style={styles.breakingTagText}>BREAKING</Text>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.breakingScroll}>
+              {breaking.map((article, i) => (
+                <Pressable key={article.id} onPress={() => handleArticlePress(article)} style={styles.breakingItem}>
+                  <Text style={styles.breakingText} numberOfLines={1}>
+                    {article.title}
+                  </Text>
+                  {i < breaking.length - 1 ? <Text style={styles.breakingSep}>•</Text> : null}
+                </Pressable>
+              ))}
+            </ScrollView>
+          </WebContainer>
+        </View>
+      ) : null}
+
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
+        <WebContainer>
+          <View style={styles.columns}>
+            {/* Left: timestamped headline stream */}
+            <View style={styles.leftCol}>
+              <Text style={styles.colTitle}>AMAKURU MASHYA</Text>
+              {timeline.map((article) => (
+                <Pressable key={article.id} onPress={() => handleArticlePress(article)} style={styles.timelineRow}>
+                  <Text style={styles.timelineTime}>{timeAgo(article.publishedAt)}</Text>
+                  <Text style={styles.timelineTitle} numberOfLines={2}>
+                    {article.title}
+                  </Text>
+                </Pressable>
+              ))}
+            </View>
+
+            {/* Center: hero + top stories + grid */}
+            <View style={styles.centerCol}>
+              <HeroCard article={feed.hero} onPress={handleArticlePress} onStoryPress={handleStoryPress} />
+
+              {(topStory1 || topStory2) && (
+                <View style={styles.topStoriesRow}>
+                  {topStory1 ? (
+                    <View style={styles.topStoryHalf}>
+                      <NewsListItem article={topStory1} onPress={handleArticlePress} />
+                    </View>
+                  ) : null}
+                  {topStory2 ? (
+                    <View style={styles.topStoryHalf}>
+                      <NewsListItem article={topStory2} onPress={handleArticlePress} />
+                    </View>
+                  ) : null}
+                </View>
+              )}
+
+              {restLatest.length ? (
+                <>
+                  <View style={styles.sectionHeader}>
+                    <Text style={styles.colTitle}>IBINDI</Text>
+                    {onSeeAllPress ? (
+                      <Pressable onPress={onSeeAllPress}>
+                        <Text style={styles.seeAll}>Byose</Text>
+                      </Pressable>
+                    ) : null}
+                  </View>
+                  <View style={styles.grid}>
+                    {restLatest.map((article) => (
+                      <View key={article.id} style={styles.gridCell}>
+                        <NewsListItem article={article} onPress={handleArticlePress} />
+                      </View>
+                    ))}
+                  </View>
+                </>
+              ) : null}
+            </View>
+
+            {/* Right: trending + ad */}
+            <View style={styles.rightCol}>
+              <Text style={styles.colTitle}>BISOMWA CYANE</Text>
+              {feed.trending.slice(0, 6).map((article, i) => (
+                <Pressable key={article.id} onPress={() => handleArticlePress(article)} style={styles.trendingRow}>
+                  <Text style={styles.trendingRank}>{i + 1}</Text>
+                  <Text style={styles.trendingTitle} numberOfLines={3}>
+                    {article.title}
+                  </Text>
+                </Pressable>
+              ))}
+
+              {heroAd ? <AdBox ad={heroAd} style={styles.adSpacing} /> : null}
+            </View>
+          </View>
+        </WebContainer>
+      </ScrollView>
+    </View>
+  );
+}
+
+const styles = StyleSheet.create({
+  container: { flex: 1, backgroundColor: colors.background },
+  skeletonPad: { paddingTop: spacing.xl },
+  scrollContent: { paddingBottom: spacing.huge },
+
+  subBar: {
+    backgroundColor: colors.navy800,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.borderOnNavy,
+  },
+  subBarRow: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    paddingTop: spacing.sm,
+  },
+  dateLabel: {
+    ...typography.caption,
+    color: colors.textOnNavyFaint,
+    marginLeft: spacing.lg,
+  },
+
+  breakingBar: { backgroundColor: colors.breaking },
+  breakingRow: { flexDirection: 'row', alignItems: 'center', paddingVertical: spacing.sm },
+  breakingTag: { flexDirection: 'row', alignItems: 'center', marginRight: spacing.lg },
+  breakingDot: { width: 6, height: 6, borderRadius: 3, backgroundColor: colors.white, marginRight: spacing.xs },
+  breakingTagText: { ...typography.caption, fontWeight: '700', letterSpacing: 0.6, color: colors.white },
+  breakingScroll: { flex: 1 },
+  breakingItem: { flexDirection: 'row', alignItems: 'center', marginRight: spacing.lg },
+  breakingText: { ...typography.body, fontSize: 13, fontWeight: '600', color: colors.white },
+  breakingSep: { color: 'rgba(255,255,255,0.5)', marginLeft: spacing.lg },
+
+  columns: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingTop: spacing.xl,
+    gap: spacing.xxl,
+  },
+  colTitle: {
+    ...typography.sectionTitle,
+    color: colors.textMuted,
+    marginBottom: spacing.md,
+  },
+  sectionHeader: {
+    flexDirection: 'row',
+    alignItems: 'center',
+    justifyContent: 'space-between',
+    marginTop: spacing.xl,
+  },
+  seeAll: {
+    ...typography.body,
+    fontSize: 13,
+    fontWeight: '600',
+    color: colors.blue500,
+    marginBottom: spacing.md,
+  },
+
+  leftCol: { width: 280 },
+  timelineRow: {
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  timelineTime: {
+    ...typography.meta,
+    color: colors.blue600,
+    fontWeight: '600',
+    marginBottom: 2,
+  },
+  timelineTitle: {
+    ...typography.body,
+    fontSize: 13.5,
+    color: colors.textPrimary,
+    lineHeight: 18,
+  },
+
+  centerCol: { flex: 1, minWidth: 0 },
+  topStoriesRow: { flexDirection: 'row', gap: spacing.md, marginTop: spacing.md },
+  topStoryHalf: { flex: 1, minWidth: 0 },
+  grid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.md },
+  gridCell: { width: '48.5%' },
+
+  rightCol: { width: 300 },
+  trendingRow: {
+    flexDirection: 'row',
+    alignItems: 'flex-start',
+    paddingVertical: spacing.sm,
+    borderBottomWidth: StyleSheet.hairlineWidth,
+    borderBottomColor: colors.border,
+  },
+  trendingRank: {
+    ...typography.sectionTitle,
+    width: 22,
+    color: colors.blue500,
+    fontSize: 15,
+  },
+  trendingTitle: {
+    flex: 1,
+    ...typography.body,
+    fontSize: 13.5,
+    color: colors.textPrimary,
+    lineHeight: 18,
+  },
+  adSpacing: { marginTop: spacing.lg },
+});

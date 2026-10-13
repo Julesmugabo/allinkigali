@@ -45,12 +45,12 @@ const app = express();
 app.use(cors({
   origin: [
     'https://allinkigali.vercel.app',
+    'https://allinkigali.rw',
+    'https://www.allinkigali.rw',
     'https://admin.allinkigali.com',
     'https://admin.allinkigali.rw',
     /\.vercel\.app$/,
-    'http://localhost:3000',
-    'http://localhost:5173',
-    'http://localhost:19006',
+    /^http:\/\/localhost:\d+$/,
   ],
   credentials: true,
 }));

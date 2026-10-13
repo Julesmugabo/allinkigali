@@ -7,7 +7,7 @@
  * those stores.
  */
 import React, { useEffect, useMemo, useRef } from 'react';
-import { View, Platform, useWindowDimensions } from 'react-native';
+import { View, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
@@ -27,33 +27,6 @@ import { useUser } from './src/context/UserContext';
 import usePushNotifications from './src/hooks/usePushNotifications';
 
 const navigationRef = createNavigationContainerRef();
-
-// Web only: past this viewport width, the phone-shaped layout is centered
-// in a fixed-width frame instead of stretching edge to edge. Native builds
-// never see this — WebFrame is a no-op there.
-const WEB_FRAME_WIDTH = 480;
-const WEB_FRAME_BREAKPOINT = 700;
-
-function WebFrame({ children }) {
-  const { width } = useWindowDimensions();
-  if (Platform.OS !== 'web' || width < WEB_FRAME_BREAKPOINT) {
-    return children;
-  }
-  return (
-    <View style={{ flex: 1, alignItems: 'center', backgroundColor: colors.navy900 }}>
-      <View
-        style={{
-          width: WEB_FRAME_WIDTH,
-          flex: 1,
-          // @ts-ignore — web-only CSS, ignored by the native style parser
-          boxShadow: '0 0 60px rgba(0,0,0,0.45)',
-        }}
-      >
-        {children}
-      </View>
-    </View>
-  );
-}
 
 function PushNotificationSetup() {
   const { user } = useUser();
@@ -165,16 +138,14 @@ export default function App() {
                           behind it. With no background here, that was the
                           page's default white — a jarring flash, especially
                           on the dark navy screens (Shop, Me, Admin). */}
-                      <WebFrame>
-                        <View style={{ flex: 1, backgroundColor: colors.navy800 }}>
-                          <StatusBar style="light" />
-                          <InstallAppBanner />
-                          <PushNotificationSetup />
-                          <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>
-                            <AppNavigator />
-                          </NavigationContainer>
-                        </View>
-                      </WebFrame>
+                      <View style={{ flex: 1, backgroundColor: colors.navy800 }}>
+                        <StatusBar style="light" />
+                        <InstallAppBanner />
+                        <PushNotificationSetup />
+                        <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>
+                          <AppNavigator />
+                        </NavigationContainer>
+                      </View>
                     </AdsProvider>
                   </NewsProvider>
                 </FliersProvider>
