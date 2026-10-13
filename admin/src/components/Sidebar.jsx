@@ -1,42 +1,52 @@
-import React from 'react';
+import React, { useEffect, useState } from 'react';
 import { NavLink } from 'react-router-dom';
 import {
+  Home, Bell, FolderOpen, FileText,
   LayoutDashboard, Newspaper, Store, UtensilsCrossed,
   Coffee, Wallet, Users, LogOut, Menu, X,
 } from 'lucide-react';
 import { t } from '../theme';
 
+// ─── Portal links (visible to ALL staff) ───────────────────────────────────
+const PORTAL_LINKS = [
+  { to: '/',              icon: Home,       label: 'Home',         end: true },
+  { to: '/announcements', icon: Bell,       label: 'Announcements' },
+  { to: '/documents',     icon: FolderOpen, label: 'Documents' },
+  { to: '/contracts',     icon: FileText,   label: 'My Contracts' },
+];
+
+// ─── Role-specific dashboard links ─────────────────────────────────────────
 const ROLE_LINKS = {
   director: [
-    { to: '/', icon: LayoutDashboard, label: 'Overview' },
-    { to: '/news', icon: Newspaper, label: 'News' },
-    { to: '/sellers', icon: Store, label: 'Sales Partners' },
-    { to: '/restaurants', icon: UtensilsCrossed, label: 'Restaurants' },
-    { to: '/coffee-shops', icon: Coffee, label: 'Coffee Shops' },
-    { to: '/finance', icon: Wallet, label: 'Finance' },
-    { to: '/admins', icon: Users, label: 'Admin Users' },
+    { to: '/overview',      icon: LayoutDashboard, label: 'Overview' },
+    { to: '/news',          icon: Newspaper,       label: 'News' },
+    { to: '/sellers',       icon: Store,           label: 'Sales Partners' },
+    { to: '/restaurants',   icon: UtensilsCrossed, label: 'Restaurants' },
+    { to: '/coffee-shops',  icon: Coffee,          label: 'Coffee Shops' },
+    { to: '/finance',       icon: Wallet,          label: 'Finance' },
+    { to: '/admins',        icon: Users,           label: 'Admin Users' },
   ],
   news: [
-    { to: '/', icon: Newspaper, label: 'News Dashboard' },
+    { to: '/news',     icon: Newspaper,       label: 'News Dashboard' },
   ],
   sellers: [
-    { to: '/', icon: Store, label: 'Sales Partners' },
-    { to: '/restaurants', icon: UtensilsCrossed, label: 'Restaurants' },
-    { to: '/coffee-shops', icon: Coffee, label: 'Coffee Shops' },
+    { to: '/sellers',      icon: Store,           label: 'Sales Partners' },
+    { to: '/restaurants',  icon: UtensilsCrossed, label: 'Restaurants' },
+    { to: '/coffee-shops', icon: Coffee,          label: 'Coffee Shops' },
   ],
   restaurant: [
-    { to: '/', icon: UtensilsCrossed, label: 'My Restaurant' },
+    { to: '/restaurants', icon: UtensilsCrossed, label: 'My Restaurant' },
   ],
   coffeeshop: [
-    { to: '/', icon: Coffee, label: 'My Coffee Shop' },
+    { to: '/coffee-shops', icon: Coffee, label: 'My Coffee Shop' },
   ],
   finance: [
-    { to: '/', icon: Wallet, label: 'Finance Dashboard' },
+    { to: '/finance', icon: Wallet, label: 'Finance Dashboard' },
   ],
 };
 
-export default function Sidebar({ user, onLogout, open, onToggle }) {
-  const links = ROLE_LINKS[user.role] || ROLE_LINKS.director;
+export default function Sidebar({ user, onLogout, open, onToggle, unreadCount }) {
+  const dashboardLinks = ROLE_LINKS[user.role] || [];
 
   return (
     <>
@@ -49,35 +59,63 @@ export default function Sidebar({ user, onLogout, open, onToggle }) {
       {open && <div onClick={onToggle} style={styles.overlay} />}
 
       <aside style={{ ...styles.sidebar, ...(open ? styles.sidebarOpen : {}) }}>
+        {/* Brand */}
         <div style={styles.brand}>
           <div style={styles.brandIcon}>A</div>
-          <span style={styles.brandText}>AllInKigali</span>
+          <div>
+            <div style={styles.brandText}>AllInKigali</div>
+            <div style={styles.brandSub}>Staff Portal</div>
+          </div>
         </div>
 
         <nav style={styles.nav}>
-          {links.map((link) => (
+          {/* ── Staff Portal section ── */}
+          <div style={styles.sectionLabel}>PORTAL</div>
+          {PORTAL_LINKS.map((link) => (
             <NavLink
               key={link.to}
               to={link.to}
-              end={link.to === '/'}
+              end={link.end}
               onClick={() => window.innerWidth < 768 && onToggle()}
-              style={({ isActive }) => ({
-                ...styles.navLink,
-                ...(isActive ? styles.navLinkActive : {}),
-              })}
+              style={({ isActive }) => ({ ...styles.navLink, ...(isActive ? styles.navLinkActive : {}) })}
             >
-              <link.icon size={18} />
-              <span>{link.label}</span>
+              <link.icon size={17} />
+              <span style={{ flex: 1 }}>{link.label}</span>
+              {link.to === '/announcements' && unreadCount > 0 && (
+                <span style={styles.badge}>{unreadCount > 9 ? '9+' : unreadCount}</span>
+              )}
             </NavLink>
           ))}
+
+          {/* ── Dashboards section (role-specific) ── */}
+          {dashboardLinks.length > 0 && (
+            <>
+              <div style={{ ...styles.sectionLabel, marginTop: 16 }}>
+                {user.role === 'director' ? 'DASHBOARDS' : 'MY DASHBOARD'}
+              </div>
+              {dashboardLinks.map((link) => (
+                <NavLink
+                  key={link.to}
+                  to={link.to}
+                  end={link.to === '/overview'}
+                  onClick={() => window.innerWidth < 768 && onToggle()}
+                  style={({ isActive }) => ({ ...styles.navLink, ...(isActive ? styles.navLinkActive : {}) })}
+                >
+                  <link.icon size={17} />
+                  <span>{link.label}</span>
+                </NavLink>
+              ))}
+            </>
+          )}
         </nav>
 
+        {/* Footer */}
         <div style={styles.footer}>
           <div style={styles.userInfo}>
             <div style={styles.avatar}>
               {user.firstName?.[0]}{user.lastName?.[0]}
             </div>
-            <div>
+            <div style={{ minWidth: 0 }}>
               <div style={styles.userName}>{user.firstName} {user.lastName}</div>
               <div style={styles.userRole}>{user.role}</div>
             </div>
@@ -102,13 +140,8 @@ const styles = {
     transform: 'translateX(-100%)',
     transition: 'transform 0.2s ease',
   },
-  sidebarOpen: {
-    transform: 'translateX(0)',
-  },
-  overlay: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)',
-    zIndex: 99,
-  },
+  sidebarOpen: { transform: 'translateX(0)' },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99 },
   toggle: {
     position: 'fixed', top: 12, left: 12, zIndex: 101,
     background: t.bgCard, color: t.text,
@@ -124,34 +157,40 @@ const styles = {
     width: 36, height: 36, borderRadius: 10, background: t.accent,
     color: t.bg, fontSize: 18, fontWeight: 700,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
+    flexShrink: 0,
   },
-  brandText: { color: t.text, fontSize: 17, fontWeight: 700 },
-  nav: {
-    flex: 1, padding: '8px 12px', overflowY: 'auto',
-    display: 'flex', flexDirection: 'column', gap: 2,
+  brandText: { color: t.text, fontSize: 15, fontWeight: 700, lineHeight: 1.2 },
+  brandSub: { color: t.textMuted, fontSize: 11, fontWeight: 500, letterSpacing: 0.3 },
+
+  nav: { flex: 1, padding: '8px 12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 },
+  sectionLabel: {
+    color: t.textMuted, fontSize: 10, fontWeight: 700,
+    letterSpacing: 0.8, padding: '4px 12px 2px',
   },
   navLink: {
     display: 'flex', alignItems: 'center', gap: 10,
-    padding: '10px 12px', borderRadius: t.radius,
+    padding: '9px 12px', borderRadius: t.radius,
     color: t.textSecondary, fontSize: 14, fontWeight: 500,
     textDecoration: 'none', transition: 'all 0.15s',
   },
-  navLinkActive: {
-    background: t.bgActive, color: t.accent,
+  navLinkActive: { background: t.bgActive, color: t.accent },
+  badge: {
+    background: t.danger, color: '#fff',
+    fontSize: 10, fontWeight: 700,
+    minWidth: 18, height: 18, borderRadius: 9,
+    display: 'flex', alignItems: 'center', justifyContent: 'center',
+    padding: '0 4px',
   },
-  footer: {
-    padding: 16, borderTop: `1px solid ${t.border}`,
-  },
-  userInfo: {
-    display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12,
-  },
+
+  footer: { padding: 16, borderTop: `1px solid ${t.border}` },
+  userInfo: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 },
   avatar: {
     width: 36, height: 36, borderRadius: '50%',
     background: t.bgHover, color: t.text,
     display: 'flex', alignItems: 'center', justifyContent: 'center',
-    fontSize: 13, fontWeight: 600,
+    fontSize: 13, fontWeight: 600, flexShrink: 0,
   },
-  userName: { color: t.text, fontSize: 13, fontWeight: 600 },
+  userName: { color: t.text, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
   userRole: { color: t.textMuted, fontSize: 12, textTransform: 'capitalize' },
   logoutBtn: {
     display: 'flex', alignItems: 'center', gap: 8,
