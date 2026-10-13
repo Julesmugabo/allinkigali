@@ -55,8 +55,8 @@ export default function Sidebar({ user, onLogout, open, onToggle, unreadCount })
         {open ? <X size={20} /> : <Menu size={20} />}
       </button>
 
-      {/* Overlay on mobile */}
-      {open && <div onClick={onToggle} style={styles.overlay} />}
+      {/* Overlay on mobile only — not on desktop where sidebar sits beside content */}
+      {open && window.innerWidth < 768 && <div onClick={onToggle} style={styles.overlay} />}
 
       <aside style={{ ...styles.sidebar, ...(open ? styles.sidebarOpen : {}) }}>
         {/* Brand */}
