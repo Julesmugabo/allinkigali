@@ -1,11 +1,13 @@
 import React, { useEffect, useState, useMemo, useCallback } from 'react';
 import {
   Store, Clock, Check, X, ToggleLeft, ToggleRight,
-  Truck, MapPin, Phone, ChevronDown,
+  Truck, MapPin, Phone, ChevronDown, ExternalLink,
 } from 'lucide-react';
+import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { t } from '../theme';
 import { PageHeader, StatCard, Card, DataTable, Badge, Tabs } from '../components/PageShell';
+import { useClient } from '../context/ClientContext';
 
 const STATUS_COLOR = {
   open: t.success, closed: t.danger, pending: t.warning,
@@ -13,11 +15,18 @@ const STATUS_COLOR = {
 };
 
 export default function SellersDashboard() {
+  const { enterClient } = useClient();
+  const navigate = useNavigate();
   const [places, setPlaces] = useState([]);
   const [pending, setPending] = useState([]);
   const [loading, setLoading] = useState(true);
   const [tab, setTab] = useState('pending');
   const [actionId, setActionId] = useState(null);
+
+  const openClientDashboard = (type, id, name) => {
+    enterClient(type, id, name);
+    navigate('/client-dashboard');
+  };
 
   const loadAll = useCallback(async () => {
     try {
@@ -127,10 +136,10 @@ export default function SellersDashboard() {
           <DataTable
             columns={[
               { key: 'name', label: 'Name', render: (r) => (
-                <div style={{ color: t.text, fontWeight: 500 }}>{r.name}</div>
-              )},
-              { key: 'location', label: 'Location', render: (r) => (
-                <span style={{ color: t.textSecondary }}>{r.location || '—'}</span>
+                <div>
+                  <div style={{ color: t.text, fontWeight: 500 }}>{r.name}</div>
+                  <div style={{ color: t.textMuted, fontSize: 12 }}>{r.location || '—'}</div>
+                </div>
               )},
               { key: 'phone', label: 'Phone', render: (r) => (
                 <span style={{ color: t.textSecondary }}>{r.phone || '—'}</span>
@@ -159,6 +168,14 @@ export default function SellersDashboard() {
                   }
                 </button>
               )},
+              { key: 'manage', label: '', width: 140, render: (r) => (
+                <button
+                  onClick={() => openClientDashboard('restaurant', r.id, r.name)}
+                  style={s.openDashBtn}
+                >
+                  <ExternalLink size={13} /> Open Dashboard
+                </button>
+              )},
             ]}
             rows={restaurants}
             emptyText="No restaurants yet."
@@ -169,10 +186,10 @@ export default function SellersDashboard() {
           <DataTable
             columns={[
               { key: 'name', label: 'Name', render: (r) => (
-                <div style={{ color: t.text, fontWeight: 500 }}>{r.name}</div>
-              )},
-              { key: 'location', label: 'Location', render: (r) => (
-                <span style={{ color: t.textSecondary }}>{r.location || '—'}</span>
+                <div>
+                  <div style={{ color: t.text, fontWeight: 500 }}>{r.name}</div>
+                  <div style={{ color: t.textMuted, fontSize: 12 }}>{r.location || '—'}</div>
+                </div>
               )},
               { key: 'phone', label: 'Phone', render: (r) => (
                 <span style={{ color: t.textSecondary }}>{r.phone || '—'}</span>
@@ -187,6 +204,14 @@ export default function SellersDashboard() {
                     ? <><ToggleRight size={18} color={t.success} /> <span style={{ color: t.success }}>Open</span></>
                     : <><ToggleLeft size={18} color={t.danger} /> <span style={{ color: t.danger }}>Closed</span></>
                   }
+                </button>
+              )},
+              { key: 'manage', label: '', width: 140, render: (r) => (
+                <button
+                  onClick={() => openClientDashboard('coffeeshop', r.id, r.name)}
+                  style={s.openDashBtn}
+                >
+                  <ExternalLink size={13} /> Open Dashboard
                 </button>
               )},
             ]}
@@ -239,5 +264,13 @@ const s = {
   toggleBtn: {
     display: 'flex', alignItems: 'center', gap: 4,
     background: 'transparent', padding: '4px 0', fontSize: 13,
+  },
+  openDashBtn: {
+    display: 'flex', alignItems: 'center', gap: 5,
+    background: t.bgActive, color: t.accent,
+    padding: '6px 10px', borderRadius: 8,
+    fontSize: 12, fontWeight: 600, cursor: 'pointer',
+    border: `1px solid ${t.accent}30`,
+    whiteSpace: 'nowrap',
   },
 };

@@ -4,6 +4,8 @@ import { getUser, logout as apiLogout, apiFetch, setUser as saveUser } from './a
 import { t } from './theme';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
+import { ClientProvider } from './context/ClientContext';
+import ClientDashboard from './pages/ClientDashboard';
 
 // Staff Portal pages (all roles)
 import StaffHome    from './pages/StaffHome';
@@ -50,9 +52,11 @@ export default function App() {
   if (!user) return <Login onLogin={handleLogin} />;
 
   const role = user.role;
+  const canManageClients = role === 'sellers' || role === 'director';
   const isDirector = role === 'director';
 
   return (
+    <ClientProvider>
     <div style={styles.layout}>
       <Sidebar
         user={user}
@@ -92,11 +96,15 @@ export default function App() {
             {role === 'coffeeshop'  && <Route path="/coffee-shops" element={<CoffeeShopsDashboard />} />}
             {role === 'finance'     && <Route path="/finance"      element={<FinanceDashboard />} />}
 
+            {/* ── Client dashboard (Sellers Admin + director) ── */}
+            {canManageClients && <Route path="/client-dashboard" element={<ClientDashboard />} />}
+
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </main>
     </div>
+    </ClientProvider>
   );
 }
 
