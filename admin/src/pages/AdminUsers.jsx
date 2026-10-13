@@ -25,6 +25,12 @@ export default function AdminUsers() {
   const [role, setRole] = useState('news');
   const [error, setError] = useState('');
   const [saving, setSaving] = useState(false);
+  // "create account" mode — shown after ACCOUNT_NOT_FOUND
+  const [needsCreate, setNeedsCreate] = useState(false);
+  const [firstName, setFirstName] = useState('');
+  const [lastName, setLastName] = useState('');
+  const [password, setPassword] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
 
   const load = useCallback(async () => {
     try {
@@ -36,15 +42,42 @@ export default function AdminUsers() {
 
   useEffect(() => { load(); }, [load]);
 
+  const resetModal = () => {
+    setShowAssign(false);
+    setEmail('');
+    setRole('news');
+    setError('');
+    setNeedsCreate(false);
+    setFirstName('');
+    setLastName('');
+    setPassword('');
+  };
+
   const assignRole = async () => {
     setError('');
     setSaving(true);
     try {
-      await apiFetch('/admin/assign-role', { method: 'POST', body: { email: email.trim(), role } });
-      setShowAssign(false);
-      setEmail('');
+      const body = { email: email.trim(), role };
+      if (needsCreate) {
+        body.firstName = firstName.trim();
+        body.lastName = lastName.trim();
+        body.password = password;
+      }
+      const result = await apiFetch('/admin/assign-role', { method: 'POST', body });
+      resetModal();
       await load();
-    } catch (err) { setError(err.message); }
+      if (result.created) {
+        alert(`Account created for ${result.email} with role "${result.role}". Share the temporary password with them.`);
+      }
+    } catch (err) {
+      // Server returned ACCOUNT_NOT_FOUND — switch to create-account mode.
+      if (err.code === 'ACCOUNT_NOT_FOUND' || (err.message && err.message.includes('ACCOUNT_NOT_FOUND'))) {
+        setNeedsCreate(true);
+        setError('');
+      } else {
+        setError(err.message);
+      }
+    }
     setSaving(false);
   };
 
@@ -108,11 +141,13 @@ export default function AdminUsers() {
       </Card>
 
       {showAssign && (
-        <div style={s.modalOverlay} onClick={() => setShowAssign(false)}>
+        <div style={s.modalOverlay} onClick={resetModal}>
           <div style={s.modal} onClick={(e) => e.stopPropagation()}>
-            <h2 style={s.modalTitle}>Assign Admin Role</h2>
+            <h2 style={s.modalTitle}>{needsCreate ? 'Create Account & Assign Role' : 'Assign Admin Role'}</h2>
             <p style={{ color: t.textSecondary, fontSize: 13, marginBottom: 16 }}>
-              The user must already have an account. Enter their email and select a role.
+              {needsCreate
+                ? `No account found for ${email}. Fill in their details to create one and assign the role in one step.`
+                : 'Enter the person\'s email and select a role to assign.'}
             </p>
 
             {error && <div style={s.error}>{error}</div>}
@@ -121,9 +156,10 @@ export default function AdminUsers() {
               <label style={s.label}>Email</label>
               <input
                 type="email" value={email}
-                onChange={(e) => setEmail(e.target.value)}
+                onChange={(e) => { setEmail(e.target.value); setNeedsCreate(false); setError(''); }}
                 placeholder="user@example.com"
                 style={{ width: '100%' }}
+                disabled={needsCreate}
               />
             </div>
 
@@ -136,10 +172,64 @@ export default function AdminUsers() {
               </select>
             </div>
 
+            {needsCreate && (
+              <>
+                <div style={s.divider} />
+                <p style={{ color: t.textMuted, fontSize: 12, marginBottom: 12 }}>
+                  Account details — share the password with the person after creating.
+                </p>
+                <div style={{ display: 'flex', gap: 10 }}>
+                  <div style={{ ...s.field, flex: 1 }}>
+                    <label style={s.label}>First name *</label>
+                    <input
+                      value={firstName}
+                      onChange={(e) => setFirstName(e.target.value)}
+                      placeholder="e.g. Jean"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                  <div style={{ ...s.field, flex: 1 }}>
+                    <label style={s.label}>Last name</label>
+                    <input
+                      value={lastName}
+                      onChange={(e) => setLastName(e.target.value)}
+                      placeholder="e.g. Uwimana"
+                      style={{ width: '100%' }}
+                    />
+                  </div>
+                </div>
+                <div style={{ ...s.field, marginTop: 12 }}>
+                  <label style={s.label}>Temporary password *</label>
+                  <div style={{ position: 'relative' }}>
+                    <input
+                      type={showPassword ? 'text' : 'password'}
+                      value={password}
+                      onChange={(e) => setPassword(e.target.value)}
+                      placeholder="Min. 8 characters"
+                      style={{ width: '100%', paddingRight: 80 }}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(v => !v)}
+                      style={{ position: 'absolute', right: 10, top: '50%', transform: 'translateY(-50%)', background: 'none', border: 'none', color: t.textSecondary, cursor: 'pointer', fontSize: 12, padding: 0 }}
+                    >
+                      {showPassword ? 'Hide' : 'Show'}
+                    </button>
+                  </div>
+                </div>
+              </>
+            )}
+
             <div style={s.modalActions}>
-              <button onClick={() => setShowAssign(false)} style={s.cancelBtn}>Cancel</button>
-              <button onClick={assignRole} disabled={saving || !email.trim()} style={s.primaryBtn}>
-                {saving ? 'Assigning...' : 'Assign'}
+              <button onClick={resetModal} style={s.cancelBtn}>Cancel</button>
+              <button
+                onClick={assignRole}
+                disabled={saving || !email.trim() || (needsCreate && (!firstName.trim() || !password.trim()))}
+                style={s.primaryBtn}
+              >
+                {saving
+                  ? (needsCreate ? 'Creating...' : 'Assigning...')
+                  : (needsCreate ? 'Create account & assign' : 'Assign role')}
               </button>
             </div>
           </div>
@@ -161,4 +251,5 @@ const s = {
   field: { display: 'flex', flexDirection: 'column', gap: 4 },
   label: { color: t.textSecondary, fontSize: 13, fontWeight: 500 },
   modalActions: { display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 },
+  divider: { borderTop: `1px solid ${t.border}`, margin: '16px 0' },
 };

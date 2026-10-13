@@ -8,6 +8,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const bcrypt = require('bcryptjs');
 const { pool, query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
@@ -70,21 +71,46 @@ router.get('/admins', requireAuth, requireRole('director'), async (_req, res) =>
 });
 
 router.post('/assign-role', requireAuth, requireRole('director'), async (req, res) => {
-  const { email, role } = req.body || {};
+  const { email, role, password, firstName, lastName } = req.body || {};
   if (!email || !email.trim()) return res.status(400).json({ error: 'email is required.' });
   const ASSIGNABLE = ['news', 'sellers', 'restaurant', 'coffeeshop', 'ibibanza', 'inzuzamacye', 'salehouse', 'allingadget', 'uruhurwiza', 'finance'];
   if (role !== null && !ASSIGNABLE.includes(role)) {
     return res.status(400).json({ error: `role must be one of: ${ASSIGNABLE.join(', ')}, or null to revoke.` });
   }
 
+  const normalizedEmail = email.trim().toLowerCase();
+
+  // Check if account exists first.
+  const { rows: existing } = await query('select id from users where email = $1', [normalizedEmail]);
+
+  if (!existing[0]) {
+    // No account yet — if the director provided a password, create the account now.
+    if (!password || !password.trim()) {
+      return res.status(404).json({
+        code: 'ACCOUNT_NOT_FOUND',
+        error: 'No account found for that email. Provide a temporary password to create one.',
+      });
+    }
+    if (!firstName || !firstName.trim()) {
+      return res.status(400).json({ error: 'First name is required when creating a new account.' });
+    }
+
+    const passwordHash = await bcrypt.hash(password, 10);
+    const { rows: created } = await query(
+      `insert into users (email, password_hash, first_name, last_name, role)
+       values ($1, $2, $3, $4, $5)
+       returning id, email, first_name, last_name, role, created_at`,
+      [normalizedEmail, passwordHash, firstName.trim(), (lastName || '').trim(), role]
+    );
+    return res.status(201).json({ ...adminToJson(created[0]), created: true });
+  }
+
+  // Account exists — just update the role.
   const { rows } = await query(
     `update users set role = $1 where email = $2
      returning id, email, first_name, last_name, role, created_at`,
-    [role, email.trim().toLowerCase()]
+    [role, normalizedEmail]
   );
-  if (!rows[0]) {
-    return res.status(404).json({ error: 'No account found for that email — they need to create an account first.' });
-  }
   res.json(adminToJson(rows[0]));
 });
 
