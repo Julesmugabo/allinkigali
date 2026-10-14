@@ -7,7 +7,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { radius } from '../../../theme';
 import { useShopStyles } from '../../../theme/shopThemes';
-import { rwf } from '../place/MenuSection';
+import { rwf } from '../../../utils/money';
 
 export default function FactsBar({ supplier, open }) {
   const styles = useShopStyles(makeStyles);

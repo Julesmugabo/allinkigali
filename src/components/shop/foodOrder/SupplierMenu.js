@@ -3,6 +3,9 @@
  * category index on the left (with counts; click to jump), search inside
  * the menu, "🔥 Popular" first (most ordered), then each category showing
  * 6 dishes with "Show all N". Dishes sit two per row.
+ *
+ * Where "+" puts a dish is up to the page: by default the Order Food cart;
+ * a restaurant page passes `selection` to collect dishes for a table booking.
  */
 import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
@@ -16,10 +19,15 @@ const SHORT = 6;
 const slug = (s) => String(s).toLowerCase().replace(/[^a-z0-9]+/g, '-');
 const jump = (id) => document.getElementById(`menu-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
-export default function SupplierMenu({ supplier, dishes, closed, onOpenDish }) {
+export default function SupplierMenu({ supplier, dishes, closed, onOpenDish, selection }) {
   const c = useShopTheme();
   const styles = useShopStyles(makeStyles);
   const cart = useFoodCart();
+  const pick = selection || {
+    qtyOf: (d) => cart.qtyOf(supplier.key, d.id),
+    add: (d) => cart.addItem(supplier, d),
+    setQty: (d, n) => cart.setQty(supplier.key, d.id, n),
+  };
   const [q, setQ] = useState('');
   const [open, setOpen] = useState({}); // category → showing all
   const [active, setActive] = useState('popular');
@@ -38,9 +46,9 @@ export default function SupplierMenu({ supplier, dishes, closed, onOpenDish }) {
     <View style={styles.grid}>
       {list.map((d) => (
         <View key={d.id} style={styles.cell}>
-          <DishCard dish={d} popular={popularIds.has(d.id)} closed={closed} qty={cart.qtyOf(supplier.key, d.id)}
-            onOpen={() => onOpenDish(d)} onAdd={() => cart.addItem(supplier, d)}
-            onChange={(n) => cart.setQty(supplier.key, d.id, n)} />
+          <DishCard dish={d} popular={popularIds.has(d.id)} closed={closed} qty={pick.qtyOf(d)}
+            onOpen={() => onOpenDish(d)} onAdd={() => pick.add(d)}
+            onChange={(n) => pick.setQty(d, n)} />
         </View>
       ))}
     </View>

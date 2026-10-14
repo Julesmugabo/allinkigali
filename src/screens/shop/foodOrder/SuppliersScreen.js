@@ -12,7 +12,7 @@ import WebContainer from '../../../web/layout/WebContainer';
 import ChipRow from '../../../components/shop/browse/ChipRow';
 import SupplierCard from '../../../components/shop/foodOrder/SupplierCard';
 import CartDrawer from '../../../components/shop/foodOrder/CartDrawer';
-import { rwf } from '../../../components/shop/place/MenuSection';
+import { rwf } from '../../../utils/money';
 import { useFoodCart } from '../../../context/FoodCartContext';
 import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 import { spacing } from '../../../theme';

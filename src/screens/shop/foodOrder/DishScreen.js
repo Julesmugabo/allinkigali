@@ -13,7 +13,7 @@ import WebContainer from '../../../web/layout/WebContainer';
 import CartPanel from '../../../components/shop/foodOrder/CartPanel';
 import AddedToast from '../../../components/shop/foodOrder/AddedToast';
 import DishCard from '../../../components/shop/foodOrder/DishCard';
-import { rwf } from '../../../components/shop/place/MenuSection';
+import { rwf } from '../../../utils/money';
 import { useFoodCart, placeKey } from '../../../context/FoodCartContext';
 import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 import { radius, spacing } from '../../../theme';

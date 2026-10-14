@@ -7,7 +7,7 @@ import React from 'react';
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import { radius, spacing } from '../../../theme';
 import { useShopStyles } from '../../../theme/shopThemes';
-import { rwf } from '../place/MenuSection';
+import { rwf } from '../../../utils/money';
 import AddControl from './AddControl';
 
 export default function DishCard({ dish, popular, qty, closed, onOpen, onAdd, onChange }) {

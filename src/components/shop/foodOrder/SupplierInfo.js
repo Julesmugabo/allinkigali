@@ -6,7 +6,7 @@ import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 import { spacing } from '../../../theme';
 import { useShopStyles } from '../../../theme/shopThemes';
-import { rwf } from '../place/MenuSection';
+import { rwf } from '../../../utils/money';
 import LocationSection from '../place/LocationSection';
 import ContactBox from '../place/actions/ContactBox';
 

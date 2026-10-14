@@ -13,7 +13,7 @@ import AsyncStorage from '@react-native-async-storage/async-storage';
 import GradientBackground from '../../../components/common/GradientBackground';
 import WebContainer from '../../../web/layout/WebContainer';
 import { groupState } from '../../../components/shop/foodOrder/CartPanel';
-import { rwf } from '../../../components/shop/place/MenuSection';
+import { rwf } from '../../../utils/money';
 import { useFoodCart } from '../../../context/FoodCartContext';
 import { useUser } from '../../../context/UserContext';
 import { apiFetch } from '../../../services/apiClient';

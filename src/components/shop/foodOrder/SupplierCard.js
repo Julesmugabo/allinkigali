@@ -11,7 +11,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { radius, spacing } from '../../../theme';
 import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 import { coverOf } from '../../../screens/shop/home/useDiscoverData';
-import { rwf } from '../place/MenuSection';
+import { rwf } from '../../../utils/money';
 
 export default function SupplierCard({ supplier, open, inCart, match, onPress }) {
   const c = useShopTheme();

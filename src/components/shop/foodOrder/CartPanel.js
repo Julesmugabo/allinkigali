@@ -11,7 +11,7 @@ import { radius, spacing } from '../../../theme';
 import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 import { useFoodCart } from '../../../context/FoodCartContext';
 import { isSupplierOpen } from '../../../screens/shop/foodOrder/useFoodCatalog';
-import { rwf } from '../place/MenuSection';
+import { rwf } from '../../../utils/money';
 
 // Live state of one place's part: what blocks it, using current place data.
 export function groupState(group, supplier) {

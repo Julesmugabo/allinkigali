@@ -14,7 +14,7 @@ export default function AboutSection({ place, details }) {
   const styles = useShopStyles(makeStyles);
   const rows = details.filter(([, , values]) => values.length);
   return (
-    <Section id="overview" title="About">
+    <Section id="about" title="About">
       {place.description ? <Text style={styles.text}>{place.description}</Text> : null}
       {place.openHours ? (
         <View style={styles.hours}>

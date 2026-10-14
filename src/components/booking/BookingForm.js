@@ -11,6 +11,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import { apiFetch } from '../../services/apiClient';
+import { withPreorder } from '../../utils/preorder';
 import { useUser } from '../../context/UserContext';
 import { promptGoogleSignIn } from '../../services/googleAuth';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
@@ -130,14 +131,8 @@ export default function BookingForm({ visible, onClose, placeId, placeName, type
 
   const handleClose = () => { reset(); onClose(); };
 
-  const buildNotes = () => {
-    let full = notes.trim();
-    if (itemList.length > 0) {
-      const itemsText = 'Pre-selected: ' + itemList.map(i => i.name).join(', ');
-      full = full ? `${full}\n${itemsText}` : itemsText;
-    }
-    return full;
-  };
+  // Picked dishes go in the notes with quantities and a total (same wording as the website).
+  const buildNotes = () => withPreorder(notes, itemList);
 
   const submit = async () => {
     if (!user) { setShowAuth(true); return; }

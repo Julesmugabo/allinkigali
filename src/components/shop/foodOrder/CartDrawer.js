@@ -7,7 +7,7 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, ScrollView, StyleSheet } from 'react-native';
 import { useFoodCart } from '../../../context/FoodCartContext';
 import { useShopStyles } from '../../../theme/shopThemes';
-import { rwf } from '../place/MenuSection';
+import { rwf } from '../../../utils/money';
 import CartPanel, { groupState } from './CartPanel';
 import AddedToast from './AddedToast';
 

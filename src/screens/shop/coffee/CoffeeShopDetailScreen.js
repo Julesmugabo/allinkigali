@@ -113,6 +113,9 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
   const [bookingOpen, setBookingOpen] = useState(false);
   const [menuItems, setMenuItems] = useState([]);
   const [selectedItems, setSelectedItems] = useState({});
+  const picked = Object.values(selectedItems);
+  const pickedCount = picked.reduce((n, v) => n + v.qty, 0);
+  const pickedTotal = picked.reduce((n, v) => n + Number(v.price || 0) * v.qty, 0);
 
   useEffect(() => {
     const id = route.params?.id;
@@ -144,7 +147,7 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
 
   return (
     <GradientBackground colorsOverride={cc.gradient}>
-      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + spacing.huge }}>
+      <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={{ paddingBottom: insets.bottom + spacing.huge + (pickedCount ? 64 : 0) }}>
 
         {/* Hero photo — tappable to open lightbox */}
         <Pressable style={styles.photoWell} onPress={() => photos.length ? setLightboxIndex(0) : null}>
@@ -209,44 +212,7 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
 
         <View style={styles.divider} />
 
-        {/* About */}
-        <View style={styles.section}>
-          <Text style={styles.sectionTitle}>About</Text>
-          <Text style={styles.description}>{shop.description}</Text>
-        </View>
-
-        <View style={styles.divider} />
-
-        {/* Photos grid */}
-        {photos.length > 0 && (
-          <>
-            <View style={styles.section}>
-              <View style={styles.sectionTitleRow}>
-                <Text style={styles.sectionTitle}>Photos</Text>
-                {photos.length > 1 && (
-                  <Pressable onPress={() => setLightboxIndex(0)} style={styles.seeAllBtn}>
-                    <Text style={styles.seeAllLabel}>See all {photos.length}</Text>
-                    <MaterialCommunityIcons name="arrow-right" size={14} color={cc.accentText} />
-                  </Pressable>
-                )}
-              </View>
-            </View>
-            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.gallery}>
-              {photos.map((p, i) => (
-                <Pressable key={i} onPress={() => setLightboxIndex(i)} style={({ pressed }) => [styles.galleryItem, pressed && { opacity: 0.8 }]}>
-                  <Image source={{ uri: p.url }} style={styles.galleryImage} resizeMode="cover" />
-                  {p.label ? <Text style={styles.galleryLabel} numberOfLines={1}>{p.label}</Text> : null}
-                  <View style={styles.galleryOverlay}>
-                    <MaterialCommunityIcons name="magnify-plus-outline" size={20} color={cc.text} />
-                  </View>
-                </Pressable>
-              ))}
-            </ScrollView>
-            <View style={styles.divider} />
-          </>
-        )}
-
-        {/* Menu — horizontal cards per category */}
+        {/* Menu first, right under the booking buttons: picked dishes go with the booking */}
         {menuItems.length > 0 && (() => {
           const grouped = {};
           menuItems.forEach((item) => {
@@ -306,6 +272,44 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
           );
         })()}
 
+        {/* About */}
+        <View style={styles.section}>
+          <Text style={styles.sectionTitle}>About</Text>
+          <Text style={styles.description}>{shop.description}</Text>
+        </View>
+
+        <View style={styles.divider} />
+
+        {/* Photos grid */}
+        {photos.length > 0 && (
+          <>
+            <View style={styles.section}>
+              <View style={styles.sectionTitleRow}>
+                <Text style={styles.sectionTitle}>Photos</Text>
+                {photos.length > 1 && (
+                  <Pressable onPress={() => setLightboxIndex(0)} style={styles.seeAllBtn}>
+                    <Text style={styles.seeAllLabel}>See all {photos.length}</Text>
+                    <MaterialCommunityIcons name="arrow-right" size={14} color={cc.accentText} />
+                  </Pressable>
+                )}
+              </View>
+            </View>
+            <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.gallery}>
+              {photos.map((p, i) => (
+                <Pressable key={i} onPress={() => setLightboxIndex(i)} style={({ pressed }) => [styles.galleryItem, pressed && { opacity: 0.8 }]}>
+                  <Image source={{ uri: p.url }} style={styles.galleryImage} resizeMode="cover" />
+                  {p.label ? <Text style={styles.galleryLabel} numberOfLines={1}>{p.label}</Text> : null}
+                  <View style={styles.galleryOverlay}>
+                    <MaterialCommunityIcons name="magnify-plus-outline" size={20} color={cc.text} />
+                  </View>
+                </Pressable>
+              ))}
+            </ScrollView>
+            <View style={styles.divider} />
+          </>
+        )}
+
+
         {/* Coffee details */}
         <View style={styles.section}>
           <Text style={styles.sectionTitle}>Coffee</Text>
@@ -347,6 +351,12 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
           </View>
         </View>
       </ScrollView>
+      {pickedCount > 0 && !bookingOpen ? (
+        <Pressable onPress={() => setBookingOpen(true)} style={[styles.dishBar, { bottom: insets.bottom + spacing.md }]} accessibilityRole="button">
+          <Text style={styles.dishBarText}>🍽 {pickedCount} dish{pickedCount > 1 ? 'es' : ''} for your table · ≈ {pickedTotal.toLocaleString()} RWF</Text>
+          <Text style={styles.dishBarCta}>Reserve a seat →</Text>
+        </Pressable>
+      ) : null}
 
       {/* Lightbox */}
       {lightboxIndex !== null && (
@@ -380,6 +390,9 @@ function DetailRow({ icon, label, value }) {
 }
 
 const styles = StyleSheet.create({
+  dishBar: { position: 'absolute', left: gutter, right: gutter, flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', gap: spacing.sm, backgroundColor: cc.cta, borderRadius: radius.md, paddingHorizontal: spacing.lg, paddingVertical: spacing.md },
+  dishBarText: { flex: 1, color: cc.ctaText, fontSize: 13, fontWeight: '600' },
+  dishBarCta: { color: cc.ctaText, fontSize: 14, fontWeight: '800' },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
   photoWell: { width: '100%', aspectRatio: 16 / 9, backgroundColor: 'rgba(142,98,52,0.14)', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   photo: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },

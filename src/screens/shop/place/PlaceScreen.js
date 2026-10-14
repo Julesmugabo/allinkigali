@@ -5,7 +5,7 @@
  * on screen while scrolling (book / order / call). Similar places close it.
  * Phones keep the original detail screens.
  */
-import React, { useCallback, useState } from 'react';
+import React, { useCallback, useMemo, useState } from 'react';
 import { View, Text, ScrollView, Pressable, ActivityIndicator, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import GradientBackground from '../../../components/common/GradientBackground';
@@ -14,13 +14,15 @@ import PhotoMosaic from '../../../components/shop/place/PhotoMosaic';
 import PhotoViewer from '../../../components/shop/place/PhotoViewer';
 import PlaceHeader from '../../../components/shop/place/PlaceHeader';
 import AboutSection from '../../../components/shop/place/AboutSection';
-import MenuSection from '../../../components/shop/place/MenuSection';
+import Section from '../../../components/shop/place/Section';
+import DishPreview from '../../../components/shop/place/DishPreview';
+import SupplierMenu from '../../../components/shop/foodOrder/SupplierMenu';
 import ReviewsSection from '../../../components/shop/place/ReviewsSection';
 import LocationSection from '../../../components/shop/place/LocationSection';
 import MoreLikeThis from '../../../components/shop/place/MoreLikeThis';
 import { jumpTo } from '../../../components/shop/place/Section';
 import BookBox from '../../../components/shop/place/actions/BookBox';
-import DeliveryBox from '../../../components/shop/place/actions/DeliveryBox';
+import OrderDeliveryBox from '../../../components/shop/place/actions/OrderDeliveryBox';
 import ContactBox from '../../../components/shop/place/actions/ContactBox';
 import { useUser } from '../../../context/UserContext';
 import useSavedPlaces from '../../../hooks/useSavedPlaces';
@@ -37,17 +39,23 @@ export default function PlaceScreen({ kind, navigation, route }) {
   const { user } = useUser();
   const { isSaved, toggle } = useSavedPlaces();
   const [viewer, setViewer] = useState(null);
-  const [cart, setCart] = useState({});
+  const [table, setTable] = useState({}); // dishes picked for the table booking: id → { id, name, price, qty }
+  const [preview, setPreview] = useState(null); // dish shown in the quick look
   const [copied, setCopied] = useState(false);
 
   const login = useCallback(() => navigation.navigate('AccountTab', { screen: 'Login' }), [navigation]);
-  const addDish = useCallback((m) => setCart((c) => ({ ...c, [m.id]: { name: m.name, price: Number(m.price), qty: (c[m.id]?.qty || 0) + 1 } })), []);
-  const removeDish = useCallback((m) => setCart((c) => {
-    const qty = (c[m.id]?.qty || 0) - 1;
-    const next = { ...c };
-    if (qty > 0) next[m.id] = { ...c[m.id], qty }; else delete next[m.id];
+  // The menu in the same shape the Order Food menu uses.
+  const dishes = useMemo(() => menu.map((m) => ({
+    id: String(m.id), category: m.category || 'Menu', name: m.name, description: m.description || '',
+    price: Number(m.price || 0), photoUrl: m.photo_url || m.photoUrl || null, orders: 0, sortOrder: m.sortOrder || m.sort_order || 0,
+  })), [menu]);
+  const setDishQty = useCallback((dishId, qty) => setTable((t) => {
+    const next = { ...t };
+    if (qty > 0 && next[dishId]) next[dishId] = { ...next[dishId], qty: Math.min(qty, 99) }; else delete next[dishId];
     return next;
   }), []);
+  const addDish = useCallback((d, n = 1) => setTable((t) => ({ ...t, [d.id]: { id: d.id, name: d.name, price: d.price, qty: Math.min((t[d.id]?.qty || 0) + n, 99) } })), []);
+  const selection = useMemo(() => ({ qtyOf: (d) => table[d.id]?.qty || 0, add: (d) => addDish(d), setQty: (d, n) => setDishQty(d.id, n) }), [table, addDish, setDishQty]);
   const share = () => {
     navigator.clipboard?.writeText(window.location.href).then(() => { setCopied(true); setTimeout(() => setCopied(false), 2000); });
   };
@@ -62,14 +70,16 @@ export default function PlaceScreen({ kind, navigation, route }) {
     );
   }
 
-  const canOrder = !!kind.orderType && place.deliveryEnabled && menu.length > 0;
+  const hasMenu = !!kind.menuPath; // restaurants and coffee shops; weddings have none
+  const delivers = !!kind.orderType && place.deliveryEnabled;
   const sections = [
-    { id: 'overview', label: 'Overview' },
-    menu.length ? { id: 'menu', label: 'Menu' } : null,
+    hasMenu ? { id: 'menu', label: `Menu${dishes.length ? ` (${dishes.length})` : ''}` } : null,
     photos.length ? { id: 'photos', label: `Photos (${photos.length})` } : null,
     { id: 'reviews', label: 'Reviews' },
+    { id: 'about', label: 'About' },
     { id: 'location', label: 'Location' },
   ].filter(Boolean);
+  const tableDishes = Object.values(table);
   const onJump = (s) => (s === 'photos' ? setViewer(0) : jumpTo(s));
   const saved = isSaved(kind.key, place.id);
 
@@ -99,15 +109,21 @@ export default function PlaceScreen({ kind, navigation, route }) {
           <View style={styles.body}>
             <View style={styles.main}>
               <PlaceHeader kind={kind} place={place} reviews={reviews} sections={sections} onJump={onJump} />
-              <AboutSection place={place} details={kind.details(place)} />
-              <MenuSection menu={menu} canOrder={canOrder} cart={cart} onAdd={addDish} onRemove={removeDish} />
+              {hasMenu ? (
+                <Section id="menu" title="Menu" right={<Text style={styles.menuHint}>Add dishes with + to have them ready for your table</Text>}>
+                  <SupplierMenu supplier={{ ...place, key: `table:${place.id}` }} dishes={dishes} closed={false}
+                    selection={selection} onOpenDish={setPreview} />
+                </Section>
+              ) : null}
               <ReviewsSection kind={kind} place={place} reviews={reviews} user={user} onLogin={login} onPosted={reloadReviews} />
+              <AboutSection place={place} details={kind.details(place)} />
               <LocationSection place={place} />
             </View>
             <View style={styles.side}>
-              <BookBox kind={kind} place={place} user={user} closedNow={!isOpen(place)} onLogin={login} />
-              {canOrder ? (
-                <DeliveryBox kind={kind} place={place} user={user} cart={cart} onClearCart={() => setCart({})} onLogin={login} onJumpToMenu={() => jumpTo('menu')} />
+              <BookBox kind={kind} place={place} user={user} closedNow={!isOpen(place)} onLogin={login}
+                dishes={tableDishes} onDishQty={hasMenu ? setDishQty : null} onBooked={() => setTable({})} />
+              {delivers ? (
+                <OrderDeliveryBox place={place} onOrder={() => navigation.navigate('OrderFoodPlace', { type: kind.orderType, id: place.id })} />
               ) : null}
               <ContactBox place={place} />
             </View>
@@ -116,6 +132,7 @@ export default function PlaceScreen({ kind, navigation, route }) {
           <MoreLikeThis kind={kind} places={similar} onOpen={(pid) => navigation.push(kind.detailRoute, { id: pid })} />
         </WebContainer>
       </ScrollView>
+      {preview ? <DishPreview dish={preview} placeName={place.name} onAdd={addDish} onClose={() => setPreview(null)} /> : null}
       {viewer != null && photos.length ? <PhotoViewer photos={photos} start={viewer} onClose={() => setViewer(null)} /> : null}
     </GradientBackground>
   );
@@ -133,5 +150,6 @@ const makeStyles = (c) => StyleSheet.create({
   toolLabel: { color: c.text, fontWeight: '600', fontSize: 13.5 },
   body: { flexDirection: 'row', gap: spacing.huge, alignItems: 'flex-start' },
   main: { flex: 1, minWidth: 0 },
+  menuHint: { color: c.textMuted, fontSize: 13 },
   side: { width: 360, gap: 14, position: 'sticky', top: 16, marginTop: spacing.xl },
 });

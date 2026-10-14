@@ -9,7 +9,7 @@ import { View, Text, Pressable, ScrollView, ActivityIndicator, StyleSheet } from
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import GradientBackground from '../../../components/common/GradientBackground';
 import WebContainer from '../../../web/layout/WebContainer';
-import { rwf } from '../../../components/shop/place/MenuSection';
+import { rwf } from '../../../utils/money';
 import { apiFetch } from '../../../services/apiClient';
 import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 import { radius, spacing } from '../../../theme';
