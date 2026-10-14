@@ -26,7 +26,7 @@ export default function NewsHeader({
       <View style={styles.topRow}>
         <View style={styles.brand}>
           <Image
-            source={require('../../../assets/ak-banner.png')}
+            source={require('../../../assets/logo-wordmark.png')}
             style={styles.logoImg}
             resizeMode="contain"
           />
@@ -69,7 +69,8 @@ const styles = StyleSheet.create({
   },
   brand: { flexDirection: 'row', alignItems: 'center' },
   tagline: { marginTop: -spacing.xs, marginBottom: spacing.md },
-  logoImg: { width: 36, height: 36, borderRadius: 8 },
+  // The AllinKigali wordmark (image is ~4:1), same logo as the website's top bar.
+  logoImg: { width: 124, height: 31 },
   icons: { flexDirection: 'row', alignItems: 'center' },
   bellDot: {
     position: 'absolute',
