@@ -14,7 +14,7 @@ import Contracts    from './pages/Contracts';
 // Role-specific dashboards
 import Overview            from './pages/Overview';
 import NewsDashboard       from './dashboards/news/NewsDashboard';
-import SellersDashboard    from './pages/SellersDashboard';
+import SellersDashboard    from './dashboards/sellers/SellersDashboard';
 import PlacesDashboard     from './dashboards/places/PlacesDashboard';
 import { MyPlaceDashboard, ClientPlaceDashboard } from './dashboards/owner/OwnerDashboard';
 import FinanceDashboard    from './dashboards/finance/FinanceDashboard';
@@ -75,7 +75,7 @@ export default function App() {
             {isDirector && <>
               <Route path="/overview"      element={<Overview />} />
               <Route path="/news/:section?" element={<NewsDashboard />} />
-              <Route path="/sellers"       element={<SellersDashboard />} />
+              <Route path="/sellers/:section?" element={<SellersDashboard />} />
               <Route path="/restaurants/:section?" element={<PlacesDashboard kind="restaurant" />} />
               <Route path="/coffee-shops/:section?" element={<PlacesDashboard kind="coffeeshop" />} />
               <Route path="/finance/:section?" element={<FinanceDashboard />} />
@@ -85,7 +85,7 @@ export default function App() {
             {/* ── Role-specific dashboards ── */}
             {role === 'news'        && <Route path="/news/:section?" element={<NewsDashboard />} />}
             {role === 'sellers'     && <>
-              <Route path="/sellers"      element={<SellersDashboard />} />
+              <Route path="/sellers/:section?" element={<SellersDashboard />} />
               <Route path="/restaurants/:section?" element={<PlacesDashboard kind="restaurant" />} />
               <Route path="/coffee-shops/:section?" element={<PlacesDashboard kind="coffeeshop" />} />
             </>}

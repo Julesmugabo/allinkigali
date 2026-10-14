@@ -6,6 +6,7 @@ const express = require('express');
 const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
+const { notifyUser } = require('../pushNotifications');
 
 const router = express.Router();
 
@@ -68,15 +69,18 @@ router.post('/:id/approve', ...staffGuard, async (req, res) => {
   let listingId;
   if (p.type === 'restaurant') {
     const { rows } = await query(
-      `INSERT INTO restaurants (name, location, district, phone, open_status, cuisines, foods, occasion, atmosphere, dietary, seating, features, photos, rating)
-       VALUES ($1,$2,$3,$4,'Open now','{}','{}','{}','{}','{}','{}','{}','{}',4.0) RETURNING id`,
+      // (used to also write a "photos" column restaurants don't have, so
+      // every approval failed; photos live in restaurant_photos)
+      `INSERT INTO restaurants (name, location, district, phone, open_status, cuisines, foods, occasion, atmosphere, dietary, seating, features, rating)
+       VALUES ($1,$2,$3,$4,'Open now','{}','{}','{}','{}','{}','{}','{}',4.0) RETURNING id`,
       [p.business_name, p.location, p.district, p.phone]
     );
     listingId = rows[0].id;
   } else {
     const { rows } = await query(
-      `INSERT INTO coffee_shops (name, location, district, phone, open_status, specialties, features, atmosphere, photos, rating)
-       VALUES ($1,$2,$3,$4,'Open now','{}','{}','{}','{}',4.0) RETURNING id`,
+      // (specialties/features/photos aren't coffee_shops columns)
+      `INSERT INTO coffee_shops (name, location, district, phone, open_status, rating)
+       VALUES ($1,$2,$3,$4,'Open now',4.0) RETURNING id`,
       [p.business_name, p.location, p.district, p.phone]
     );
     listingId = rows[0].id;
@@ -96,14 +100,12 @@ router.post('/:id/approve', ...staffGuard, async (req, res) => {
     [listingId, p.id]
   );
 
-  // Notify the owner
-  await query(
-    `INSERT INTO notifications (user_id, title, body, type)
-     VALUES ($1,$2,$3,'listing_approved')`,
-    [p.user_id,
-     '🎉 Your listing has been approved!',
-     `${p.business_name} is now live on allinkigali. Log in to set up your dashboard — add photos, menu and more.`]
-  );
+  // Notify the owner (in-app + push)
+  notifyUser(p.user_id, {
+    title: '🎉 Your listing has been approved!',
+    body: `${p.business_name} is now live on allinkigali. Log in to set up your dashboard — add photos, menu and more.`,
+    data: { type: 'listing_approved', listingId },
+  }).catch(() => {});
 
   res.json({ ok: true, listingId });
 });
@@ -121,13 +123,11 @@ router.post('/:id/decline', ...staffGuard, async (req, res) => {
     [reason || '', p.id]
   );
 
-  await query(
-    `INSERT INTO notifications (user_id, title, body, type)
-     VALUES ($1,$2,$3,'listing_declined')`,
-    [p.user_id,
-     'Your listing application was not approved',
-     reason || 'Thank you for applying. Unfortunately we could not approve your listing at this time. Please contact us for more information.']
-  );
+  notifyUser(p.user_id, {
+    title: 'Your listing application was not approved',
+    body: reason || 'Thank you for applying. Unfortunately we could not approve your listing at this time. Please contact us for more information.',
+    data: { type: 'listing_declined' },
+  }).catch(() => {});
 
   res.json({ ok: true });
 });

@@ -4,12 +4,11 @@
  * decision) — every business is publicly readable regardless of status,
  * unlike News where an unpublished article is genuinely hidden.
  *
- * Self-serve registration/editing needs no login today, same as the
- * in-memory version had no real access control either — see the note in
- * migrations/004_businesses.sql for why (customer/seller accounts aren't
- * real `users` rows yet). Only the two actions with real trust weight —
- * approving a business, and deleting a still-pending one — are actually
- * locked to an admin role.
+ * Registering and editing need a login: a seller can create a shop (it is
+ * theirs) and edit only their own; the Sales Partners admin and director can
+ * edit any. Only staff may set the trust fields (verified, owner, rating,
+ * review count). Previously none of this needed a login — anyone could
+ * change any shop's phone number or mark it verified.
  */
 const express = require('express');
 const { query } = require('../db');
@@ -93,8 +92,14 @@ router.get('/', async (_req, res) => {
   res.json(rows.map(businessToJson));
 });
 
-router.post('/', async (req, res) => {
-  const { columns, values } = businessFields(req.body || {});
+const isStaff = (user) => user && (user.role === 'sellers' || user.role === 'director');
+const STAFF_ONLY = ['verified', 'ownerId', 'rating', 'reviewCount'];
+const withoutStaffFields = (body) => Object.fromEntries(Object.entries(body).filter(([k]) => !STAFF_ONLY.includes(k)));
+
+router.post('/', requireAuth, async (req, res) => {
+  const staff = isStaff(req.user);
+  const body = staff ? { ...req.body } : { ...withoutStaffFields(req.body || {}), ownerId: req.user.sub };
+  const { columns, values } = businessFields(body);
   if (!columns.length) return res.status(400).json({ error: 'No fields provided.' });
   const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
   const { rows } = await query(
@@ -104,8 +109,14 @@ router.post('/', async (req, res) => {
   res.status(201).json(businessToJson(rows[0]));
 });
 
-router.patch('/:id', async (req, res) => {
-  const { columns, values } = businessFields(req.body || {});
+router.patch('/:id', requireAuth, async (req, res) => {
+  const staff = isStaff(req.user);
+  if (!staff) {
+    const { rows: own } = await query('select owner_id from businesses where id = $1', [req.params.id]);
+    if (!own[0]) return res.status(404).json({ error: 'Business not found.' });
+    if (String(own[0].owner_id) !== String(req.user.sub)) return res.status(403).json({ error: 'You can only edit your own shop.' });
+  }
+  const { columns, values } = businessFields(staff ? req.body || {} : withoutStaffFields(req.body || {}));
   if (!columns.length) return res.status(400).json({ error: 'No fields provided.' });
   const setClause = columns.map((c, i) => `${c} = $${i + 1}`).join(', ');
   const { rows } = await query(

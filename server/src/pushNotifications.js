@@ -53,6 +53,10 @@ async function removeInvalidTokens(tokens) {
 }
 
 async function notifyUser(userId, { title, body, data = {} }) {
+  // Always keep the in-app notification — previously it was only saved when
+  // the user had a push token, so web users (and anyone who declined push)
+  // never saw booking/order/approval notifications at all.
+  await saveNotification(userId, title, body, data);
   const tokens = await getTokensForUser(userId);
   if (!tokens.length) return;
   const messages = tokens.map(token => ({
@@ -66,8 +70,6 @@ async function notifyUser(userId, { title, body, data = {} }) {
     }
   });
   if (invalid.length) await removeInvalidTokens(invalid);
-
-  await saveNotification(userId, title, body, data);
 }
 
 async function notifyUsers(userIds, { title, body, data = {} }) {
