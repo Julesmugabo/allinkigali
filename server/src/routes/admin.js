@@ -64,10 +64,16 @@ router.post('/migrate', requireAuth, requireRole('director'), async (_req, res) 
 // created by accident through the UI; that still only happens via
 // createAdmin.js directly, same deliberate boundary as before.
 router.get('/admins', requireAuth, requireRole('director'), async (_req, res) => {
+  // Owners also show the place they're linked to.
   const { rows } = await query(
-    "select id, email, first_name, last_name, role, created_at from users where role is not null order by role, email"
+    `select u.id, u.email, u.first_name, u.last_name, u.role, u.created_at,
+            u.restaurant_id, u.coffee_shop_id, coalesce(r.name, c.name) as place_name
+     from users u
+     left join restaurants r on r.id = u.restaurant_id
+     left join coffee_shops c on c.id = u.coffee_shop_id
+     where u.role is not null order by u.role, u.email`
   );
-  res.json(rows.map(adminToJson));
+  res.json(rows.map((r) => ({ ...adminToJson(r), restaurantId: r.restaurant_id, coffeeShopId: r.coffee_shop_id, placeName: r.place_name })));
 });
 
 router.post('/assign-role', requireAuth, requireRole('director'), async (req, res) => {

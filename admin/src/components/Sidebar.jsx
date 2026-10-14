@@ -27,7 +27,6 @@ const ROLE_LINKS = {
     { to: '/restaurants',   icon: UtensilsCrossed, label: 'Restaurants' },
     { to: '/coffee-shops',  icon: Coffee,          label: 'Coffee Shops' },
     { to: '/finance',       icon: Wallet,          label: 'Finance' },
-    { to: '/admins',        icon: Users,           label: 'Admin Users' },
   ],
   news: [
     { to: '/news',     icon: Newspaper,       label: 'News Dashboard' },

@@ -12,13 +12,12 @@ import Documents    from './pages/Documents';
 import Contracts    from './pages/Contracts';
 
 // Role-specific dashboards
-import Overview            from './pages/Overview';
+import DirectorDashboard   from './dashboards/director/DirectorDashboard';
 import NewsDashboard       from './dashboards/news/NewsDashboard';
 import SellersDashboard    from './dashboards/sellers/SellersDashboard';
 import PlacesDashboard     from './dashboards/places/PlacesDashboard';
 import { MyPlaceDashboard, ClientPlaceDashboard } from './dashboards/owner/OwnerDashboard';
 import FinanceDashboard    from './dashboards/finance/FinanceDashboard';
-import AdminUsers          from './pages/AdminUsers';
 
 export default function App() {
   const [user, setUser] = useState(getUser);
@@ -73,13 +72,13 @@ export default function App() {
 
             {/* ── Director dashboards ── */}
             {isDirector && <>
-              <Route path="/overview"      element={<Overview />} />
+              <Route path="/overview/:section?" element={<DirectorDashboard />} />
               <Route path="/news/:section?" element={<NewsDashboard />} />
               <Route path="/sellers/:section?" element={<SellersDashboard />} />
               <Route path="/restaurants/:section?" element={<PlacesDashboard kind="restaurant" />} />
               <Route path="/coffee-shops/:section?" element={<PlacesDashboard kind="coffeeshop" />} />
               <Route path="/finance/:section?" element={<FinanceDashboard />} />
-              <Route path="/admins"        element={<AdminUsers />} />
+              <Route path="/admins" element={<Navigate to="/overview/team" replace />} />
             </>}
 
             {/* ── Role-specific dashboards ── */}
