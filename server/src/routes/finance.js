@@ -1182,17 +1182,22 @@ router.post('/finance-notifications/check', ...finAuth, async (req, res) => {
   const now = new Date().toISOString().slice(0, 10);
   const inserted = [];
 
+  // Everything already alerted in the last day, loaded once instead of per item.
+  const { rows: recent } = await query(
+    `SELECT type, data->>'invoice_id' AS invoice_id, data->>'budget_id' AS budget_id FROM notifications
+     WHERE user_id=$1 AND type IN ('finance_overdue','finance_budget') AND created_at > NOW() - INTERVAL '1 day'`,
+    [uid]
+  );
+  const alerted = new Set(recent.map((n) => (n.type === 'finance_overdue' ? `inv:${n.invoice_id}` : `bud:${n.budget_id}`)));
+
   // Overdue invoices
   const { rows: overdue } = await query(
     `SELECT id, invoice_number, contact_id, outstanding, due_date FROM fin_invoices
      WHERE status IN ('sent','partially_paid') AND due_date < $1 AND outstanding > 0`, [now]
   );
   for (const inv of overdue) {
-    const exists = await query(
-      `SELECT 1 FROM notifications WHERE user_id=$1 AND type='finance_overdue' AND data->>'invoice_id'=$2 AND created_at > NOW() - INTERVAL '1 day'`,
-      [uid, String(inv.id)]
-    );
-    if (!exists.rows.length) {
+    if (!alerted.has(`inv:${inv.id}`)) {
+      alerted.add(`inv:${inv.id}`);
       await query(
         `INSERT INTO notifications (id, user_id, title, body, type, data) VALUES (gen_random_uuid(), $1, $2, $3, 'finance_overdue', $4)`,
         [uid, `Invoice ${inv.invoice_number} overdue`, `Outstanding: RWF ${Number(inv.outstanding).toLocaleString()}. Due: ${inv.due_date}`,
@@ -1212,11 +1217,8 @@ router.post('/finance-notifications/check', ...finAuth, async (req, res) => {
   for (const ba of budgetAlerts) {
     const pct = (ba.spent / ba.approved_amount) * 100;
     if (pct >= 90) {
-      const exists = await query(
-        `SELECT 1 FROM notifications WHERE user_id=$1 AND type='finance_budget' AND data->>'budget_id'=$2 AND created_at > NOW() - INTERVAL '1 day'`,
-        [uid, String(ba.id)]
-      );
-      if (!exists.rows.length) {
+      if (!alerted.has(`bud:${ba.id}`)) {
+        alerted.add(`bud:${ba.id}`);
         await query(
           `INSERT INTO notifications (id, user_id, title, body, type, data) VALUES (gen_random_uuid(), $1, $2, $3, 'finance_budget', $4)`,
           [uid, `Budget alert: ${ba.account_name}`, `${Math.round(pct)}% of budget used (${ba.name})`,

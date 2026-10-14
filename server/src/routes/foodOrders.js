@@ -8,17 +8,13 @@ const router = express.Router();
 
 // GET /food-orders/delivery-places — restaurants/coffee shops with delivery enabled
 router.get('/delivery-places', async (_req, res) => {
-  const { rows: restos } = await query(
-    `SELECT id, name, location, district, phone, rating,
-            delivery_enabled, delivery_fee, min_order, estimated_time
-     FROM restaurants WHERE delivery_enabled = true ORDER BY name`
-  );
+  const cols = `id, name, location, district, phone, rating,
+            delivery_enabled, delivery_fee, min_order, estimated_time`;
+  const [{ rows: restos }, { rows: cafes }] = await Promise.all([
+    query(`SELECT ${cols} FROM restaurants WHERE delivery_enabled = true ORDER BY name`),
+    query(`SELECT ${cols} FROM coffee_shops WHERE delivery_enabled = true ORDER BY name`),
+  ]);
   const restosMapped = restos.map(r => ({ ...r, place_type: 'restaurant', photos: [] }));
-  const { rows: cafes } = await query(
-    `SELECT id, name, location, district, phone, rating,
-            delivery_enabled, delivery_fee, min_order, estimated_time
-     FROM coffee_shops WHERE delivery_enabled = true ORDER BY name`
-  );
   const cafesMapped = cafes.map(r => ({ ...r, place_type: 'coffeeshop', photos: [] }));
   res.json([...restosMapped, ...cafesMapped]);
 });
