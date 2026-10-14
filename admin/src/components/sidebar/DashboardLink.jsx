@@ -7,6 +7,7 @@ import React, { useEffect, useState } from 'react';
 import { NavLink, useLocation } from 'react-router-dom';
 import { ChevronDown, ChevronRight } from 'lucide-react';
 import { t } from '../../theme';
+import SubNavItem from './SubNavItem';
 
 const isMobile = () => window.innerWidth < 768;
 
@@ -44,15 +45,7 @@ export default function DashboardLink({ link, children = [], onNavigate }) {
       {hasChildren && open && (
         <div style={s.children}>
           {children.map((c) => (
-            <NavLink
-              key={c.to}
-              to={c.to}
-              end
-              onClick={() => isMobile() && onNavigate?.()}
-              style={({ isActive }) => ({ ...s.child, ...(isActive ? s.childActive : {}) })}
-            >
-              {c.label}
-            </NavLink>
+            <SubNavItem key={c.to || c.label} item={c} onNavigate={() => isMobile() && onNavigate?.()} />
           ))}
         </div>
       )}
@@ -70,6 +63,4 @@ const s = {
   linkActive: { background: t.bgActive, color: t.accent },
   chevron: { background: 'transparent', color: t.textMuted, padding: '8px 6px' },
   children: { margin: '2px 0 6px 21px', paddingLeft: 10, borderLeft: `1px solid ${t.borderLight}`, display: 'flex', flexDirection: 'column', gap: 1 },
-  child: { padding: '6px 10px', borderRadius: 6, color: t.textMuted, fontSize: 13, textDecoration: 'none' },
-  childActive: { color: t.accent, background: 'rgba(56,189,248,0.08)', fontWeight: 600 },
 };
