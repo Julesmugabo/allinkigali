@@ -134,56 +134,36 @@ router.post('/link-restaurant', requireAuth, requireRole('director'), async (req
 });
 
 // List all restaurants and coffee shops (for the link picker and admin dashboard)
+// Every listing (active or not) for the Sales Partners admin and director.
+const LIST_COLS = `id, name, location, district, phone, rating, open_status, is_active,
+  delivery_enabled, delivery_fee, min_order, estimated_time, created_at`;
+
 router.get('/restaurants-list', requireAuth, requireRole('director', 'sellers'), async (_req, res) => {
-  const { rows: restos } = await query(
-    `SELECT id, name, location, phone, open_status, delivery_enabled, delivery_fee, estimated_time, 'restaurant' as type FROM restaurants ORDER BY name`
-  );
-  const { rows: cafes } = await query(
-    `SELECT id, name, location, phone, open_status, NULL::boolean as delivery_enabled, NULL::numeric as delivery_fee, NULL as estimated_time, 'coffeeshop' as type FROM coffee_shops ORDER BY name`
-  );
+  const { rows: restos } = await query(`SELECT ${LIST_COLS}, 'restaurant' as type FROM restaurants ORDER BY name`);
+  const { rows: cafes } = await query(`SELECT ${LIST_COLS}, 'coffeeshop' as type FROM coffee_shops ORDER BY name`);
   res.json([...restos, ...cafes]);
 });
 
-// PATCH a restaurant's admin-editable fields (open_status, delivery_enabled, delivery_fee, estimated_time)
-router.patch('/restaurants/:id', requireAuth, requireRole('director', 'sellers'), async (req, res) => {
-  const allowed = ['open_status', 'delivery_enabled', 'delivery_fee', 'estimated_time', 'name', 'location', 'phone'];
-  const sets = [];
-  const params = [];
-  for (const key of allowed) {
-    if (req.body[key] !== undefined) {
-      params.push(req.body[key]);
-      sets.push(`${key}=$${params.length}`);
-    }
-  }
-  if (!sets.length) return res.status(400).json({ error: 'No fields to update.' });
-  params.push(req.params.id);
-  const { rows } = await query(
-    `UPDATE restaurants SET ${sets.join(', ')}, updated_at=NOW() WHERE id=$${params.length} RETURNING *`,
-    params
-  );
-  if (!rows.length) return res.status(404).json({ error: 'Not found.' });
-  res.json(rows[0]);
-});
+// Quick admin edits from the places list. Coffee shops have the same
+// delivery columns as restaurants (they couldn't be switched on before).
+const QUICK_FIELDS = ['open_status', 'is_active', 'delivery_enabled', 'delivery_fee', 'min_order', 'estimated_time', 'name', 'location', 'phone'];
 
-// PATCH a coffee shop's admin-editable fields
-router.patch('/coffee-shops/:id', requireAuth, requireRole('director', 'sellers'), async (req, res) => {
-  const allowed = ['open_status', 'name', 'location', 'phone'];
-  const sets = [];
-  const params = [];
-  for (const key of allowed) {
-    if (req.body[key] !== undefined) {
-      params.push(req.body[key]);
-      sets.push(`${key}=$${params.length}`);
+function quickPatch(table) {
+  return async (req, res) => {
+    const sets = [];
+    const params = [];
+    for (const key of QUICK_FIELDS) {
+      if (req.body[key] !== undefined) { params.push(req.body[key]); sets.push(`${key}=$${params.length}`); }
     }
-  }
-  if (!sets.length) return res.status(400).json({ error: 'No fields to update.' });
-  params.push(req.params.id);
-  const { rows } = await query(
-    `UPDATE coffee_shops SET ${sets.join(', ')}, updated_at=NOW() WHERE id=$${params.length} RETURNING *`,
-    params
-  );
-  if (!rows.length) return res.status(404).json({ error: 'Not found.' });
-  res.json(rows[0]);
-});
+    if (!sets.length) return res.status(400).json({ error: 'No fields to update.' });
+    params.push(req.params.id);
+    const { rows } = await query(`UPDATE ${table} SET ${sets.join(', ')}, updated_at=NOW() WHERE id=$${params.length} RETURNING *`, params);
+    if (!rows.length) return res.status(404).json({ error: 'Not found.' });
+    res.json(rows[0]);
+  };
+}
+
+router.patch('/restaurants/:id', requireAuth, requireRole('director', 'sellers'), quickPatch('restaurants'));
+router.patch('/coffee-shops/:id', requireAuth, requireRole('director', 'sellers'), quickPatch('coffee_shops'));
 
 module.exports = router;

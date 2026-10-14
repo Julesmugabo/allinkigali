@@ -8,6 +8,7 @@ import {
 import { t } from '../theme';
 import DashboardLink from './sidebar/DashboardLink';
 import { SUB_NAV } from '../navigation/subNav';
+import { ownerNav } from '../dashboards/owner/sections';
 
 // ─── Portal links (visible to ALL staff) ───────────────────────────────────
 const PORTAL_LINKS = [
@@ -37,10 +38,10 @@ const ROLE_LINKS = {
     { to: '/coffee-shops', icon: Coffee,          label: 'Coffee Shops' },
   ],
   restaurant: [
-    { to: '/restaurants', icon: UtensilsCrossed, label: 'My Restaurant' },
+    { to: '/my-place', icon: UtensilsCrossed, label: 'My Restaurant' },
   ],
   coffeeshop: [
-    { to: '/coffee-shops', icon: Coffee, label: 'My Coffee Shop' },
+    { to: '/my-place', icon: Coffee, label: 'My Coffee Shop' },
   ],
   finance: [
     { to: '/finance', icon: Wallet, label: 'Finance Dashboard' },
@@ -96,7 +97,7 @@ export default function Sidebar({ user, onLogout, open, onToggle, unreadCount })
                 <DashboardLink
                   key={link.to}
                   link={{ ...link, end: link.to === '/overview' }}
-                  children={SUB_NAV[link.to]}
+                  children={link.to === '/my-place' ? ownerNav(user.role === 'coffeeshop') : SUB_NAV[link.to]}
                   onNavigate={onToggle}
                 />
               ))}

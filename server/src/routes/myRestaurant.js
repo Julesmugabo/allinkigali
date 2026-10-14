@@ -44,6 +44,7 @@ const PROFILE_FIELDS = {
     phone: 'phone', website: 'website', openStatus: 'open_status', price: 'price',
     atmosphere: 'atmosphere', seating: 'seating',
     deliveryEnabled: 'delivery_enabled', deliveryFee: 'delivery_fee', minOrder: 'min_order', estimatedTime: 'estimated_time',
+    openHours: 'open_hours', deliveryZones: 'delivery_zones',
   },
   restaurants: { cuisines: 'cuisines', foods: 'foods', occasion: 'occasion', dietary: 'dietary', features: 'features' },
   coffee_shops: {
@@ -117,6 +118,7 @@ router.get('/bookings', ...guard, async (req, res) => {
     id: b.id, status: b.status, guestName: b.guest_name, guestPhone: b.guest_phone,
     date: b.date, time: b.time, partySize: b.party_size, notes: b.notes,
     placeName: b.placeName, noshowCount: b.noshow_count || 0, createdAt: b.created_at,
+    declineReason: b.decline_reason, respondedAt: b.responded_at,
   })));
 });
 
@@ -124,7 +126,7 @@ router.get('/bookings', ...guard, async (req, res) => {
 router.put('/bookings/:id/status', ...guard, async (req, res) => {
   const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
-  const { status } = req.body;
+  const { status, reason } = req.body;
   const allowed = ['confirmed', 'rejected', 'completed', 'noshow', 'cancelled'];
   if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status.' });
 
@@ -139,6 +141,8 @@ router.put('/bookings/:id/status', ...guard, async (req, res) => {
   const params = [status];
   if (status === 'confirmed') updates.push('confirmed_at=NOW()');
   if (status === 'noshow') updates.push('noshow_count=noshow_count+1');
+  if (status === 'confirmed' || status === 'rejected') updates.push('responded_at=COALESCE(responded_at, NOW())');
+  if (status === 'rejected' && reason) { params.push(String(reason).slice(0, 200)); updates.push(`decline_reason=$${params.length}`); }
 
   await query(
     `UPDATE resto_bookings SET ${updates.join(',')} WHERE id=$${params.length + 1}`,
@@ -149,7 +153,7 @@ router.put('/bookings/:id/status', ...guard, async (req, res) => {
   if (booking.user_id) {
     const msgMap = {
       confirmed: `Your reservation at ${booking.place_name} on ${booking.date} at ${booking.time} is confirmed. See you there!`,
-      rejected: `Your reservation at ${booking.place_name} on ${booking.date} at ${booking.time} could not be accommodated.`,
+      rejected: `Your reservation at ${booking.place_name} on ${booking.date} at ${booking.time} could not be accommodated${reason ? ` (${reason})` : ''}.`,
       cancelled: `Your reservation at ${booking.place_name} on ${booking.date} at ${booking.time} was cancelled.`,
     };
     const titleMap = {
@@ -202,10 +206,16 @@ router.put('/menu/:id', ...guard, async (req, res) => {
   const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
   const m = MENU[ctx.table];
-  const { category, name, description, price, available, photoUrl, sortOrder, brewMethod, origin } = req.body;
-  const sets = ['category=$1', 'name=$2', 'description=$3', 'price=$4', 'available=$5', 'photo_url=$6', 'sort_order=$7'];
-  const vals = [category, name, description, price, available !== false, photoUrl || null, sortOrder ?? 0];
-  if (ctx.table === 'coffee_shops') { sets.push(`brew_method=$${vals.length + 1}`, `origin=$${vals.length + 2}`); vals.push(brewMethod || null, origin || null); }
+  // Only the fields sent are changed, so a quick "sold out" toggle that
+  // sends just { available } doesn't blank the item's name and price.
+  const fields = { category: 'category', name: 'name', description: 'description', price: 'price', available: 'available', photoUrl: 'photo_url', sortOrder: 'sort_order' };
+  if (ctx.table === 'coffee_shops') Object.assign(fields, { brewMethod: 'brew_method', origin: 'origin' });
+  const sets = [];
+  const vals = [];
+  Object.entries(fields).forEach(([key, col]) => {
+    if (key in req.body) { vals.push(key === 'available' ? req.body[key] !== false : req.body[key]); sets.push(`${col}=$${vals.length}`); }
+  });
+  if (!sets.length) return res.status(400).json({ error: 'No fields provided.' });
   vals.push(req.params.id, ctx.placeId);
   const { rows } = await query(
     `UPDATE ${m.table} SET ${sets.join(', ')}, updated_at=NOW() WHERE id=$${vals.length - 1} AND ${m.fk}=$${vals.length} RETURNING *`,

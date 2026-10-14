@@ -39,6 +39,8 @@ function toJson(row) {
     notes: row.notes,
     status: row.status,
     noshowCount: row.noshow_count,
+    declineReason: row.decline_reason,
+    respondedAt: row.responded_at,
     confirmedAt: row.confirmed_at,
     createdAt: row.created_at,
   };
@@ -143,7 +145,7 @@ router.get('/admin', requireAuth, async (req, res) => {
 
 // PUT /resto-bookings/:id/status — admin confirms / rejects / marks noshow
 router.put('/:id/status', requireAuth, async (req, res) => {
-  const { status } = req.body;
+  const { status, reason } = req.body;
   const allowed = ['confirmed','rejected','completed','noshow'];
   if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status.' });
 
@@ -161,6 +163,8 @@ router.put('/:id/status', requireAuth, async (req, res) => {
   const params = [status];
   if (status === 'confirmed') { updates.push('confirmed_at=NOW()'); }
   if (status === 'noshow') { updates.push('noshow_count=noshow_count+1'); }
+  if (status === 'confirmed' || status === 'rejected') { updates.push('responded_at=COALESCE(responded_at, NOW())'); }
+  if (status === 'rejected' && reason) { params.push(String(reason).slice(0, 200)); updates.push(`decline_reason=$${params.length}`); }
 
   const { rows: updated } = await query(
     `UPDATE resto_bookings SET ${updates.join(',')} WHERE id=$${params.length + 1} RETURNING *`,

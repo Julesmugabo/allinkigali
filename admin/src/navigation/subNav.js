@@ -5,8 +5,11 @@
  */
 import { financeNav } from '../dashboards/finance/nav';
 import { newsNav } from '../dashboards/news/nav';
+import { restaurantsNav, coffeeShopsNav } from '../dashboards/places/nav';
 
 export const SUB_NAV = {
   '/finance': financeNav,
   '/news': newsNav,
+  '/restaurants': restaurantsNav,
+  '/coffee-shops': coffeeShopsNav,
 };

@@ -7,7 +7,6 @@ import { useNavigate } from 'react-router-dom';
 import { apiFetch } from '../api';
 import { t } from '../theme';
 import { PageHeader, StatCard, Card, DataTable, Badge, Tabs } from '../components/PageShell';
-import { useClient } from '../context/ClientContext';
 
 const STATUS_COLOR = {
   open: t.success, closed: t.danger, pending: t.warning,
@@ -15,7 +14,6 @@ const STATUS_COLOR = {
 };
 
 export default function SellersDashboard() {
-  const { enterClient } = useClient();
   const navigate = useNavigate();
   const [places, setPlaces] = useState([]);
   const [pending, setPending] = useState([]);
@@ -24,8 +22,7 @@ export default function SellersDashboard() {
   const [actionId, setActionId] = useState(null);
 
   const openClientDashboard = (type, id, name) => {
-    enterClient(type, id, name);
-    navigate('/client-dashboard');
+    navigate(`/clients/${type}/${id}`);
   };
 
   const loadAll = useCallback(async () => {

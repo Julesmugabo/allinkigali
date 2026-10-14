@@ -4,8 +4,6 @@ import { getUser, logout as apiLogout, apiFetch, setUser as saveUser } from './a
 import { t } from './theme';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
-import { ClientProvider } from './context/ClientContext';
-import ClientDashboard from './pages/ClientDashboard';
 
 // Staff Portal pages (all roles)
 import StaffHome    from './pages/StaffHome';
@@ -17,8 +15,8 @@ import Contracts    from './pages/Contracts';
 import Overview            from './pages/Overview';
 import NewsDashboard       from './dashboards/news/NewsDashboard';
 import SellersDashboard    from './pages/SellersDashboard';
-import RestaurantsDashboard from './pages/RestaurantsDashboard';
-import CoffeeShopsDashboard from './pages/CoffeeShopsDashboard';
+import PlacesDashboard     from './dashboards/places/PlacesDashboard';
+import { MyPlaceDashboard, ClientPlaceDashboard } from './dashboards/owner/OwnerDashboard';
 import FinanceDashboard    from './dashboards/finance/FinanceDashboard';
 import AdminUsers          from './pages/AdminUsers';
 
@@ -56,7 +54,6 @@ export default function App() {
   const isDirector = role === 'director';
 
   return (
-    <ClientProvider>
     <div style={styles.layout}>
       <Sidebar
         user={user}
@@ -79,8 +76,8 @@ export default function App() {
               <Route path="/overview"      element={<Overview />} />
               <Route path="/news/:section?" element={<NewsDashboard />} />
               <Route path="/sellers"       element={<SellersDashboard />} />
-              <Route path="/restaurants"   element={<RestaurantsDashboard />} />
-              <Route path="/coffee-shops"  element={<CoffeeShopsDashboard />} />
+              <Route path="/restaurants/:section?" element={<PlacesDashboard kind="restaurant" />} />
+              <Route path="/coffee-shops/:section?" element={<PlacesDashboard kind="coffeeshop" />} />
               <Route path="/finance/:section?" element={<FinanceDashboard />} />
               <Route path="/admins"        element={<AdminUsers />} />
             </>}
@@ -89,22 +86,20 @@ export default function App() {
             {role === 'news'        && <Route path="/news/:section?" element={<NewsDashboard />} />}
             {role === 'sellers'     && <>
               <Route path="/sellers"      element={<SellersDashboard />} />
-              <Route path="/restaurants"  element={<RestaurantsDashboard />} />
-              <Route path="/coffee-shops" element={<CoffeeShopsDashboard />} />
+              <Route path="/restaurants/:section?" element={<PlacesDashboard kind="restaurant" />} />
+              <Route path="/coffee-shops/:section?" element={<PlacesDashboard kind="coffeeshop" />} />
             </>}
-            {role === 'restaurant'  && <Route path="/restaurants"  element={<RestaurantsDashboard />} />}
-            {role === 'coffeeshop'  && <Route path="/coffee-shops" element={<CoffeeShopsDashboard />} />}
+            {(role === 'restaurant' || role === 'coffeeshop') && <Route path="/my-place/:section?" element={<MyPlaceDashboard />} />}
             {role === 'finance'     && <Route path="/finance/:section?" element={<FinanceDashboard />} />}
 
-            {/* ── Client dashboard (Sellers Admin + director) ── */}
-            {canManageClients && <Route path="/client-dashboard" element={<ClientDashboard />} />}
+            {/* ── A client's own dashboard, opened by the Sales Partners admin or director ── */}
+            {canManageClients && <Route path="/clients/:kind/:placeId/:section?" element={<ClientPlaceDashboard />} />}
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>
         </div>
       </main>
     </div>
-    </ClientProvider>
   );
 }
 

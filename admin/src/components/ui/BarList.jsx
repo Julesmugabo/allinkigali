@@ -2,8 +2,8 @@
  * BarList.jsx — labelled horizontal bars (value relative to the largest).
  */
 import React from 'react';
-import { t } from '../../../theme';
-import { fmtNum } from '../../../components/ui';
+import { t } from '../../theme';
+import { fmtNum } from './index';
 
 export default function BarList({ rows, color = t.accent, empty = 'No data yet.' }) {
   if (!rows.length) return <div style={{ color: t.textMuted, fontSize: 13, padding: '12px 0' }}>{empty}</div>;

@@ -8,7 +8,7 @@ import { Panel, Kpi, KpiGrid, Loading, ErrorText, fmtNum } from '../../../../com
 import { useNews } from '../../NewsContext';
 import { newsApi } from '../../newsApi';
 import { fmtDate } from '../../constants';
-import BarList from '../../components/BarList';
+import BarList from '../../../../components/ui/BarList';
 
 const RANGES = [7, 30, 90];
 
