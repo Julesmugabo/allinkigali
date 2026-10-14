@@ -9,26 +9,28 @@
  * design change to either one applies to both layouts automatically.
  */
 import React, { useMemo } from 'react';
-import { View, Text, Pressable, Image, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, Pressable, Image, ScrollView, StyleSheet, useWindowDimensions } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import WebContainer from '../../web/layout/WebContainer';
 import HeroCard from '../../components/news/HeroCard';
 import NewsTagline from '../../components/news/NewsTagline';
 import NewsListItem from '../../components/news/NewsListItem';
-import AdBox from '../../components/news/AdBox';
+import SideAd from '../../components/news/ads/SideAd';
+import { useAds } from '../../context/AdsContext';
 import FeedSkeleton from '../../components/news/FeedSkeleton';
 import EmptyState from '../../components/common/EmptyState';
 
 import { formatLongDate, timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius } from '../../theme';
 
+const LEFT_AD_MIN_WIDTH = 1200;
+
 export default function NewsFeedWide({
   categories,
   activeCategory,
   onCategoryChange,
   feed,
-  heroAd,
   handleArticlePress,
   handleStoryPress,
   isLoading,
@@ -37,6 +39,12 @@ export default function NewsFeedWide({
   reload,
   onSeeAllPress,
 }) {
+  // Web ads: the first runs on the right; a second (if any) on the left,
+  // which only shows when the screen is wide enough for both columns.
+  const { webAds } = useAds();
+  const { width } = useWindowDimensions();
+  const rightAd = webAds[0] || null;
+  const leftAd = width >= LEFT_AD_MIN_WIDTH ? webAds[1] || null : null;
   const breaking = useMemo(() => articles.filter((a) => a.isBreaking), [articles]);
 
   if (isLoading) {
@@ -144,6 +152,7 @@ export default function NewsFeedWide({
                   </Pressable>
                 );
               })}
+              {leftAd ? <SideAd ad={leftAd} style={styles.adSpacing} /> : null}
             </View>
 
             {/* Center: hero + top stories + grid */}
@@ -198,7 +207,7 @@ export default function NewsFeedWide({
                 </Pressable>
               ))}
 
-              {heroAd ? <AdBox ad={heroAd} style={styles.adSpacing} /> : null}
+              {rightAd ? <SideAd ad={rightAd} style={styles.adSpacing} /> : null}
             </View>
           </View>
         </WebContainer>

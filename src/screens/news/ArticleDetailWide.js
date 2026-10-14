@@ -13,15 +13,18 @@ import GradientBackground from '../../components/common/GradientBackground';
 import WebContainer from '../../web/layout/WebContainer';
 import ArticleLabels from '../../components/news/ArticleLabels';
 import MarkdownBody from '../../components/news/MarkdownBody';
-import AdBox from '../../components/news/AdBox';
+import SideAd from '../../components/news/ads/SideAd';
 import { useNews } from '../../context/NewsContext';
-import { useAds } from '../../context/AdsContext';
+import { useAds, nthAd } from '../../context/AdsContext';
 import { timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius } from '../../theme';
 
+// A stable number from an article id, so an article always gets the same rotating ad.
+const idTurn = (id) => [...String(id)].reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 9973, 0);
+
 export default function ArticleDetailWide({ route, navigation }) {
   const { getArticleById, categories, getStoryById, incrementArticleView, getFeed } = useNews();
-  const { getAdAfter } = useAds();
+  const { webAds } = useAds();
   const article = getArticleById(route.params?.id);
 
   const categoryLabel = article ? categories.find((c) => c.key === article.category)?.label || '' : '';
@@ -32,7 +35,9 @@ export default function ArticleDetailWide({ route, navigation }) {
     () => getFeed('all').trending.filter((a) => a.id !== article?.id).slice(0, 5),
     [getFeed, article?.id]
   );
-  const ad = article ? getAdAfter(article.id) : null;
+  // The web ad the writer picked for this article, or one chosen from the
+  // running web ads by the article's id, so different articles show different ads.
+  const ad = article ? webAds.find((x) => x.id === article.webAdId) || nthAd(webAds, idTurn(article.id)) : null;
 
   const openArticle = (a) => {
     incrementArticleView(a.id);
@@ -128,7 +133,7 @@ export default function ArticleDetailWide({ route, navigation }) {
                   ))}
                 </>
               ) : null}
-              {ad ? <AdBox ad={ad} style={styles.adSpacing} /> : null}
+              {ad ? <SideAd ad={ad} style={styles.adSpacing} /> : null}
             </View>
           </View>
         </WebContainer>

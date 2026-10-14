@@ -1,97 +1,62 @@
 /**
- * AdsContext.js — Amatangazo agaragara mu makuru (ad units shown in the News feed).
+ * AdsContext.js — Amatangazo (the ads readers see).
  *
- * Talks to our own Express + Postgres backend now (server/src/routes/ads.js),
- * not in-memory state — every screen still only ever calls useAds().
+ * Loads the ads that are running now (switched on, inside their dates) for
+ * both channels: `appAds` for the app/phone feed and `webAds` for the
+ * website. Managing ads happens in the News dashboard of the Staff Portal.
  *
- * Kept separate from NewsContext on purpose — an ad isn't an article, even
- * though it renders inline in the same feed. Each ad is anchored to a real
- * article's id ("show this right after that story"), which the News admin
- * picks explicitly, rather than a raw position number that would silently
- * drift as articles get added, archived, or reordered above it.
+ * recordView() counts an ad once per app session however often it scrolls
+ * past; openAd() counts the click and opens the advertiser's link.
  */
 import React, { createContext, useContext, useMemo, useState, useCallback, useEffect } from 'react';
+import { Linking } from 'react-native';
 import { apiFetch } from '../services/apiClient';
 
 const AdsContext = createContext(null);
+const seen = new Set(); // ad ids already counted this session
 
 export function AdsProvider({ children }) {
   const [ads, setAds] = useState([]);
-  const [isLoading, setIsLoading] = useState(true);
 
   const refreshAds = useCallback(async () => {
     try {
       const data = await apiFetch('/ads');
-      setAds(data || []);
+      setAds(Array.isArray(data) ? data : []);
     } catch {
-      // Leave whatever was already loaded rather than blanking the list
-      // over a transient network hiccup.
+      // Keep what's loaded rather than blanking ads over a network hiccup.
     }
   }, []);
+  useEffect(() => { refreshAds(); }, [refreshAds]);
 
-  useEffect(() => {
-    (async () => {
-      await refreshAds();
-      setIsLoading(false);
-    })();
-  }, [refreshAds]);
-
-  const addAd = useCallback(async (data) => {
-    try {
-      const newAd = await apiFetch('/ads', {
-        method: 'POST',
-        body: { type: data.type || 'photo', mediaUri: data.mediaUri, afterArticleId: data.afterArticleId },
-      });
-      setAds((current) => [newAd, ...current]);
-      return newAd;
-    } catch {
-      return null;
-    }
+  const recordView = useCallback((ad) => {
+    if (!ad?.id || seen.has(ad.id)) return;
+    seen.add(ad.id);
+    apiFetch(`/ads/${ad.id}/view`, { method: 'POST' }).catch(() => {});
   }, []);
 
-  const updateAd = useCallback(async (id, patch) => {
-    try {
-      const updated = await apiFetch(`/ads/${id}`, { method: 'PATCH', body: patch });
-      setAds((current) => current.map((a) => (a.id === id ? updated : a)));
-      return updated;
-    } catch {
-      return null;
-    }
+  const openAd = useCallback((ad) => {
+    if (!ad?.linkUrl) return;
+    apiFetch(`/ads/${ad.id}/click`, { method: 'POST' }).catch(() => {});
+    const url = /^https?:\/\//i.test(ad.linkUrl) ? ad.linkUrl : `https://${ad.linkUrl}`;
+    Linking.openURL(url).catch(() => {});
   }, []);
 
-  const deleteAd = useCallback(async (id) => {
-    try {
-      await apiFetch(`/ads/${id}`, { method: 'DELETE' });
-      setAds((current) => current.filter((a) => a.id !== id));
-    } catch {
-      // no-op — the ad stays in the list, matching a failed delete leaving
-      // state untouched rather than silently disappearing from the UI
-    }
-  }, []);
-
-  const getAdById = useCallback((id) => ads.find((a) => a.id === id) || null, [ads]);
-
-  // At most one ad per anchor article — if an admin wants a second ad, they
-  // anchor it to a different article. Keeps feed placement unambiguous.
-  const getAdAfter = useCallback(
-    (articleId) => ads.find((a) => a.afterArticleId === articleId) || null,
-    [ads]
-  );
-
-  const value = useMemo(
-    () => ({ ads, isLoading, refreshAds, addAd, updateAd, deleteAd, getAdById, getAdAfter }),
-    [ads, isLoading, refreshAds, addAd, updateAd, deleteAd, getAdById, getAdAfter]
-  );
+  const value = useMemo(() => ({
+    appAds: ads.filter((a) => a.channel === 'app'),
+    webAds: ads.filter((a) => a.channel === 'web'),
+    refreshAds, recordView, openAd,
+  }), [ads, refreshAds, recordView, openAd]);
 
   return <AdsContext.Provider value={value}>{children}</AdsContext.Provider>;
 }
 
 export function useAds() {
-  const context = useContext(AdsContext);
-  if (!context) {
-    throw new Error('useAds must be used inside <AdsProvider>.');
-  }
-  return context;
+  const ctx = useContext(AdsContext);
+  if (!ctx) throw new Error('useAds must be used inside an AdsProvider');
+  return ctx;
 }
+
+// Picks the n-th ad of a list, wrapping around, so slots take turns.
+export const nthAd = (list, n) => (list.length ? list[((n % list.length) + list.length) % list.length] : null);
 
 export default AdsContext;

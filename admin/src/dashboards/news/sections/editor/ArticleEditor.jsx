@@ -25,7 +25,7 @@ const BUTTON = { draft: 'Save draft', pending: 'Submit for approval', published:
 
 function Editor({ existing }) {
   const navigate = useNavigate();
-  const { categories, stories, authors, changed, notify } = useNews();
+  const { categories, stories, authors, ads, changed, notify } = useNews();
   const [form, setForm] = useState(() => (existing ? formFromArticle(existing) : emptyForm(categories)));
   const [errors, setErrors] = useState({});
   const [saving, setSaving] = useState(false);
@@ -116,7 +116,7 @@ function Editor({ existing }) {
       </div>
 
       <div style={s.side}>
-        <PublishOptions form={form} set={set} stories={stories} authors={authors} />
+        <PublishOptions form={form} set={set} stories={stories} authors={authors} webAds={ads.filter((a) => a.channel === 'web')} />
         {bad('publishAt')}{bad('story')}
         <Checklist {...form} />
         <Button onClick={save} disabled={saving} style={{ justifyContent: 'center', padding: '12px 16px' }}>

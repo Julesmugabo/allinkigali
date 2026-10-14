@@ -44,6 +44,7 @@ function articleToJson(row) {
     views: row.views,
     publishedAt: row.published_at,
     storyId: row.story_id,
+    webAdId: row.web_ad_id || null,
     labels: row.labels || [],
     authorId: row.author_id,
     publishAt: row.publish_at,
@@ -85,6 +86,7 @@ function articleFields(data) {
     isArchived: 'is_archived',
     publishedAt: 'published_at',
     storyId: 'story_id',
+    webAdId: 'web_ad_id', // '' from the editor means "rotate automatically"
     labels: 'labels',
     authorId: 'author_id',
     publishAt: 'publish_at',
@@ -101,7 +103,7 @@ function articleFields(data) {
   Object.entries(map).forEach(([jsKey, column]) => {
     if (jsKey in data) {
       columns.push(column);
-      values.push(data[jsKey]);
+      values.push(jsKey === 'webAdId' ? data[jsKey] || null : data[jsKey]);
     }
   });
   return { columns, values };

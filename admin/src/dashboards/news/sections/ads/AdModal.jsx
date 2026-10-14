@@ -1,51 +1,57 @@
 /**
- * AdModal.jsx — create or edit a feed ad: photo or video (uploaded to the
- * server so every reader can load it) and the article it follows.
+ * AdModal.jsx — create or edit an app or web ad: name, photo or video
+ * (uploaded so every reader can load it), the link it opens, and optional
+ * start/end dates.
  */
 import React, { useState } from 'react';
 import Modal, { ModalActions } from '../../../../components/common/Modal';
 import Button from '../../../../components/common/Button';
-import { FormGrid, SelectField } from '../../../../components/form/Fields';
+import { FormGrid, Field, SelectField, CheckboxField } from '../../../../components/form/Fields';
 import MediaUpload, { isEmbeddedPreview } from '../../../../components/form/MediaUpload';
-import { ErrorText } from '../../../../components/ui';
+import { ErrorText, Muted } from '../../../../components/ui';
 import { useNews } from '../../NewsContext';
 import { newsApi } from '../../newsApi';
-import { isDeviceOnly } from './FeedAds';
+import { CHANNELS } from './channels';
+import { isDeviceOnly } from './AdsList';
 
-export default function AdModal({ ad, onClose }) {
-  const { articles, ads, changed, notify } = useNews();
-  const [type, setType] = useState(ad?.type || 'photo');
-  const [mediaUri, setMediaUri] = useState(ad && !isDeviceOnly(ad.mediaUri) ? ad.mediaUri : '');
-  const [afterArticleId, setAfterArticleId] = useState(ad?.afterArticleId || '');
+export default function AdModal({ channel, ad, onClose }) {
+  const { changed, notify } = useNews();
+  const [form, setForm] = useState({
+    title: ad?.title || '', type: ad?.type || 'photo',
+    mediaUri: ad && !isDeviceOnly(ad.mediaUri) ? ad.mediaUri : '',
+    linkUrl: ad?.linkUrl || '', startsOn: ad?.startsOn || '', endsOn: ad?.endsOn || '',
+    isActive: ad ? ad.isActive : true,
+  });
   const [saving, setSaving] = useState(false);
   const [error, setError] = useState('');
-
-  // Only articles readers can actually scroll past, and only one ad per article.
-  const taken = new Set(ads.filter((x) => x.id !== ad?.id).map((x) => x.afterArticleId));
-  const eligible = articles.filter((a) => a.status === 'published' && !a.isArchived && !taken.has(a.id));
+  const set = (k) => (v) => setForm((f) => ({ ...f, [k]: v }));
 
   const save = async () => {
-    if (!mediaUri || isEmbeddedPreview(mediaUri)) { setError(`Upload the ${type === 'video' ? 'video' : 'photo'} first.`); return; }
-    if (!afterArticleId) { setError('Pick the article this ad follows.'); return; }
+    if (!form.title.trim()) { setError('Give the ad a name (e.g. the advertiser and offer).'); return; }
+    if (!form.mediaUri || isEmbeddedPreview(form.mediaUri)) { setError(`Upload the ${form.type === 'video' ? 'video' : 'photo'} first.`); return; }
+    if (form.startsOn && form.endsOn && form.endsOn < form.startsOn) { setError('The end date is before the start date.'); return; }
     setSaving(true); setError('');
     try {
-      const body = { type, mediaUri, afterArticleId };
-      if (ad) await newsApi.updateAd(ad.id, body);
-      else await newsApi.createAd(body);
-      notify(ad ? 'Ad updated' : 'Ad added to the feed'); changed(); onClose();
+      const body = { ...form, channel };
+      if (ad) await newsApi.updateAd(ad.id, body); else await newsApi.createAd(body);
+      notify(ad ? 'Ad updated' : `${CHANNELS[channel].title.slice(0, -1)} added`); changed(); onClose();
     } catch (e) { setError(e.message); }
     setSaving(false);
   };
 
   return (
-    <Modal open onClose={onClose} title={ad ? 'Edit Ad' : 'New Feed Ad'} width={600}>
+    <Modal open onClose={onClose} title={`${ad ? 'Edit' : 'New'} ${channel} ad`} width={620}>
       <ErrorText>{error}</ErrorText>
+      <Muted>{CHANNELS[channel].size}</Muted>
       <FormGrid>
-        <SelectField label="Type" value={type} onChange={(v) => { setType(v); setMediaUri(''); }}
+        <Field label="Name (shown on the ad)" value={form.title} onChange={set('title')} placeholder="e.g. MTN MoMo — send money free" />
+        <SelectField label="Type" value={form.type} onChange={(v) => setForm((f) => ({ ...f, type: v, mediaUri: '' }))}
           options={[{ value: 'photo', label: 'Photo' }, { value: 'video', label: 'Video' }]} />
-        <SelectField label="Show right after" value={afterArticleId} onChange={setAfterArticleId} placeholder="— Pick a published article —"
-          options={eligible.map((a) => ({ value: a.id, label: a.title }))} />
-        <MediaUpload label={type === 'video' ? 'Video (max 10 MB)' : 'Photo'} kind={type === 'video' ? 'video' : 'image'} value={mediaUri} onChange={setMediaUri} />
+        <MediaUpload label={form.type === 'video' ? 'Video (max 10 MB)' : 'Photo'} kind={form.type === 'video' ? 'video' : 'image'} value={form.mediaUri} onChange={set('mediaUri')} />
+        <Field label="Opens this link when clicked" value={form.linkUrl} onChange={set('linkUrl')} placeholder="https://… or wa.me/2507…" />
+        <Field label="Start date (optional)" type="date" value={form.startsOn} onChange={set('startsOn')} />
+        <Field label="End date (optional)" type="date" value={form.endsOn} onChange={set('endsOn')} />
+        <CheckboxField label="Switched on" checked={form.isActive} onChange={set('isActive')} />
       </FormGrid>
       <ModalActions>
         <Button variant="ghost" onClick={onClose}>Cancel</Button>

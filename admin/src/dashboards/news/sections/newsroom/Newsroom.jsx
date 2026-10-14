@@ -65,7 +65,7 @@ export default function Newsroom() {
             <Button icon={Plus} onClick={() => go('write')}>New article</Button>
             <Button variant="warning" onClick={() => go('articles')}>Review pending</Button>
             <Button variant="info" onClick={() => go('stories')}>Live stories</Button>
-            <Button variant="info" onClick={() => go('ads')}>Ad ops</Button>
+            <Button variant="info" onClick={() => go('app-ads')}>Ads</Button>
           </div>
         </Panel>
       </div>

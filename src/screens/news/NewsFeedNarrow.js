@@ -11,7 +11,7 @@ import NewsHeader from '../../components/news/NewsHeader';
 import HeroCard from '../../components/news/HeroCard';
 import TrendingRail from '../../components/news/TrendingRail';
 import NewsListItem from '../../components/news/NewsListItem';
-import AdBox from '../../components/news/AdBox';
+import FeedAdItem from '../../components/news/ads/FeedAdItem';
 import FeedSkeleton from '../../components/news/FeedSkeleton';
 import SectionLabel from '../../components/common/SectionLabel';
 import EmptyState from '../../components/common/EmptyState';
@@ -26,7 +26,7 @@ export default function NewsFeedNarrow({
   unreadCount,
   onNotificationsPress,
   feed,
-  heroAd,
+  trendAds,
   feedItems,
   handleArticlePress,
   handleStoryPress,
@@ -48,19 +48,17 @@ export default function NewsFeedNarrow({
 
         <HeroCard article={feed.hero} onPress={handleArticlePress} onStoryPress={handleStoryPress} />
 
-        {heroAd ? <AdBox ad={heroAd} style={styles.heroAdSpacing} /> : null}
-
         {feed.trending.length ? (
           <>
             <SectionLabel title="BISOMWA CYANE" />
-            <TrendingRail articles={feed.trending} onArticlePress={handleArticlePress} />
+            <TrendingRail articles={feed.trending} ads={trendAds} onArticlePress={handleArticlePress} />
           </>
         ) : null}
 
         <SectionLabel title="AMAKURU MASHYA" actionLabel="Byose" onActionPress={onSeeAllPress} />
       </View>
     ),
-    [feed, heroAd, handleArticlePress, handleStoryPress, onSeeAllPress]
+    [feed, trendAds, handleArticlePress, handleStoryPress, onSeeAllPress]
   );
 
   return (
@@ -78,7 +76,7 @@ export default function NewsFeedNarrow({
         keyExtractor={(item) => item.rowKey}
         renderItem={({ item }) =>
           item.kind === 'ad' ? (
-            <AdBox ad={item.ad} />
+            <FeedAdItem ad={item.ad} />
           ) : (
             <NewsListItem article={item.article} onPress={handleArticlePress} />
           )
@@ -151,5 +149,4 @@ const styles = StyleSheet.create({
     borderRadius: 3,
     backgroundColor: colors.blue500,
   },
-  heroAdSpacing: { marginTop: spacing.md },
 });

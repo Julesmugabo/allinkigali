@@ -1,7 +1,7 @@
 /**
  * PublishOptions.jsx — the editor's side panel: where the article goes
- * (draft / approval / publish / schedule), live story, byline, flags and
- * labels.
+ * (draft / approval / publish / schedule), live story, byline, the web ad
+ * shown with it, flags and labels.
  */
 import React from 'react';
 import { t } from '../../../../theme';
@@ -15,7 +15,7 @@ const DESTINATIONS = [
   { key: 'schedule', label: 'Schedule', hint: 'Goes live automatically at the time you pick.' },
 ];
 
-export default function PublishOptions({ form, set, stories, authors }) {
+export default function PublishOptions({ form, set, stories, authors, webAds = [] }) {
   const toggleLabel = (key) => set('labels')(form.labels.includes(key) ? form.labels.filter((l) => l !== key) : [...form.labels, key]);
   const pickableStories = stories.filter((st) => st.isLive || st.id === form.storyId);
 
@@ -48,6 +48,13 @@ export default function PublishOptions({ form, set, stories, authors }) {
         <div style={s.h}>Byline</div>
         <SelectField value={form.authorId} onChange={set('authorId')} placeholder="No author"
           options={authors.filter((a) => a.is_active || a.id === form.authorId).map((a) => ({ value: a.id, label: `${a.name} (${a.role})` }))} />
+      </div>
+
+      <div style={s.group}>
+        <div style={s.h}>Ad on this article (website)</div>
+        <SelectField value={form.webAdId} onChange={set('webAdId')} placeholder="Automatic — ads take turns"
+          options={webAds.filter((a) => a.isActive || a.id === form.webAdId).map((a) => ({ value: a.id, label: a.title || 'Untitled ad' }))} />
+        <span style={s.hint}>Shown under "Bisomwa cyane" on the website's article page. The app doesn't show it.</span>
       </div>
 
       <div style={s.group}>

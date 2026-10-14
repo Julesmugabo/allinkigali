@@ -11,8 +11,10 @@ import React, { useState, useCallback, useMemo } from 'react';
 
 import NewsFeed from './NewsFeed';
 import { useNews } from '../../context/NewsContext';
-import { useAds } from '../../context/AdsContext';
+import { useAds, nthAd } from '../../context/AdsContext';
 import useUnreadNotifications from '../../hooks/useUnreadNotifications';
+
+const EVERY = 6; // one app ad after every 6 stories
 
 export default function NewsScreen({ navigation }) {
   const [activeCategory, setActiveCategory] = useState('all');
@@ -21,7 +23,7 @@ export default function NewsScreen({ navigation }) {
   const unreadCount = useUnreadNotifications();
 
   const { categoriesWithAll, getFeed, incrementArticleView, isLoading, loadFailed, reload, articles } = useNews();
-  const { getAdAfter } = useAds();
+  const { appAds } = useAds();
 
   // refreshKey is in the deps so pull-to-refresh recomputes relative times.
   const feed = useMemo(() => getFeed(activeCategory), [getFeed, activeCategory, refreshKey]);
@@ -58,22 +60,20 @@ export default function NewsScreen({ navigation }) {
 
   const onNotificationsPress = useCallback(() => navigation.navigate('Notifications'), [navigation]);
 
-  // The News admin anchors each ad to a real article's id ("show this right
-  // after that story") rather than a raw position, so placement survives
-  // articles being added/archived above it.
-  const heroAd = feed.hero ? getAdAfter(feed.hero.id) : null;
-
-  // Only the narrow (phone-shaped) feed interleaves ads between articles —
-  // the wide layout places the one ad in its sidebar instead (see heroAd).
+  // App ads: the first two take the 2nd and 4th "Bisomwa cyane" cards (one
+  // card only when there's a single ad), then one follows every 6 stories,
+  // taking turns through the list. The wide web layout uses web ads instead.
+  const trendAds = useMemo(() => appAds.slice(0, 2), [appAds]);
   const feedItems = useMemo(() => {
     const items = [];
-    feed.latest.forEach((article) => {
+    let turn = trendAds.length;
+    feed.latest.forEach((article, i) => {
       items.push({ rowKey: article.id, kind: 'article', article });
-      const ad = getAdAfter(article.id);
-      if (ad) items.push({ rowKey: ad.id, kind: 'ad', ad });
+      const ad = (i + 1) % EVERY === 0 ? nthAd(appAds, turn++) : null;
+      if (ad) items.push({ rowKey: `ad-${i}-${ad.id}`, kind: 'ad', ad });
     });
     return items;
-  }, [feed.latest, getAdAfter]);
+  }, [feed.latest, appAds, trendAds]);
 
   return (
     <NewsFeed
@@ -83,7 +83,7 @@ export default function NewsScreen({ navigation }) {
       unreadCount={unreadCount}
       onNotificationsPress={onNotificationsPress}
       feed={feed}
-      heroAd={heroAd}
+      trendAds={trendAds}
       feedItems={feedItems}
       handleArticlePress={handleArticlePress}
       handleStoryPress={handleStoryPress}

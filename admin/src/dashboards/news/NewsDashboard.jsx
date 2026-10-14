@@ -16,6 +16,7 @@ import ArticleEditor from './sections/editor/ArticleEditor';
 import Categories from './sections/categories/Categories';
 import Stories from './sections/stories/Stories';
 import AdOps from './sections/ads/AdOps';
+import AdsList from './sections/ads/AdsList';
 import Authors from './sections/authors/Authors';
 import Analytics from './sections/analytics/Analytics';
 import Reports from './sections/reports/Reports';
@@ -27,7 +28,9 @@ const VIEWS = {
   write: ArticleEditor,
   categories: Categories,
   stories: Stories,
-  ads: AdOps,
+  'app-ads': () => <AdsList channel="app" />,
+  'web-ads': () => <AdsList channel="web" />,
+  advertisers: AdOps,
   authors: Authors,
   analytics: Analytics,
   reports: Reports,

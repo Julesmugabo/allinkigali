@@ -36,7 +36,7 @@ export const newsApi = {
   deactivateAuthor: (id) => del(`/news/authors/${id}`),
 
   // ads
-  ads: () => get('/ads'),
+  ads: () => get('/ads/manage'),
   createAd: (body) => post('/ads', body),
   updateAd: (id, body) => patch(`/ads/${id}`, body),
   deleteAd: (id) => del(`/ads/${id}`),

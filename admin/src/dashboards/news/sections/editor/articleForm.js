@@ -17,7 +17,7 @@ export function emptyForm(categories) {
   return {
     title: '', category: categories[0]?.key || '', source: '', sourceUrl: '', body: '', imageUrl: '',
     isBreaking: false, isFeatured: false, isTrending: false, labels: [],
-    storyId: '', newStoryTitle: '', authorId: '', destination: 'draft', publishAt: '',
+    storyId: '', newStoryTitle: '', authorId: '', webAdId: '', destination: 'draft', publishAt: '',
     slug: '', metaDescription: '', ogImage: '',
   };
 }
@@ -28,7 +28,7 @@ export function formFromArticle(a) {
     title: a.title || '', category: a.category || '', source: a.source || '', sourceUrl: a.sourceUrl || '',
     body: a.body || '', imageUrl: a.imageUrl || '',
     isBreaking: !!a.isBreaking, isFeatured: !!a.isFeatured, isTrending: !!a.isTrending, labels: a.labels || [],
-    storyId: a.storyId || '', newStoryTitle: '', authorId: a.authorId || '',
+    storyId: a.storyId || '', newStoryTitle: '', authorId: a.authorId || '', webAdId: a.webAdId || '',
     destination: scheduled ? 'schedule' : (['draft', 'pending', 'published'].includes(a.status) ? a.status : 'draft'),
     publishAt: toLocalInput(a.publishAt),
     slug: a.slug || '', metaDescription: a.metaDescription || '', ogImage: a.ogImage || '',
@@ -62,7 +62,7 @@ export function toPayload(form, { existing, storyId }) {
     icon: CATEGORY_ICONS[form.category] || 'newspaper-variant-outline',
     isBreaking: form.isBreaking, isFeatured: form.isFeatured, isTrending: form.isTrending,
     labels: form.labels, isSponsored: form.labels.includes('sponsored'),
-    storyId: storyId || null, authorId: form.authorId || null,
+    storyId: storyId || null, authorId: form.authorId || null, webAdId: form.webAdId || null,
     status,
     publishAt: form.destination === 'schedule' ? new Date(form.publishAt).toISOString() : null,
     slug: form.slug.trim() || slugify(form.title),
