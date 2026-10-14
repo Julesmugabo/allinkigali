@@ -10,7 +10,6 @@ import React from 'react';
 import { createNativeStackNavigator } from '@react-navigation/native-stack';
 
 import RootNavigator from './RootNavigator';
-import AdminNavigator from './AdminNavigator';
 
 const Stack = createNativeStackNavigator();
 
@@ -18,7 +17,6 @@ export default function AppNavigator() {
   return (
     <Stack.Navigator screenOptions={{ headerShown: false, animation: 'fade' }}>
       <Stack.Screen name="Main" component={RootNavigator} />
-      <Stack.Screen name="Admin" component={AdminNavigator} />
     </Stack.Navigator>
   );
 }

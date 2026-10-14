@@ -10,27 +10,8 @@ import { Text, View, TouchableOpacity, StyleSheet } from 'react-native';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 
 import MenuRow from './MenuRow';
-import { ROLE_META } from '../../admin/adminAuth';
 import { showAlert } from '../../utils/showAlert';
 import { colors, typography, spacing, radius } from '../../theme';
-
-const ADMIN_ROW_LABEL = {
-  news:       'News dashboard',
-  sellers:    'Sales Partners dashboard',
-  director:   'Director dashboard',
-  restaurant: 'Manage Restaurants',
-  coffeeshop: 'Manage Coffee Shops',
-  finance:    'Finance dashboard',
-};
-
-const ROLE_DASHBOARDS = {
-  news:       ['news'],
-  sellers:    ['sellers'],
-  director:   ['director', 'news', 'sellers', 'restaurant', 'coffeeshop', 'finance'],
-  restaurant: ['restaurant'],
-  coffeeshop: ['coffeeshop'],
-  finance:    ['finance'],
-};
 
 function Group({ children }) {
   return (
@@ -114,49 +95,8 @@ export default function SettingsList({ user, navigation, myBusiness, waitingRequ
   }
 
   // ──────────────────────────────────────────── SIGNED IN
-  const adminRows = user.role ? ROLE_DASHBOARDS[user.role] || [] : [];
-
   return (
     <>
-      {/* Admin dashboards */}
-      {adminRows.length > 0 && (
-        <Group>
-          {adminRows.map((role, index) => (
-            <MenuRow
-              key={role}
-              icon={ROLE_META[role].icon}
-              label={ADMIN_ROW_LABEL[role]}
-              onPress={() => navigation.navigate(ROLE_META[role].route)}
-              isLast={index === adminRows.length - 1}
-            />
-          ))}
-        </Group>
-      )}
-
-      {/* Restaurant / coffee shop owner dashboard */}
-      {user.role === 'restaurant' && (
-        <Group>
-          <MenuRow
-            icon="silverware-fork-knife"
-            label="My Restaurant"
-            value="Bookings, menu & profile"
-            onPress={() => navigation.navigate('RestaurantOwnerDashboard')}
-            isLast
-          />
-        </Group>
-      )}
-      {user.role === 'coffeeshop' && (
-        <Group>
-          <MenuRow
-            icon="coffee-outline"
-            label="My Coffee Shop"
-            value="Bookings, intents & profile"
-            onPress={() => navigation.navigate('CoffeeShopOwnerDashboard')}
-            isLast
-          />
-        </Group>
-      )}
-
       {/* Seller business */}
       {myBusiness && (
         <Group>
