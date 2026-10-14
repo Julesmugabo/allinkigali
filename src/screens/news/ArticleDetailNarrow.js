@@ -21,7 +21,7 @@ import { colors, typography, spacing, radius, gutter } from '../../theme';
 
 export default function ArticleDetailNarrow({ route, navigation }) {
   const insets = useSafeAreaInsets();
-  const { getArticleById, categories, getStoryById, showViewCounts } = useNews();
+  const { getArticleById, categories, getStoryById } = useNews();
   const article = getArticleById(route.params?.id);
 
   const categoryLabel = article ? categories.find((c) => c.key === article.category)?.label || '' : '';
@@ -73,7 +73,6 @@ export default function ArticleDetailNarrow({ route, navigation }) {
               <Text style={styles.sourceText}>{article.source}</Text>
             </View>
             <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
-            {showViewCounts ? <Text style={styles.time}>· {article.views || 0} abasomye</Text> : null}
           </View>
 
           {article.body?.trim() ? (
