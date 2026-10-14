@@ -220,7 +220,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   skeletonPad: { paddingTop: spacing.xl },
   scrollContent: { paddingBottom: spacing.huge },
-  tagline: { marginTop: spacing.lg },
+  tagline: { marginTop: spacing.xxl, marginBottom: spacing.sm },
 
   subBar: {
     backgroundColor: colors.navy800,
