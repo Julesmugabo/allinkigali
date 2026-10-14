@@ -176,7 +176,7 @@ export default function OrderFoodScreen({ navigation }) {
     try {
       const order = await apiFetch('/food-orders', {
         method: 'POST',
-        body: JSON.stringify({
+        body: {
           placeId: cartPlaceId,
           placeName: selectedPlace?.name || '',
           placeType: selectedPlace?.place_type || 'restaurant',
@@ -188,7 +188,7 @@ export default function OrderFoodScreen({ navigation }) {
           deliveryPhone: deliveryPhone.trim(),
           notes: notes.trim(),
           paymentMethod: 'cash',
-        }),
+        },
       });
       setOrderDone(order);
       setCart({});

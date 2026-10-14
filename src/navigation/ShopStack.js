@@ -8,13 +8,10 @@ import ShopScreen from '../screens/shop/ShopScreen';
 import CheckoutScreen from '../screens/shop/CheckoutScreen';
 import BusinessDetailScreen from '../screens/shop/BusinessDetailScreen';
 import BusinessBookScreen from '../screens/shop/BusinessBookScreen';
-import RestaurantMarketScreen from '../screens/shop/resto/RestaurantMarketScreen';
-import RestaurantDetailScreen from '../screens/shop/resto/RestaurantDetailScreen';
-import CoffeeShopMarketScreen from '../screens/shop/coffee/CoffeeShopMarketScreen';
-import CoffeeShopDetailScreen from '../screens/shop/coffee/CoffeeShopDetailScreen';
-import OrderFoodScreen from '../screens/shop/orderFood/OrderFoodScreen';
-import WeddingMarketScreen from '../screens/shop/wedding/WeddingMarketScreen';
-import WeddingDetailScreen from '../screens/shop/wedding/WeddingDetailScreen';
+// Wide browsers get the new list/place pages; phones keep the original screens.
+import {
+  RestaurantMarket, RestaurantDetail, CoffeeShopMarket, CoffeeShopDetail, WeddingMarket, WeddingDetail, OrderFood,
+} from '../screens/shop/browse/wideScreens';
 
 const Stack = createNativeStackNavigator();
 
@@ -32,16 +29,16 @@ export default function ShopStack() {
       <Stack.Screen name="BusinessDetail" component={BusinessDetailScreen} />
       <Stack.Screen name="BusinessBook" component={BusinessBookScreen} />
 
-      <Stack.Screen name="RestaurantMarket" component={RestaurantMarketScreen} />
-      <Stack.Screen name="RestaurantDetail" component={RestaurantDetailScreen} />
+      <Stack.Screen name="RestaurantMarket" component={RestaurantMarket} />
+      <Stack.Screen name="RestaurantDetail" component={RestaurantDetail} />
 
-      <Stack.Screen name="CoffeeShopMarket" component={CoffeeShopMarketScreen} />
-      <Stack.Screen name="CoffeeShopDetail" component={CoffeeShopDetailScreen} />
+      <Stack.Screen name="CoffeeShopMarket" component={CoffeeShopMarket} />
+      <Stack.Screen name="CoffeeShopDetail" component={CoffeeShopDetail} />
 
-      <Stack.Screen name="OrderFood" component={OrderFoodScreen} />
+      <Stack.Screen name="OrderFood" component={OrderFood} />
 
-      <Stack.Screen name="WeddingMarket" component={WeddingMarketScreen} />
-      <Stack.Screen name="WeddingDetail" component={WeddingDetailScreen} />
+      <Stack.Screen name="WeddingMarket" component={WeddingMarket} />
+      <Stack.Screen name="WeddingDetail" component={WeddingDetail} />
     </Stack.Navigator>
   );
 }

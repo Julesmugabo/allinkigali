@@ -38,6 +38,7 @@ const restaurantMenuRoutes = require('./routes/restaurantMenu');
 const myRestaurantRoutes  = require('./routes/myRestaurant');
 const pendingListingsRoutes = require('./routes/pendingListings');
 const foodOrdersRoutes    = require('./routes/foodOrders');
+const reviewsRoutes       = require('./routes/reviews');
 const weddingVenuesRoutes = require('./routes/weddingVenues');
 const financeRoutes       = require('./routes/finance');
 const staffPortalRoutes   = require('./routes/staffPortal');
@@ -83,6 +84,7 @@ app.use('/my-restaurant',  myRestaurantRoutes);
 app.use('/my-coffeeshop',  myRestaurantRoutes); // same handler, getContext() routes by role
 app.use('/pending-listings', pendingListingsRoutes);
 app.use('/food-orders',    foodOrdersRoutes);
+app.use('/reviews',        reviewsRoutes);
 app.use('/wedding-venues', weddingVenuesRoutes);
 app.use('/finance',        financeRoutes);
 app.use('/staff',          staffPortalRoutes);

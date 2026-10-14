@@ -41,7 +41,7 @@ export default function RegisterListingScreen({ navigation }) {
     try {
       await apiFetch('/pending-listings', {
         method: 'POST',
-        body: JSON.stringify({ type, ...form }),
+        body: { type, ...form },
       });
       setDone(true);
     } catch (e) {

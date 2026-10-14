@@ -16,6 +16,14 @@ async function pushNotification(userId, title, body, type, data = {}) {
 
 // Find the user_id of any admin who has the given role assigned to them.
 // Used to notify the restaurant/coffee-shop admin of a new booking.
+async function getOwnerOf(placeId) {
+  const { rows } = await query(
+    'SELECT id FROM users WHERE restaurant_id = $1 OR coffee_shop_id = $1 LIMIT 1',
+    [String(placeId)]
+  );
+  return rows[0]?.id || null;
+}
+
 async function getAdminWithRole(role) {
   const { rows } = await query(
     'SELECT id FROM users WHERE role = $1 LIMIT 1',
@@ -63,11 +71,10 @@ router.post('/', requireAuth, async (req, res) => {
   );
   const booking = rows[0];
 
-  // Notify the relevant admin
-  const adminRole = type === 'restaurant' ? 'restaurant' : 'coffeeshop';
-  // Also notify the owner linked by restaurant_id / coffee_shop_id
-  const adminId = await getAdminWithRole(adminRole);
-  await pushNotification(
+  // Notify the place's own owner; places without one (e.g. wedding venues)
+  // go to the Sales Partners team that manages them.
+  const adminId = await getOwnerOf(placeId) || await getAdminWithRole('sellers');
+  if (adminId) await pushNotification(
     adminId,
     `New booking — ${placeName}`,
     `${guestName} · ${partySize || 2} people · ${date} at ${time}`,
@@ -97,10 +104,9 @@ router.delete('/:id', requireAuth, async (req, res) => {
   const booking = rows[0];
   if (['confirmed','pending'].includes(booking.status)) {
     await query('UPDATE resto_bookings SET status=$1, updated_at=NOW() WHERE id=$2', ['cancelled', booking.id]);
-    // Notify restaurant owner
-    const adminRole = booking.type === 'restaurant' ? 'restaurant' : 'coffeeshop';
-    const adminId = await getAdminWithRole(adminRole);
-    await pushNotification(
+    // Notify the place's owner (or Sales Partners when it has none)
+    const adminId = await getOwnerOf(booking.place_id) || await getAdminWithRole('sellers');
+    if (adminId) await pushNotification(
       adminId,
       `Booking cancelled — ${booking.place_name}`,
       `${booking.guest_name} cancelled their reservation for ${booking.date} at ${booking.time}.`,

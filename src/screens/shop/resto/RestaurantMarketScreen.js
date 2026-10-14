@@ -25,6 +25,8 @@ import {
   PRICE_LABELS,
 } from '../../../data/restaurantData';
 import { apiFetch } from '../../../services/apiClient';
+import RwandaLocationPicker from '../../../components/common/RwandaLocationPicker';
+import { EMPTY_LOCATION, matchesLocation, locationLabel } from '../../../utils/placeLocation';
 import { colors, typography, spacing, radius, gutter } from '../../../theme';
 import { restaurantColors as rc } from '../../../theme/colors';
 
@@ -55,6 +57,7 @@ function filterRestaurants(restaurants, f) {
     if (f.seating.length && !f.seating.some((s) => r.seating.includes(s)))   return false;
     if (f.features.length && !f.features.some((ft) => r.features.includes(ft))) return false;
     if (f.rating && r.rating < f.rating) return false;
+    if (!matchesLocation(r, f.loc)) return false;
     return true;
   });
 }
@@ -62,6 +65,7 @@ function filterRestaurants(restaurants, f) {
 const EMPTY_FILTERS = {
   cuisines: [], foods: [], occasions: [], price: null,
   atmospheres: [], dietary: [], seating: [], features: [], rating: null,
+  loc: EMPTY_LOCATION,
 };
 
 function toggle(arr, val) {
@@ -214,6 +218,7 @@ export default function RestaurantMarketScreen({ navigation }) {
     filters.seating.forEach((s) => chips.push({ key: `s-${s}`, label: SEATING_LABELS[s] || s, remove: () => tog('seating', s) }));
     filters.features.forEach((ft) => chips.push({ key: `ft-${ft}`, label: FEATURE_LABELS[ft] || ft, remove: () => tog('features', ft) }));
     if (filters.rating) chips.push({ key: 'rating', label: `${filters.rating}+ ★`, remove: () => set('rating', null) });
+    if (filters.loc.province) chips.push({ key: 'loc', label: `📍 ${locationLabel(filters.loc)}`, remove: () => set('loc', EMPTY_LOCATION) });
     return chips;
   }, [filters]);
 
@@ -229,6 +234,10 @@ export default function RestaurantMarketScreen({ navigation }) {
           </Pressable>
         )}
       </View>
+
+      <FilterSection title="Location" defaultOpen>
+        <RwandaLocationPicker value={filters.loc} onChange={(loc) => set('loc', loc)} />
+      </FilterSection>
 
       <FilterSection title="Occasion">
         <View style={ss.chipRow}>

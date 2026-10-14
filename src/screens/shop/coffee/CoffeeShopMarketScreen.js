@@ -23,6 +23,8 @@ import {
   SEATINGS_CS, SEATING_LABELS_CS,
 } from '../../../data/coffeeShopData';
 import { apiFetch } from '../../../services/apiClient';
+import RwandaLocationPicker from '../../../components/common/RwandaLocationPicker';
+import { EMPTY_LOCATION, matchesLocation, locationLabel } from '../../../utils/placeLocation';
 import { colors, typography, spacing, radius, gutter } from '../../../theme';
 import { coffeeColors as cc } from '../../../theme/colors';
 
@@ -50,6 +52,7 @@ function filterShops(shops, f) {
     if (f.seating.length && !f.seating.some((st) => s.seating.includes(st))) return false;
     if (f.price && s.price !== f.price) return false;
     if (f.rating && s.rating < f.rating) return false;
+    if (!matchesLocation(s, f.loc)) return false;
     return true;
   });
 }
@@ -57,6 +60,7 @@ function filterShops(shops, f) {
 const EMPTY_FILTERS = {
   intents: [], coffeeTypes: [], brewingMethods: [], origins: [],
   food: [], atmosphere: [], facilities: [], seating: [], price: null, rating: null,
+  loc: EMPTY_LOCATION,
 };
 
 function haversineKm(lat1, lng1, lat2, lng2) {
@@ -232,6 +236,7 @@ export default function CoffeeShopMarketScreen({ navigation }) {
     filters.seating.forEach((st) => chips.push({ key: `st-${st}`, label: SEATING_LABELS_CS[st] || st, remove: () => tog('seating', st) }));
     if (filters.price) chips.push({ key: 'price', label: PRICE_LABELS[filters.price], remove: () => set('price', null) });
     if (filters.rating) chips.push({ key: 'rating', label: `${filters.rating}+ ★`, remove: () => set('rating', null) });
+    if (filters.loc.province) chips.push({ key: 'loc', label: `📍 ${locationLabel(filters.loc)}`, remove: () => set('loc', EMPTY_LOCATION) });
     return chips;
   }, [filters]);
 
@@ -263,6 +268,10 @@ export default function CoffeeShopMarketScreen({ navigation }) {
           })}
         </View>
       </View>
+
+      <FilterSection title="Location" defaultOpen>
+        <RwandaLocationPicker value={filters.loc} onChange={(loc) => set('loc', loc)} />
+      </FilterSection>
 
       <FilterSection title="Coffee type">
         <View style={ss.chipRow}>

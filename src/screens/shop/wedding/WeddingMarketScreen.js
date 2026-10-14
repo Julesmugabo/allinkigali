@@ -15,6 +15,8 @@ import {
   WEDDING_VENUES, FACILITY_LABELS, VIEW_LABELS, PRIVACY_LABELS, PHOTO_LABELS,
 } from '../../../data/weddingVenueData';
 import { apiFetch } from '../../../services/apiClient';
+import RwandaLocationPicker from '../../../components/common/RwandaLocationPicker';
+import { EMPTY_LOCATION, matchesLocation } from '../../../utils/placeLocation';
 import { colors, typography, spacing, radius, gutter } from '../../../theme';
 import { weddingColors as wc } from '../../../theme/colors';
 
@@ -82,15 +84,16 @@ export default function WeddingMarketScreen({ navigation }) {
   const [views, setViews] = useState([]);
   const [privacy, setPrivacy] = useState([]);
   const [photography, setPhotography] = useState([]);
+  const [loc, setLoc] = useState(EMPTY_LOCATION);
 
   const toggle = (setter) => (val) => setter(prev =>
     prev.includes(val) ? prev.filter(v => v !== val) : [...prev, val]
   );
 
   const clearAll = () => {
-    setFacilities([]); setViews([]); setPrivacy([]); setPhotography([]);
+    setFacilities([]); setViews([]); setPrivacy([]); setPhotography([]); setLoc(EMPTY_LOCATION);
   };
-  const activeCount = facilities.length + views.length + privacy.length + photography.length;
+  const activeCount = facilities.length + views.length + privacy.length + photography.length + (loc.province ? 1 : 0);
 
   const results = useMemo(() => {
     let list = liveVenues;
@@ -109,6 +112,7 @@ export default function WeddingMarketScreen({ navigation }) {
     if (views.length)      list = list.filter(v => views.every(f => (v.views || []).includes(f)));
     if (privacy.length)    list = list.filter(v => privacy.every(f => (v.privacy || []).includes(f)));
     if (photography.length) list = list.filter(v => photography.every(f => (v.photography || []).includes(f)));
+    if (loc.province) list = list.filter(v => matchesLocation(v, loc));
     if (userLocation) {
       list = list.map(v => ({
         ...v,
@@ -116,7 +120,7 @@ export default function WeddingMarketScreen({ navigation }) {
       })).sort((a, b) => a._dist - b._dist);
     }
     return list;
-  }, [committedSearch, facilities, views, privacy, photography, userLocation]);
+  }, [liveVenues, committedSearch, facilities, views, privacy, photography, loc, userLocation]);
 
   return (
     <GradientBackground colorsOverride={wc.gradient}>
@@ -261,6 +265,10 @@ export default function WeddingMarketScreen({ navigation }) {
             </Pressable>
           </View>
           <ScrollView showsVerticalScrollIndicator={false}>
+            <View style={styles.filterGroup}>
+              <Text style={styles.filterGroupTitle}>Location</Text>
+              <RwandaLocationPicker value={loc} onChange={setLoc} />
+            </View>
             <FilterSection
               title="Venue Facilities"
               options={Object.keys(FACILITY_LABELS)}

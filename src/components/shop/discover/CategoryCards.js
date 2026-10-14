@@ -28,11 +28,11 @@ export default function CategoryCards({ cards }) {
 
 const styles = StyleSheet.create({
   grid: { flexDirection: 'row', gap: 16 },
-  card: { flex: 1, height: 190, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: '#0B3A66', justifyContent: 'flex-end' },
+  card: { flex: 1, height: 320, borderRadius: radius.lg, overflow: 'hidden', backgroundColor: '#0B3A66', justifyContent: 'flex-end' },
   hover: { transform: [{ translateY: -3 }] },
   shade: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(2,20,40,0.45)' },
   icon: { position: 'absolute', top: 14, left: 14, width: 40, height: 40, borderRadius: 12, backgroundColor: 'rgba(255,255,255,0.18)', alignItems: 'center', justifyContent: 'center' },
   text: { padding: 16 },
-  label: { color: colors.white, fontSize: 20, fontWeight: '800' },
-  stat: { color: 'rgba(230,240,255,0.9)', fontSize: 13, marginTop: 4, fontWeight: '600' },
+  label: { color: colors.white, fontSize: 24, fontWeight: '800' },
+  stat: { color: 'rgba(230,240,255,0.9)', fontSize: 14, marginTop: 4, fontWeight: '600' },
 });
