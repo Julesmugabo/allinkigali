@@ -7,11 +7,14 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { apiFetch } from '../../../../services/apiClient';
-import { colors } from '../../../../theme';
 import { rwf } from '../MenuSection';
-import { box } from './boxStyles';
+import { makeBoxStyles } from './boxStyles';
+import { useShopTheme, useShopStyles } from '../../../../theme/shopThemes';
 
 export default function DeliveryBox({ kind, place, user, cart, onClearCart, onLogin, onJumpToMenu }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
+  const box = useShopStyles(makeBoxStyles);
   const [address, setAddress] = useState('');
   const [phone, setPhone] = useState(null); // null = use the account's phone
   const [status, setStatus] = useState({ busy: false, error: '', order: null });
@@ -53,7 +56,7 @@ export default function DeliveryBox({ kind, place, user, cart, onClearCart, onLo
 
   return (
     <View style={box.card}>
-      <View style={box.titleRow}><MaterialCommunityIcons name="moped" size={20} color={colors.blue300} /><Text style={box.title}>Order delivery</Text></View>
+      <View style={box.titleRow}><MaterialCommunityIcons name="moped" size={20} color={c.accentText} /><Text style={box.title}>Order delivery</Text></View>
       <Text style={box.muted}>
         {[place.estimatedTime ? `~${place.estimatedTime}` : null, `fee ${rwf(fee)}`, minOrder ? `min order ${rwf(minOrder)}` : null].filter(Boolean).join(' · ')}
       </Text>
@@ -75,8 +78,8 @@ export default function DeliveryBox({ kind, place, user, cart, onClearCart, onLo
           {shortBy > 0 ? <Text style={styles.warn}>Add {rwf(shortBy)} more to reach the minimum order.</Text> : null}
           {user ? (
             <>
-              <TextInput value={address} onChangeText={setAddress} placeholder="Delivery address" placeholderTextColor={colors.textOnNavyFaint} style={box.input} />
-              <TextInput value={phone ?? (user.phone || '')} onChangeText={setPhone} placeholder="Phone number" placeholderTextColor={colors.textOnNavyFaint} style={box.input} />
+              <TextInput value={address} onChangeText={setAddress} placeholder="Delivery address" placeholderTextColor={c.textMuted} style={box.input} />
+              <TextInput value={phone ?? (user.phone || '')} onChangeText={setPhone} placeholder="Phone number" placeholderTextColor={c.textMuted} style={box.input} />
             </>
           ) : null}
           {status.error ? <Text style={box.error}>{status.error}</Text> : null}
@@ -89,12 +92,12 @@ export default function DeliveryBox({ kind, place, user, cart, onClearCart, onLo
   );
 }
 
-const styles = StyleSheet.create({
-  outline: { borderRadius: 10, borderWidth: 1, borderColor: 'rgba(133,183,235,0.35)', paddingVertical: 10, alignItems: 'center' },
-  outlineLabel: { color: colors.blue300, fontWeight: '700' },
+const makeStyles = (c) => StyleSheet.create({
+  outline: { borderRadius: 10, borderWidth: 1, borderColor: c.borderStrong, paddingVertical: 10, alignItems: 'center' },
+  outlineLabel: { color: c.accentText, fontWeight: '700' },
   line: { flexDirection: 'row', justifyContent: 'space-between', gap: 10 },
-  lineName: { color: colors.white, flex: 1 },
-  linePrice: { color: colors.white, fontWeight: '600' },
-  total: { color: colors.white, fontWeight: '800', fontSize: 15 },
+  lineName: { color: c.text, flex: 1 },
+  linePrice: { color: c.text, fontWeight: '600' },
+  total: { color: c.text, fontWeight: '800', fontSize: 15 },
   warn: { color: '#FBBF24', fontSize: 13 },
 });

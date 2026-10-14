@@ -24,6 +24,7 @@ import {
 } from '../../../data/coffeeShopData';
 import { apiFetch } from '../../../services/apiClient';
 import RwandaLocationPicker from '../../../components/common/RwandaLocationPicker';
+import { ShopThemeProvider, COFFEE_THEME } from '../../../theme/shopThemes';
 import { EMPTY_LOCATION, matchesLocation, locationLabel } from '../../../utils/placeLocation';
 import { typography, spacing, radius, gutter } from '../../../theme';
 import { coffeeColors as cc } from '../../../theme/colors';
@@ -270,7 +271,7 @@ export default function CoffeeShopMarketScreen({ navigation }) {
       </View>
 
       <FilterSection title="Location" defaultOpen>
-        <RwandaLocationPicker value={filters.loc} onChange={(loc) => set('loc', loc)} />
+        <ShopThemeProvider theme={COFFEE_THEME}><RwandaLocationPicker value={filters.loc} onChange={(loc) => set('loc', loc)} /></ShopThemeProvider>
       </FilterSection>
 
       <FilterSection title="Coffee type">

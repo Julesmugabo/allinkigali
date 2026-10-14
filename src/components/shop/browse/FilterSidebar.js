@@ -7,11 +7,14 @@ import React, { useState } from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import RwandaLocationPicker from '../../common/RwandaLocationPicker';
-import { colors, spacing } from '../../../theme';
+import { spacing } from '../../../theme';
+import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 
 const SHORT = 6;
 
 function Group({ group, picked, onToggle }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   const [all, setAll] = useState(false);
   const options = all ? group.options : group.options.slice(0, SHORT);
   if (!group.options.length) return null;
@@ -23,7 +26,7 @@ function Group({ group, picked, onToggle }) {
         return (
           <Pressable key={o.key} onPress={() => onToggle(group.key, o.key)} accessibilityRole="checkbox" accessibilityState={{ checked: on }}
             style={({ hovered }) => [styles.option, hovered && styles.optionHover]}>
-            <MaterialCommunityIcons name={on ? 'checkbox-marked' : 'checkbox-blank-outline'} size={18} color={on ? colors.blue500 : colors.textOnNavyFaint} />
+            <MaterialCommunityIcons name={on ? 'checkbox-marked' : 'checkbox-blank-outline'} size={18} color={on ? c.accent : c.textMuted} />
             <Text style={[styles.optionLabel, on && styles.optionOn]} numberOfLines={1}>{o.label}</Text>
           </Pressable>
         );
@@ -36,6 +39,8 @@ function Group({ group, picked, onToggle }) {
 }
 
 export default function FilterSidebar({ groups, state, onToggle, onLocation, onClear, hasChoices }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   return (
     <View style={styles.wrap}>
       <View style={styles.head}>
@@ -51,16 +56,16 @@ export default function FilterSidebar({ groups, state, onToggle, onLocation, onC
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   wrap: { width: 230 },
   head: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.sm },
-  heading: { color: colors.white, fontSize: 16, fontWeight: '800' },
-  clear: { color: colors.blue300, fontSize: 13, fontWeight: '600' },
-  group: { paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: 'rgba(133,183,235,0.14)' },
-  title: { color: colors.white, fontSize: 13, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.6 },
+  heading: { color: c.text, fontSize: 16, fontWeight: '800' },
+  clear: { color: c.accentText, fontSize: 13, fontWeight: '600' },
+  group: { paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: c.border },
+  title: { color: c.text, fontSize: 13, fontWeight: '700', marginBottom: 6, textTransform: 'uppercase', letterSpacing: 0.6 },
   option: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingVertical: 5, borderRadius: 6 },
-  optionHover: { backgroundColor: 'rgba(255,255,255,0.04)' },
-  optionLabel: { color: colors.textOnNavy, fontSize: 13.5, flex: 1 },
-  optionOn: { color: colors.white, fontWeight: '600' },
-  more: { color: colors.blue300, fontSize: 12.5, fontWeight: '600', marginTop: 4 },
+  optionHover: { backgroundColor: c.surface },
+  optionLabel: { color: c.textSoft, fontSize: 13.5, flex: 1 },
+  optionOn: { color: c.text, fontWeight: '600' },
+  more: { color: c.accentText, fontSize: 12.5, fontWeight: '600', marginTop: 4 },
 });

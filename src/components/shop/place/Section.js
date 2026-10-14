@@ -4,11 +4,14 @@
  */
 import React from 'react';
 import { View, Text, StyleSheet } from 'react-native';
-import { colors, spacing } from '../../../theme';
+import { spacing } from '../../../theme';
+import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 
 export const jumpTo = (id) => document.getElementById(`section-${id}`)?.scrollIntoView({ behavior: 'smooth', block: 'start' });
 
 export default function Section({ id, title, right, children }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   return (
     <View style={styles.wrap} nativeID={`section-${id}`}>
       <View style={styles.head}>
@@ -20,8 +23,8 @@ export default function Section({ id, title, right, children }) {
   );
 }
 
-const styles = StyleSheet.create({
-  wrap: { paddingVertical: spacing.xxl, borderTopWidth: 1, borderTopColor: 'rgba(133,183,235,0.14)' },
+const makeStyles = (c) => StyleSheet.create({
+  wrap: { paddingVertical: spacing.xxl, borderTopWidth: 1, borderTopColor: c.border },
   head: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.md, gap: 12 },
-  title: { color: colors.white, fontSize: 20, fontWeight: '800' },
+  title: { color: c.text, fontSize: 20, fontWeight: '800' },
 });

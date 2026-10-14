@@ -9,11 +9,13 @@ import {
 import {
   anyOf, optionsFrom, priceGroup, ratingGroup, openNowChip, deliversChip, topRatedChip, has,
 } from './common';
+import { COFFEE_THEME } from '../../../../theme/shopThemes';
 
 const PRICE = { 1: '$', 2: '$$', 3: '$$$', 4: '$$$$' };
 
 export default {
   key: 'coffee',
+  theme: COFFEE_THEME, // warm espresso look, same as the phone coffee screens
   title: 'Coffee Shops',
   heading: 'Coffee shops in Kigali',
   noun: ['coffee shop', 'coffee shops'],

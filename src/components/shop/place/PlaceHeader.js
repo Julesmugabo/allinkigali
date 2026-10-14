@@ -5,12 +5,15 @@
  */
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
-import { colors, spacing } from '../../../theme';
+import { spacing } from '../../../theme';
 import { isOpen } from '../../../screens/shop/home/useDiscoverData';
+import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 
 const BUSY = { quiet: ['Quiet right now', '#34D399'], moderate: ['Getting busy', '#FBBF24'], full: ['Full right now', '#F87171'] };
 
 export default function PlaceHeader({ kind, place, reviews, sections, onJump }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   const rating = reviews.average ?? place.rating; // real reviews win over the listed rating
   const open = isOpen(place);
   const busy = BUSY[place.busyNow];
@@ -43,17 +46,17 @@ export default function PlaceHeader({ kind, place, reviews, sections, onJump }) 
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   wrap: { paddingTop: spacing.xl, gap: 8 },
-  name: { color: colors.white, fontSize: 34, fontWeight: '800', letterSpacing: -0.5 },
-  facts: { color: colors.textOnNavy, fontSize: 15.5 },
+  name: { color: c.text, fontSize: 34, fontWeight: '800', letterSpacing: -0.5 },
+  facts: { color: c.textSoft, fontSize: 15.5 },
   rating: { color: '#F5C518', fontWeight: '700' },
   statusRow: { flexDirection: 'row', gap: 16, flexWrap: 'wrap' },
-  status: { color: colors.blue300, fontWeight: '700', fontSize: 14 },
+  status: { color: c.accentText, fontWeight: '700', fontSize: 14 },
   tags: { flexDirection: 'row', gap: 8, flexWrap: 'wrap' },
-  tag: { color: colors.white, fontSize: 13, backgroundColor: 'rgba(55,138,221,0.18)', borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
-  nav: { flexDirection: 'row', gap: 4, marginTop: spacing.md, borderBottomWidth: 1, borderBottomColor: 'rgba(133,183,235,0.14)' },
+  tag: { color: c.text, fontSize: 13, backgroundColor: c.accentSoft, borderRadius: 12, paddingHorizontal: 10, paddingVertical: 4 },
+  nav: { flexDirection: 'row', gap: 4, marginTop: spacing.md, borderBottomWidth: 1, borderBottomColor: c.border },
   link: { paddingHorizontal: 12, paddingVertical: 10, borderBottomWidth: 2, borderBottomColor: 'transparent' },
-  linkHover: { borderBottomColor: colors.blue500 },
-  linkLabel: { color: colors.white, fontWeight: '600', fontSize: 14.5 },
+  linkHover: { borderBottomColor: c.accent },
+  linkLabel: { color: c.text, fontWeight: '600', fontSize: 14.5 },
 });

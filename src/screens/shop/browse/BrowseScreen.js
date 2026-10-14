@@ -18,14 +18,17 @@ import SortMenu from '../../../components/shop/browse/SortMenu';
 import EmptyResults from '../../../components/shop/browse/EmptyResults';
 import useSavedPlaces from '../../../hooks/useSavedPlaces';
 import { EMPTY_LOCATION } from '../../../utils/placeLocation';
-import { colors, radius, spacing } from '../../../theme';
+import { radius, spacing } from '../../../theme';
 import usePlaces from './usePlaces';
 import { SORTS, stateFromParams, paramsFromState, applyBrowse, buildIndex, describeChoices } from './browseLogic';
+import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 
 const EMPTY = { q: '', picks: [], groups: {}, loc: EMPTY_LOCATION, sort: 'recommended' };
 const toggleIn = (arr = [], v) => (arr.includes(v) ? arr.filter((x) => x !== v) : [...arr, v]);
 
 export default function BrowseScreen({ kind, navigation, route }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   const { places, loading } = usePlaces(kind);
   const { isSaved, toggle: toggleSaved } = useSavedPlaces();
   const groups = useMemo(() => kind.filterGroups(places), [kind, places]);
@@ -88,24 +91,24 @@ export default function BrowseScreen({ kind, navigation, route }) {
   const noun = kind.noun[results.length === 1 ? 0 : 1];
 
   return (
-    <GradientBackground>
+    <GradientBackground colorsOverride={c.gradient}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <WebContainer>
           <Pressable onPress={() => navigation.navigate('Shop')} style={styles.back}>
-            <MaterialCommunityIcons name="arrow-left" size={18} color={colors.blue300} />
+            <MaterialCommunityIcons name="arrow-left" size={18} color={c.accentText} />
             <Text style={styles.backLabel}>Resto/Coffee</Text>
           </Pressable>
           <Text style={styles.heading}>{kind.heading}</Text>
 
           <View style={styles.searchRow}>
             <View style={styles.search}>
-              <MaterialCommunityIcons name="magnify" size={20} color={colors.textOnNavyFaint} />
+              <MaterialCommunityIcons name="magnify" size={20} color={c.textMuted} />
               <TextInput value={state.q} onChangeText={(q) => setState((s) => ({ ...s, q }))} placeholder={kind.searchHint}
-                placeholderTextColor={colors.textOnNavyFaint} style={styles.input} />
-              {state.q ? <Pressable onPress={() => setState((s) => ({ ...s, q: '' }))}><MaterialCommunityIcons name="close-circle" size={18} color={colors.textOnNavyFaint} /></Pressable> : null}
+                placeholderTextColor={c.textMuted} style={styles.input} />
+              {state.q ? <Pressable onPress={() => setState((s) => ({ ...s, q: '' }))}><MaterialCommunityIcons name="close-circle" size={18} color={c.textMuted} /></Pressable> : null}
             </View>
             <Pressable onPress={() => setShowMap((m) => !m)} style={[styles.mapBtn, showMap && styles.mapBtnOn]}>
-              <MaterialCommunityIcons name={showMap ? 'view-grid-outline' : 'map-outline'} size={18} color={colors.white} />
+              <MaterialCommunityIcons name={showMap ? 'view-grid-outline' : 'map-outline'} size={18} color={c.text} />
               <Text style={styles.mapLabel}>{showMap ? 'Hide map' : 'Show map'}</Text>
             </Pressable>
           </View>
@@ -121,7 +124,7 @@ export default function BrowseScreen({ kind, navigation, route }) {
                 <Text style={styles.count}>{loading ? 'Loading…' : `${results.length} ${noun}`}</Text>
                 <SortMenu sorts={SORTS} value={state.sort} onChange={setSort} />
               </View>
-              {loading && !results.length ? <ActivityIndicator color={colors.blue300} style={{ marginTop: spacing.huge }} /> : null}
+              {loading && !results.length ? <ActivityIndicator color={c.accentText} style={{ marginTop: spacing.huge }} /> : null}
               {!loading && !results.length ? (
                 <EmptyResults icon={kind.icon} noun={kind.noun[1]} summary={describeChoices(state, chips, groups)}
                   onUndo={history.length ? undoLast : null} onClear={clearAll} />
@@ -149,21 +152,21 @@ export default function BrowseScreen({ kind, navigation, route }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   scroll: { paddingTop: spacing.xl, paddingBottom: spacing.huge * 2 },
   back: { flexDirection: 'row', alignItems: 'center', gap: 6, alignSelf: 'flex-start' },
-  backLabel: { color: colors.blue300, fontSize: 14, fontWeight: '600' },
-  heading: { color: colors.white, fontSize: 30, fontWeight: '800', marginTop: spacing.sm, marginBottom: spacing.lg },
+  backLabel: { color: c.accentText, fontSize: 14, fontWeight: '600' },
+  heading: { color: c.text, fontSize: 30, fontWeight: '800', marginTop: spacing.sm, marginBottom: spacing.lg },
   searchRow: { flexDirection: 'row', gap: 12, marginBottom: spacing.md },
-  search: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, height: 50, borderRadius: 26, paddingHorizontal: 18, backgroundColor: 'rgba(255,255,255,0.1)', borderWidth: 1, borderColor: 'rgba(133,183,235,0.25)' },
-  input: { flex: 1, color: colors.white, fontSize: 15.5, outlineStyle: 'none' },
-  mapBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, borderRadius: 26, borderWidth: 1, borderColor: 'rgba(133,183,235,0.35)' },
-  mapBtnOn: { backgroundColor: colors.blue500, borderColor: colors.blue500 },
-  mapLabel: { color: colors.white, fontWeight: '700', fontSize: 14 },
+  search: { flex: 1, flexDirection: 'row', alignItems: 'center', gap: 10, height: 50, borderRadius: 26, paddingHorizontal: 18, backgroundColor: c.surfaceAlt, borderWidth: 1, borderColor: c.border },
+  input: { flex: 1, color: c.text, fontSize: 15.5, outlineStyle: 'none' },
+  mapBtn: { flexDirection: 'row', alignItems: 'center', gap: 8, paddingHorizontal: 18, borderRadius: 26, borderWidth: 1, borderColor: c.borderStrong },
+  mapBtnOn: { backgroundColor: c.accent, borderColor: c.accent },
+  mapLabel: { color: c.text, fontWeight: '700', fontSize: 14 },
   body: { flexDirection: 'row', gap: spacing.xxl, marginTop: spacing.xl, alignItems: 'flex-start' },
   results: { flex: 1, minWidth: 0 },
   resultsHead: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', paddingHorizontal: 8, zIndex: 20 },
-  count: { color: colors.white, fontSize: 15, fontWeight: '700' },
+  count: { color: c.text, fontSize: 15, fontWeight: '700' },
   grid: { flexDirection: 'row', flexWrap: 'wrap', marginTop: 4 },
-  map: { width: 420, height: 640, borderRadius: radius.lg, overflow: 'hidden', position: 'sticky', top: 16, borderWidth: 1, borderColor: 'rgba(133,183,235,0.2)' },
+  map: { width: 420, height: 640, borderRadius: radius.lg, overflow: 'hidden', position: 'sticky', top: 16, borderWidth: 1, borderColor: c.border },
 });

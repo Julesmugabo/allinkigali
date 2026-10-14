@@ -16,9 +16,11 @@ import OrderFoodWide from '../orderFood/OrderFoodWide';
 import PlaceScreen from '../place/PlaceScreen';
 import BrowseScreen from './BrowseScreen';
 import KINDS from './kinds';
+import { ShopThemeProvider } from '../../../theme/shopThemes';
 
-const list = (kind) => (props) => <BrowseScreen kind={kind} {...props} />;
-const page = (kind) => (props) => <PlaceScreen kind={kind} {...props} />;
+// Each category's pages get its colour theme (coffee: espresso; others: navy).
+const list = (kind) => (props) => <ShopThemeProvider theme={kind.theme}><BrowseScreen kind={kind} {...props} /></ShopThemeProvider>;
+const page = (kind) => (props) => <ShopThemeProvider theme={kind.theme}><PlaceScreen kind={kind} {...props} /></ShopThemeProvider>;
 
 export const RestaurantMarket = wideOr(RestaurantMarketScreen, list(KINDS.resto));
 export const RestaurantDetail = wideOr(RestaurantDetailScreen, page(KINDS.resto));

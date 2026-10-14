@@ -24,11 +24,14 @@ import DeliveryBox from '../../../components/shop/place/actions/DeliveryBox';
 import ContactBox from '../../../components/shop/place/actions/ContactBox';
 import { useUser } from '../../../context/UserContext';
 import useSavedPlaces from '../../../hooks/useSavedPlaces';
-import { colors, spacing } from '../../../theme';
+import { spacing } from '../../../theme';
 import { isOpen } from '../home/useDiscoverData';
 import usePlaceDetail from './usePlaceDetail';
+import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 
 export default function PlaceScreen({ kind, navigation, route }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   const id = route.params?.id;
   const { place, photos, menu, reviews, reloadReviews, similar, missing } = usePlaceDetail(kind, id);
   const { user } = useUser();
@@ -51,9 +54,9 @@ export default function PlaceScreen({ kind, navigation, route }) {
 
   if (!place) {
     return (
-      <GradientBackground>
+      <GradientBackground colorsOverride={c.gradient}>
         <View style={styles.center}>
-          {missing ? <Text style={styles.missing}>This place could not be found.</Text> : <ActivityIndicator color={colors.blue300} />}
+          {missing ? <Text style={styles.missing}>This place could not be found.</Text> : <ActivityIndicator color={c.accentText} />}
         </View>
       </GradientBackground>
     );
@@ -71,21 +74,21 @@ export default function PlaceScreen({ kind, navigation, route }) {
   const saved = isSaved(kind.key, place.id);
 
   return (
-    <GradientBackground>
+    <GradientBackground colorsOverride={c.gradient}>
       <ScrollView contentContainerStyle={styles.scroll}>
         <WebContainer>
           <View style={styles.topBar}>
             <Pressable onPress={() => navigation.navigate(kind.listRoute)} style={styles.back}>
-              <MaterialCommunityIcons name="arrow-left" size={18} color={colors.blue300} />
+              <MaterialCommunityIcons name="arrow-left" size={18} color={c.accentText} />
               <Text style={styles.backLabel}>Back to {kind.title.toLowerCase()}</Text>
             </Pressable>
             <View style={styles.tools}>
               <Pressable onPress={() => toggle(kind.key, place.id)} style={styles.tool}>
-                <MaterialCommunityIcons name={saved ? 'heart' : 'heart-outline'} size={18} color={saved ? '#F87171' : colors.white} />
+                <MaterialCommunityIcons name={saved ? 'heart' : 'heart-outline'} size={18} color={saved ? '#F87171' : c.text} />
                 <Text style={styles.toolLabel}>{saved ? 'Saved' : 'Save'}</Text>
               </Pressable>
               <Pressable onPress={share} style={styles.tool}>
-                <MaterialCommunityIcons name="share-variant-outline" size={18} color={colors.white} />
+                <MaterialCommunityIcons name="share-variant-outline" size={18} color={c.text} />
                 <Text style={styles.toolLabel}>{copied ? 'Link copied' : 'Share'}</Text>
               </Pressable>
             </View>
@@ -118,16 +121,16 @@ export default function PlaceScreen({ kind, navigation, route }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   scroll: { paddingTop: spacing.lg, paddingBottom: spacing.huge * 2 },
   center: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  missing: { color: colors.white, fontSize: 16 },
+  missing: { color: c.text, fontSize: 16 },
   topBar: { flexDirection: 'row', justifyContent: 'space-between', alignItems: 'center', marginBottom: spacing.md },
   back: { flexDirection: 'row', alignItems: 'center', gap: 6 },
-  backLabel: { color: colors.blue300, fontSize: 14, fontWeight: '600' },
+  backLabel: { color: c.accentText, fontSize: 14, fontWeight: '600' },
   tools: { flexDirection: 'row', gap: 8 },
-  tool: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 18, backgroundColor: 'rgba(255,255,255,0.08)' },
-  toolLabel: { color: colors.white, fontWeight: '600', fontSize: 13.5 },
+  tool: { flexDirection: 'row', alignItems: 'center', gap: 6, paddingHorizontal: 12, paddingVertical: 7, borderRadius: 18, backgroundColor: c.surface },
+  toolLabel: { color: c.text, fontWeight: '600', fontSize: 13.5 },
   body: { flexDirection: 'row', gap: spacing.huge, alignItems: 'flex-start' },
   main: { flex: 1, minWidth: 0 },
   side: { width: 360, gap: 14, position: 'sticky', top: 16, marginTop: spacing.xl },

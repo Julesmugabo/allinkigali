@@ -7,15 +7,21 @@ import React, { useState } from 'react';
 import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { apiFetch } from '../../../services/apiClient';
-import { colors, radius, spacing } from '../../../theme';
+import { radius, spacing } from '../../../theme';
 import Section from './Section';
+import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 
 const SHORT = 3;
-const Stars = ({ value, size = 14 }) => (
-  <Text style={{ color: '#F5C518', fontSize: size }}>{'★'.repeat(Math.round(value))}<Text style={{ color: 'rgba(255,255,255,0.2)' }}>{'★'.repeat(5 - Math.round(value))}</Text></Text>
-);
+function Stars({ value, size = 14 }) {
+  const c = useShopTheme();
+  return (
+    <Text style={{ color: '#F5C518', fontSize: size }}>{'★'.repeat(Math.round(value))}<Text style={{ color: c.borderStrong }}>{'★'.repeat(5 - Math.round(value))}</Text></Text>
+  );
+}
 
 function WriteReview({ kind, placeId, user, onLogin, onPosted }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   const [rating, setRating] = useState(0);
   const [text, setText] = useState('');
   const [state, setState] = useState({ busy: false, error: '', done: false });
@@ -43,7 +49,7 @@ function WriteReview({ kind, placeId, user, onLogin, onPosted }) {
         ))}
       </View>
       <TextInput value={text} onChangeText={setText} multiline placeholder="What did you like? Anything to improve?"
-        placeholderTextColor={colors.textOnNavyFaint} style={styles.input} />
+        placeholderTextColor={c.textMuted} style={styles.input} />
       {state.error ? <Text style={styles.error}>{state.error}</Text> : null}
       <Pressable onPress={submit} disabled={state.busy} style={[styles.primary, state.busy && { opacity: 0.6 }]}>
         <Text style={styles.primaryLabel}>{state.busy ? 'Posting…' : 'Post review'}</Text>
@@ -53,6 +59,8 @@ function WriteReview({ kind, placeId, user, onLogin, onPosted }) {
 }
 
 export default function ReviewsSection({ kind, place, reviews, user, onLogin, onPosted }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   const [all, setAll] = useState(false);
   const average = reviews.average ?? Number(place.rating || 0);
   const max = Math.max(1, ...Object.values(reviews.counts || {}));
@@ -101,30 +109,30 @@ export default function ReviewsSection({ kind, place, reviews, user, onLogin, on
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   summary: { flexDirection: 'row', gap: spacing.xxl, alignItems: 'center', marginBottom: spacing.lg },
   big: { alignItems: 'center', gap: 4, width: 130 },
-  avg: { color: colors.white, fontSize: 44, fontWeight: '800' },
+  avg: { color: c.text, fontSize: 44, fontWeight: '800' },
   bars: { flex: 1, gap: 6 },
   barRow: { flexDirection: 'row', alignItems: 'center', gap: 10 },
-  track: { flex: 1, height: 8, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.08)', overflow: 'hidden' },
+  track: { flex: 1, height: 8, borderRadius: 4, backgroundColor: c.surface, overflow: 'hidden' },
   fill: { height: '100%', backgroundColor: '#F5C518', borderRadius: 4 },
-  muted: { color: colors.textOnNavyFaint, fontSize: 12.5 },
-  review: { paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: 'rgba(133,183,235,0.1)' },
+  muted: { color: c.textMuted, fontSize: 12.5 },
+  review: { paddingVertical: spacing.md, borderTopWidth: 1, borderTopColor: c.border },
   reviewHead: { flexDirection: 'row', alignItems: 'center', gap: 10, marginBottom: 4 },
-  guest: { color: colors.white, fontWeight: '700' },
-  reviewText: { color: colors.textOnNavy, fontSize: 14.5, lineHeight: 22 },
-  reply: { marginTop: 8, marginLeft: 16, paddingLeft: 12, borderLeftWidth: 2, borderLeftColor: colors.blue500 },
-  replyFrom: { color: colors.blue300, fontSize: 12.5, fontWeight: '700', marginBottom: 2 },
-  link: { color: colors.blue300, fontWeight: '600', marginTop: spacing.sm },
-  form: { marginTop: spacing.lg, padding: spacing.lg, borderRadius: radius.md, backgroundColor: 'rgba(255,255,255,0.05)', gap: 10 },
-  formTitle: { color: colors.white, fontWeight: '700', fontSize: 15 },
+  guest: { color: c.text, fontWeight: '700' },
+  reviewText: { color: c.textSoft, fontSize: 14.5, lineHeight: 22 },
+  reply: { marginTop: 8, marginLeft: 16, paddingLeft: 12, borderLeftWidth: 2, borderLeftColor: c.accent },
+  replyFrom: { color: c.accentText, fontSize: 12.5, fontWeight: '700', marginBottom: 2 },
+  link: { color: c.accentText, fontWeight: '600', marginTop: spacing.sm },
+  form: { marginTop: spacing.lg, padding: spacing.lg, borderRadius: radius.md, backgroundColor: c.surface, gap: 10 },
+  formTitle: { color: c.text, fontWeight: '700', fontSize: 15 },
   pickStars: { flexDirection: 'row', gap: 4 },
-  input: { minHeight: 80, color: colors.white, borderRadius: radius.sm, borderWidth: 1, borderColor: 'rgba(133,183,235,0.25)', padding: 10, fontSize: 14, outlineStyle: 'none', textAlignVertical: 'top' },
+  input: { minHeight: 80, color: c.text, borderRadius: radius.sm, borderWidth: 1, borderColor: c.border, padding: 10, fontSize: 14, outlineStyle: 'none', textAlignVertical: 'top' },
   error: { color: '#F87171' },
-  primary: { alignSelf: 'flex-start', backgroundColor: colors.blue500, borderRadius: radius.md, paddingHorizontal: 18, paddingVertical: 10 },
-  primaryLabel: { color: colors.white, fontWeight: '700' },
-  ghost: { alignSelf: 'flex-start', marginTop: spacing.lg, borderRadius: radius.md, borderWidth: 1, borderColor: 'rgba(133,183,235,0.35)', paddingHorizontal: 16, paddingVertical: 10 },
-  ghostLabel: { color: colors.blue300, fontWeight: '600' },
+  primary: { alignSelf: 'flex-start', backgroundColor: c.accent, borderRadius: radius.md, paddingHorizontal: 18, paddingVertical: 10 },
+  primaryLabel: { color: c.text, fontWeight: '700' },
+  ghost: { alignSelf: 'flex-start', marginTop: spacing.lg, borderRadius: radius.md, borderWidth: 1, borderColor: c.borderStrong, paddingHorizontal: 16, paddingVertical: 10 },
+  ghostLabel: { color: c.accentText, fontWeight: '600' },
   thanks: { color: '#60C080', fontWeight: '600', marginTop: spacing.lg },
 });

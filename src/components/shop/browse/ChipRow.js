@@ -4,9 +4,11 @@
  */
 import React from 'react';
 import { ScrollView, Pressable, Text, StyleSheet } from 'react-native';
-import { colors } from '../../../theme';
+import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 
 export default function ChipRow({ chips, active, onToggle }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   if (!chips.length) return null;
   return (
     <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={styles.row}>
@@ -23,11 +25,11 @@ export default function ChipRow({ chips, active, onToggle }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   row: { gap: 8, paddingVertical: 4 },
-  chip: { borderRadius: 20, borderWidth: 1, borderColor: 'rgba(133,183,235,0.3)', paddingHorizontal: 14, paddingVertical: 7, backgroundColor: 'rgba(255,255,255,0.05)' },
-  hover: { borderColor: 'rgba(133,183,235,0.7)' },
-  on: { backgroundColor: colors.blue500, borderColor: colors.blue500 },
-  label: { color: colors.textOnNavy, fontSize: 13.5, fontWeight: '600' },
-  labelOn: { color: colors.white },
+  chip: { borderRadius: 20, borderWidth: 1, borderColor: c.borderStrong, paddingHorizontal: 14, paddingVertical: 7, backgroundColor: c.surface },
+  hover: { borderColor: c.borderStrong },
+  on: { backgroundColor: c.accent, borderColor: c.accent },
+  label: { color: c.textSoft, fontSize: 13.5, fontWeight: '600' },
+  labelOn: { color: c.text },
 });

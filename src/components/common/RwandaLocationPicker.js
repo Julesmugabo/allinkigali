@@ -6,9 +6,11 @@
 import React from 'react';
 import { View, Text, Pressable, StyleSheet } from 'react-native';
 import { PROVINCES, getDistricts, getSectors } from '../../data/rwandaLocations';
-import { colors } from '../../theme';
+import { useShopTheme, useShopStyles } from '../../theme/shopThemes';
 
 function Row({ label, options, value, onPick }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   return (
     <View style={styles.level}>
       <Text style={styles.label}>{label}</Text>
@@ -28,6 +30,8 @@ function Row({ label, options, value, onPick }) {
 }
 
 export default function RwandaLocationPicker({ value, onChange }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   const { province, district, sector } = value;
   return (
     <View style={styles.wrap}>
@@ -45,13 +49,13 @@ export default function RwandaLocationPicker({ value, onChange }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   wrap: { gap: 10 },
   level: { gap: 6 },
-  label: { color: colors.textOnNavyFaint, fontSize: 11.5, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
+  label: { color: c.textMuted, fontSize: 11.5, fontWeight: '700', textTransform: 'uppercase', letterSpacing: 0.5 },
   chips: { flexDirection: 'row', flexWrap: 'wrap', gap: 6 },
-  chip: { borderRadius: 6, borderWidth: 1, borderColor: 'rgba(133,183,235,0.3)', paddingHorizontal: 9, paddingVertical: 5 },
-  on: { backgroundColor: colors.blue500, borderColor: colors.blue500 },
-  chipLabel: { color: colors.textOnNavy, fontSize: 12.5 },
-  chipLabelOn: { color: colors.white, fontWeight: '700' },
+  chip: { borderRadius: 6, borderWidth: 1, borderColor: c.borderStrong, paddingHorizontal: 9, paddingVertical: 5 },
+  on: { backgroundColor: c.accent, borderColor: c.accent },
+  chipLabel: { color: c.textSoft, fontSize: 12.5 },
+  chipLabelOn: { color: c.text, fontWeight: '700' },
 });

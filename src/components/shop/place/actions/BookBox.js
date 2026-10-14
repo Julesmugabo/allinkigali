@@ -8,8 +8,9 @@ import React, { useMemo, useState } from 'react';
 import { View, Text, TextInput, Pressable, ScrollView, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { apiFetch } from '../../../../services/apiClient';
-import { colors, radius } from '../../../../theme';
-import { box } from './boxStyles';
+import { radius } from '../../../../theme';
+import { makeBoxStyles } from './boxStyles';
+import { useShopTheme, useShopStyles } from '../../../../theme/shopThemes';
 
 const DAY = ['Sun', 'Mon', 'Tue', 'Wed', 'Thu', 'Fri', 'Sat'];
 const iso = (d) => `${d.getFullYear()}-${String(d.getMonth() + 1).padStart(2, '0')}-${String(d.getDate()).padStart(2, '0')}`;
@@ -24,6 +25,9 @@ function nextDays(n) {
 }
 
 export default function BookBox({ kind, place, user, closedNow, onLogin }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
+  const box = useShopStyles(makeBoxStyles);
   const cfg = kind.booking;
   const days = useMemo(() => nextDays(14), []);
   const [date, setDate] = useState(closedNow ? days[1].value : days[0].value);
@@ -63,7 +67,7 @@ export default function BookBox({ kind, place, user, closedNow, onLogin }) {
 
   return (
     <View style={box.card}>
-      <View style={box.titleRow}><MaterialCommunityIcons name={cfg.icon} size={20} color={colors.blue300} /><Text style={box.title}>{cfg.title}</Text></View>
+      <View style={box.titleRow}><MaterialCommunityIcons name={cfg.icon} size={20} color={c.accentText} /><Text style={box.title}>{cfg.title}</Text></View>
       {cfg.note ? <Text style={box.muted}>{cfg.note}</Text> : null}
       {closedNow && kind.key !== 'wedding' ? <Text style={styles.closed}>Closed right now — pick another day or time.</Text> : null}
 
@@ -79,16 +83,16 @@ export default function BookBox({ kind, place, user, closedNow, onLogin }) {
 
       <Text style={box.label}>{cfg.guests}</Text>
       <View style={styles.stepper}>
-        <Pressable onPress={() => setGuests((g) => Math.max(1, g - step))} style={styles.step}><MaterialCommunityIcons name="minus" size={18} color={colors.white} /></Pressable>
+        <Pressable onPress={() => setGuests((g) => Math.max(1, g - step))} style={styles.step}><MaterialCommunityIcons name="minus" size={18} color={c.text} /></Pressable>
         <Text style={styles.guests}>{guests}</Text>
-        <Pressable onPress={() => setGuests((g) => g + step)} style={styles.step}><MaterialCommunityIcons name="plus" size={18} color={colors.white} /></Pressable>
+        <Pressable onPress={() => setGuests((g) => g + step)} style={styles.step}><MaterialCommunityIcons name="plus" size={18} color={c.text} /></Pressable>
       </View>
 
       {user ? (
         <>
-          <TextInput value={guestName} onChangeText={setName} placeholder="Your name" placeholderTextColor={colors.textOnNavyFaint} style={box.input} />
-          <TextInput value={guestPhone} onChangeText={setPhone} placeholder="Phone number" placeholderTextColor={colors.textOnNavyFaint} style={box.input} />
-          <TextInput value={notes} onChangeText={setNotes} placeholder="Anything to add? (optional)" placeholderTextColor={colors.textOnNavyFaint} style={box.input} />
+          <TextInput value={guestName} onChangeText={setName} placeholder="Your name" placeholderTextColor={c.textMuted} style={box.input} />
+          <TextInput value={guestPhone} onChangeText={setPhone} placeholder="Phone number" placeholderTextColor={c.textMuted} style={box.input} />
+          <TextInput value={notes} onChangeText={setNotes} placeholder="Anything to add? (optional)" placeholderTextColor={c.textMuted} style={box.input} />
         </>
       ) : null}
       {status.error ? <Text style={box.error}>{status.error}</Text> : null}
@@ -99,19 +103,22 @@ export default function BookBox({ kind, place, user, closedNow, onLogin }) {
   );
 }
 
-const Chip = ({ label, on, onPress }) => (
-  <Pressable onPress={onPress} style={[styles.chip, on && styles.chipOn]}><Text style={[styles.chipLabel, on && styles.chipLabelOn]}>{label}</Text></Pressable>
-);
+function Chip({ label, on, onPress }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
+  const box = useShopStyles(makeBoxStyles);
+  return <Pressable onPress={onPress} style={[styles.chip, on && styles.chipOn]}><Text style={[styles.chipLabel, on && styles.chipLabelOn]}>{label}</Text></Pressable>;
+}
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   closed: { color: '#FBBF24', fontSize: 13 },
   chips: { gap: 6 },
   wrap: { flexDirection: 'row', flexWrap: 'wrap' },
-  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.sm, borderWidth: 1, borderColor: 'rgba(133,183,235,0.3)' },
-  chipOn: { backgroundColor: colors.blue500, borderColor: colors.blue500 },
-  chipLabel: { color: colors.textOnNavy, fontSize: 13, fontWeight: '600' },
-  chipLabelOn: { color: colors.white },
+  chip: { paddingHorizontal: 10, paddingVertical: 6, borderRadius: radius.sm, borderWidth: 1, borderColor: c.borderStrong },
+  chipOn: { backgroundColor: c.accent, borderColor: c.accent },
+  chipLabel: { color: c.textSoft, fontSize: 13, fontWeight: '600' },
+  chipLabelOn: { color: c.text },
   stepper: { flexDirection: 'row', alignItems: 'center', gap: 14 },
-  step: { width: 34, height: 34, borderRadius: 17, backgroundColor: 'rgba(255,255,255,0.12)', alignItems: 'center', justifyContent: 'center' },
-  guests: { color: colors.white, fontSize: 18, fontWeight: '800', minWidth: 40, textAlign: 'center' },
+  step: { width: 34, height: 34, borderRadius: 17, backgroundColor: c.surfaceAlt, alignItems: 'center', justifyContent: 'center' },
+  guests: { color: c.text, fontSize: 18, fontWeight: '800', minWidth: 40, textAlign: 'center' },
 });

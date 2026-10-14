@@ -5,9 +5,12 @@
 import React from 'react';
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
-import { colors, radius } from '../../../theme';
+import { radius } from '../../../theme';
+import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
 
 function Tile({ photo, onPress, style, more }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   return (
     <Pressable onPress={onPress} style={({ hovered }) => [styles.tile, style, hovered && styles.hover]}>
       <Image source={{ uri: photo.url }} style={styles.img} resizeMode="cover" />
@@ -17,10 +20,12 @@ function Tile({ photo, onPress, style, more }) {
 }
 
 export default function PhotoMosaic({ photos, icon, onOpen }) {
+  const c = useShopTheme(); // eslint-disable-line no-unused-vars
+  const styles = useShopStyles(makeStyles);
   if (!photos.length) {
     return (
       <View style={[styles.wrap, styles.empty]}>
-        <MaterialCommunityIcons name={icon} size={64} color="rgba(133,183,235,0.35)" />
+        <MaterialCommunityIcons name={icon} size={64} color={c.textMuted} />
         <Text style={styles.emptyText}>No photos yet</Text>
       </View>
     );
@@ -42,11 +47,11 @@ export default function PhotoMosaic({ photos, icon, onOpen }) {
   );
 }
 
-const styles = StyleSheet.create({
+const makeStyles = (c) => StyleSheet.create({
   wrap: { flexDirection: 'row', gap: 8, height: 420, borderRadius: radius.lg, overflow: 'hidden' },
-  empty: { alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(255,255,255,0.05)', flexDirection: 'column', gap: 8, height: 260 },
-  emptyText: { color: colors.textOnNavyFaint },
-  tile: { overflow: 'hidden', backgroundColor: 'rgba(2,28,54,0.6)' },
+  empty: { alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, flexDirection: 'column', gap: 8, height: 260 },
+  emptyText: { color: c.textMuted },
+  tile: { overflow: 'hidden', backgroundColor: c.photoWell },
   hover: { opacity: 0.88 },
   main: { flex: 2 },
   full: { flex: 1 },
@@ -54,5 +59,5 @@ const styles = StyleSheet.create({
   small: { width: 'calc(50% - 4px)', height: 'calc(50% - 4px)' },
   img: { width: '100%', height: '100%' },
   more: { ...StyleSheet.absoluteFillObject, backgroundColor: 'rgba(2,20,40,0.6)', alignItems: 'center', justifyContent: 'center' },
-  moreText: { color: colors.white, fontSize: 18, fontWeight: '800' },
+  moreText: { color: c.text, fontSize: 18, fontWeight: '800' },
 });
