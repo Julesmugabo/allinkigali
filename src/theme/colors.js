@@ -62,15 +62,25 @@ export const weddingColors = {
 };
 
 // --- Coffee shop palette -----------------------------------------------------
+// Warm espresso look: near-black brown backgrounds, cream text (like latte
+// foam), caramel for selected things, peach for the main button.
 export const coffeeColors = {
-  bg:         '#F5E9D7', // creamy beige background
-  primary:    '#6F4E37', // espresso brown — headings, nav
-  accent:     '#879B76', // sage green — buttons, active, category chips
-  accentSoft: '#EBF0E4', // tinted sage surface
-  surface:    '#23150F', // dark espresso card background
-  text:       '#BDE8F8', // light blue — text on black cards
-  textMuted:  'rgba(189,232,248,0.6)', // faded light blue
-  gradient:   ['#3D2B1F', '#6F4E37', '#8B6347'],
+  bg:          '#1B1612', // espresso — page background
+  gradient:    ['#14100D', '#1B1612', '#241D18'],
+  surface:     '#2A231E', // cards and panels
+  surfaceAlt:  '#382E27', // inputs, chips, empty photo wells
+  border:      'rgba(236,223,208,0.10)',
+  text:        '#ECDFD0', // cream — all reading text
+  textSoft:    'rgba(236,223,208,0.82)',
+  textMuted:   'rgba(236,223,208,0.58)',
+  primary:     '#7A5228', // caramel — badges, headings accents
+  accent:      '#8E6234', // caramel — selected chips, active buttons
+  accentSoft:  'rgba(142,98,52,0.24)', // caramel tint surfaces
+  accentText:  '#E1B98C', // light caramel — icons, links, small highlights
+  cta:         '#F3C493', // peach — the main action button
+  ctaText:     '#3A2414', // dark brown text on the peach button
+  open:        'rgba(84,140,72,0.92)',
+  closed:      'rgba(160,62,44,0.92)',
 };
 
 export const colors = {

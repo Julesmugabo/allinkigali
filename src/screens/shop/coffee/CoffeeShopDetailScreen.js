@@ -15,7 +15,7 @@ import GradientBackground from '../../../components/common/GradientBackground';
 import { COFFEE_SHOPS, INTENTS, INTENT_ATTRIBUTES, FACILITY_LABELS, SEATING_LABELS_CS } from '../../../data/coffeeShopData';
 import { apiFetch } from '../../../services/apiClient';
 import BookingForm from '../../../components/booking/BookingForm';
-import { colors, typography, spacing, radius, gutter } from '../../../theme';
+import { typography, spacing, radius, gutter } from '../../../theme';
 import { coffeeColors as cc } from '../../../theme/colors';
 
 const PRICE_LABELS = { 1: '$', 2: '$$', 3: '$$$' };
@@ -75,12 +75,12 @@ function PhotoLightbox({ photos, startIndex, onClose }) {
         {/* Prev / Next arrows */}
         {index > 0 && (
           <Pressable style={[lb.arrow, lb.arrowLeft]} onPress={() => go(index - 1)}>
-            <MaterialCommunityIcons name="chevron-left" size={32} color={colors.white} />
+            <MaterialCommunityIcons name="chevron-left" size={32} color={cc.text} />
           </Pressable>
         )}
         {index < photos.length - 1 && (
           <Pressable style={[lb.arrow, lb.arrowRight]} onPress={() => go(index + 1)}>
-            <MaterialCommunityIcons name="chevron-right" size={32} color={colors.white} />
+            <MaterialCommunityIcons name="chevron-right" size={32} color={cc.text} />
           </Pressable>
         )}
 
@@ -97,7 +97,7 @@ function PhotoLightbox({ photos, startIndex, onClose }) {
 
         {/* Close button */}
         <Pressable onPress={onClose} style={[lb.closeBtn, { top: insets.top + spacing.sm }]}>
-          <MaterialCommunityIcons name="close" size={22} color={colors.white} />
+          <MaterialCommunityIcons name="close" size={22} color={cc.text} />
         </Pressable>
       </View>
     </Modal>
@@ -127,9 +127,9 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
 
   if (!shop) {
     return (
-      <GradientBackground>
+      <GradientBackground colorsOverride={cc.gradient}>
         <View style={styles.notFound}>
-          <ActivityIndicator color={colors.blue300} />
+          <ActivityIndicator color={cc.accentText} />
         </View>
       </GradientBackground>
     );
@@ -150,21 +150,21 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
         <Pressable style={styles.photoWell} onPress={() => photos.length ? setLightboxIndex(0) : null}>
           {coverPhoto
             ? <Image source={{ uri: coverPhoto }} style={styles.photo} resizeMode="cover" />
-            : <MaterialCommunityIcons name="coffee-outline" size={80} color={colors.blue300} />}
+            : <MaterialCommunityIcons name="coffee-outline" size={80} color={cc.accentText} />}
           <View style={styles.priceBadge}>
             <Text style={styles.priceBadgeLabel}>{PRICE_LABELS[shop.price] || '$'}</Text>
           </View>
-          <View style={[styles.statusBadge, { backgroundColor: shop.openStatus === 'Open now' ? 'rgba(46,158,91,0.85)' : 'rgba(180,60,40,0.85)' }]}>
+          <View style={[styles.statusBadge, { backgroundColor: shop.openStatus === 'Open now' ? cc.open : cc.closed }]}>
             <Text style={styles.statusLabel}>{shop.openStatus || 'Open now'}</Text>
           </View>
           {photos.length > 1 && (
             <View style={styles.photosCountBadge}>
-              <MaterialCommunityIcons name="image-multiple-outline" size={13} color={colors.white} />
+              <MaterialCommunityIcons name="image-multiple-outline" size={13} color={cc.text} />
               <Text style={styles.photosCountLabel}>{photos.length} photos</Text>
             </View>
           )}
           <Pressable onPress={() => navigation.goBack()} style={[styles.overlayBtn, { top: insets.top + spacing.sm, left: gutter }]}>
-            <MaterialCommunityIcons name="arrow-left" size={20} color={colors.white} />
+            <MaterialCommunityIcons name="arrow-left" size={20} color={cc.text} />
           </Pressable>
         </Pressable>
 
@@ -179,7 +179,7 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
           </View>
           <Text style={styles.coffeeTypes}>☕ {(shop.coffeeTypes || []).slice(0, 4).join(' · ')}</Text>
           <Text style={styles.location}>
-            <MaterialCommunityIcons name="map-marker-outline" size={13} color={colors.blue300} />
+            <MaterialCommunityIcons name="map-marker-outline" size={13} color={cc.accentText} />
             {' '}{shop.location}
           </Text>
 
@@ -194,11 +194,11 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
           )}
 
           <Pressable onPress={() => setBookingOpen(true)} style={styles.bookBtn}>
-            <MaterialCommunityIcons name="calendar-check-outline" size={18} color={colors.white} />
+            <MaterialCommunityIcons name="calendar-check-outline" size={18} color={cc.ctaText} />
             <Text style={styles.bookBtnLabel}>Reserve a Seat</Text>
           </Pressable>
           <Pressable onPress={() => Linking.openURL(`tel:${shop.phone}`)} style={styles.callBtn}>
-            <MaterialCommunityIcons name="phone-outline" size={18} color={colors.white} />
+            <MaterialCommunityIcons name="phone-outline" size={18} color={cc.text} />
             <Text style={styles.callBtnLabel}>Call {shop.phone}</Text>
           </Pressable>
           <Pressable onPress={() => Linking.openURL(`https://wa.me/${shop.phone?.replace(/\D/g, '')}`)} style={styles.waBtn}>
@@ -226,7 +226,7 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
                 {photos.length > 1 && (
                   <Pressable onPress={() => setLightboxIndex(0)} style={styles.seeAllBtn}>
                     <Text style={styles.seeAllLabel}>See all {photos.length}</Text>
-                    <MaterialCommunityIcons name="arrow-right" size={14} color={colors.blue300} />
+                    <MaterialCommunityIcons name="arrow-right" size={14} color={cc.accentText} />
                   </Pressable>
                 )}
               </View>
@@ -237,7 +237,7 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
                   <Image source={{ uri: p.url }} style={styles.galleryImage} resizeMode="cover" />
                   {p.label ? <Text style={styles.galleryLabel} numberOfLines={1}>{p.label}</Text> : null}
                   <View style={styles.galleryOverlay}>
-                    <MaterialCommunityIcons name="magnify-plus-outline" size={20} color={colors.white} />
+                    <MaterialCommunityIcons name="magnify-plus-outline" size={20} color={cc.text} />
                   </View>
                 </Pressable>
               ))}
@@ -284,11 +284,11 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
                           <View style={styles.menuCardImg}>
                             {item.photo_url
                               ? <Image source={{ uri: item.photo_url }} style={styles.menuCardImage} resizeMode="cover" />
-                              : <MaterialCommunityIcons name="coffee-outline" size={28} color={colors.blue300} />}
+                              : <MaterialCommunityIcons name="coffee-outline" size={28} color={cc.accentText} />}
                           </View>
                           {sel && (
                             <View style={styles.menuCardBadge}>
-                              <MaterialCommunityIcons name="check" size={11} color={colors.white} />
+                              <MaterialCommunityIcons name="check" size={11} color={cc.text} />
                             </View>
                           )}
                           <View style={styles.menuCardBody}>
@@ -372,7 +372,7 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
 function DetailRow({ icon, label, value }) {
   return (
     <View style={styles.detailRow}>
-      <MaterialCommunityIcons name={icon} size={15} color={colors.blue300} style={{ width: 22 }} />
+      <MaterialCommunityIcons name={icon} size={15} color={cc.accentText} style={{ width: 22 }} />
       <Text style={styles.detailLabel}>{label}</Text>
       <Text style={styles.detailValue} numberOfLines={2}>{value}</Text>
     </View>
@@ -381,62 +381,62 @@ function DetailRow({ icon, label, value }) {
 
 const styles = StyleSheet.create({
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  photoWell: { width: '100%', aspectRatio: 16 / 9, backgroundColor: 'rgba(55,138,221,0.14)', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
+  photoWell: { width: '100%', aspectRatio: 16 / 9, backgroundColor: 'rgba(142,98,52,0.14)', alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   photo: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   priceBadge: { position: 'absolute', bottom: spacing.md, right: gutter, backgroundColor: 'rgba(0,0,0,0.6)', borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 4 },
   priceBadgeLabel: { fontSize: 13, fontWeight: '700', color: '#F5C518' },
   statusBadge: { position: 'absolute', bottom: spacing.md, left: gutter, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 4 },
-  statusLabel: { fontSize: 11, fontWeight: '700', color: colors.white },
+  statusLabel: { fontSize: 11, fontWeight: '700', color: cc.text },
   photosCountBadge: { position: 'absolute', top: spacing.md, right: gutter, flexDirection: 'row', alignItems: 'center', gap: 4, backgroundColor: 'rgba(0,0,0,0.55)', borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 4 },
-  photosCountLabel: { fontSize: 11, fontWeight: '600', color: colors.white },
+  photosCountLabel: { fontSize: 11, fontWeight: '600', color: cc.text },
   overlayBtn: { position: 'absolute', width: 38, height: 38, borderRadius: 19, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center' },
   main: { paddingHorizontal: gutter, paddingTop: spacing.xl, paddingBottom: spacing.lg },
   nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: spacing.xs },
-  name: { flex: 1, fontSize: 24, fontWeight: '800', color: colors.white, letterSpacing: -0.5 },
+  name: { flex: 1, fontSize: 24, fontWeight: '800', color: cc.text, letterSpacing: -0.5 },
   ratingPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(245,197,24,0.15)', borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 4, gap: 4, marginLeft: spacing.sm },
   ratingLabel: { fontSize: 13, fontWeight: '700', color: '#F5C518' },
-  coffeeTypes: { fontSize: 13, color: colors.blue300, marginBottom: spacing.xs },
-  location: { fontSize: 13, color: colors.textOnNavyFaint, marginBottom: spacing.sm },
+  coffeeTypes: { fontSize: 13, color: cc.accentText, marginBottom: spacing.xs },
+  location: { fontSize: 13, color: cc.textMuted, marginBottom: spacing.sm },
   intentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs, marginBottom: spacing.md },
-  intentChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(55,138,221,0.18)', borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 5 },
-  intentLabel: { fontSize: 11.5, color: colors.blue300, fontWeight: '600' },
-  bookBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: '#1A7A4A', borderRadius: radius.md, paddingVertical: spacing.md, marginBottom: spacing.sm, gap: spacing.sm },
-  bookBtnLabel: { ...typography.bodyStrong, color: colors.white },
-  callBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: colors.blue500, borderRadius: radius.md, paddingVertical: spacing.md, marginBottom: spacing.sm, gap: spacing.sm },
-  callBtnLabel: { ...typography.bodyStrong, color: colors.white },
+  intentChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(142,98,52,0.18)', borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 5 },
+  intentLabel: { fontSize: 11.5, color: cc.accentText, fontWeight: '600' },
+  bookBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: cc.cta, borderRadius: radius.md, paddingVertical: spacing.md, marginBottom: spacing.sm, gap: spacing.sm },
+  bookBtnLabel: { ...typography.bodyStrong, color: cc.ctaText },
+  callBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: cc.accent, borderRadius: radius.md, paddingVertical: spacing.md, marginBottom: spacing.sm, gap: spacing.sm },
+  callBtnLabel: { ...typography.bodyStrong, color: cc.text },
   waBtn: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', borderWidth: 1, borderColor: '#25D366', borderRadius: radius.md, paddingVertical: spacing.md, gap: spacing.sm },
-  waBtnLabel: { ...typography.bodyStrong, fontSize: 14, color: colors.white },
-  divider: { height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(133,183,235,0.18)', marginVertical: spacing.xs },
+  waBtnLabel: { ...typography.bodyStrong, fontSize: 14, color: cc.text },
+  divider: { height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(236,223,208,0.18)', marginVertical: spacing.xs },
   section: { paddingHorizontal: gutter, paddingVertical: spacing.lg },
   sectionTitleRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  sectionTitle: { ...typography.bodyStrong, fontSize: 16, color: colors.white, marginBottom: spacing.md },
-  menuCatTitle: { fontSize: 12, fontWeight: '800', color: colors.blue300, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: spacing.sm },
-  menuCard: { width: 120, marginRight: spacing.md, backgroundColor: 'rgba(255,255,255,0.07)', borderRadius: radius.md, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(133,183,235,0.22)', overflow: 'hidden' },
-  menuCardSelected: { borderColor: colors.blue500, borderWidth: 2 },
-  menuCardImg: { width: '100%', height: 88, backgroundColor: 'rgba(55,138,221,0.12)', alignItems: 'center', justifyContent: 'center' },
+  sectionTitle: { ...typography.bodyStrong, fontSize: 16, color: cc.text, marginBottom: spacing.md },
+  menuCatTitle: { fontSize: 12, fontWeight: '800', color: cc.accentText, textTransform: 'uppercase', letterSpacing: 0.8, marginBottom: spacing.sm },
+  menuCard: { width: 120, marginRight: spacing.md, backgroundColor: 'rgba(236,223,208,0.07)', borderRadius: radius.md, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(236,223,208,0.22)', overflow: 'hidden' },
+  menuCardSelected: { borderColor: cc.accent, borderWidth: 2 },
+  menuCardImg: { width: '100%', height: 88, backgroundColor: 'rgba(142,98,52,0.12)', alignItems: 'center', justifyContent: 'center' },
   menuCardImage: { width: '100%', height: 88 },
-  menuCardBadge: { position: 'absolute', top: spacing.xs, right: spacing.xs, backgroundColor: colors.blue500, borderRadius: 10, width: 18, height: 18, alignItems: 'center', justifyContent: 'center' },
+  menuCardBadge: { position: 'absolute', top: spacing.xs, right: spacing.xs, backgroundColor: cc.accent, borderRadius: 10, width: 18, height: 18, alignItems: 'center', justifyContent: 'center' },
   menuCardBody: { padding: spacing.xs + 2 },
-  menuCardName: { fontSize: 12, fontWeight: '600', color: colors.white, marginBottom: 3 },
+  menuCardName: { fontSize: 12, fontWeight: '600', color: cc.text, marginBottom: 3 },
   menuCardPrice: { fontSize: 12, fontWeight: '700', color: '#60C080' },
-  menuBookBtn: { backgroundColor: colors.blue500, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 5 },
-  menuBookBtnLabel: { fontSize: 12, fontWeight: '700', color: colors.white },
+  menuBookBtn: { backgroundColor: cc.accent, borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 5 },
+  menuBookBtnLabel: { fontSize: 12, fontWeight: '700', color: cc.text },
   seeAllBtn: { flexDirection: 'row', alignItems: 'center', gap: 4, marginBottom: spacing.md },
-  seeAllLabel: { fontSize: 13, color: colors.blue300, fontWeight: '600' },
-  description: { fontSize: 13.5, lineHeight: 21, color: colors.textOnNavy },
+  seeAllLabel: { fontSize: 13, color: cc.accentText, fontWeight: '600' },
+  description: { fontSize: 13.5, lineHeight: 21, color: cc.textSoft },
   tagGroup: { marginBottom: spacing.md },
-  tagGroupLabel: { fontSize: 12, color: colors.textOnNavyFaint, marginBottom: spacing.xs },
+  tagGroupLabel: { fontSize: 12, color: cc.textMuted, marginBottom: spacing.xs },
   tagRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  tag: { backgroundColor: 'rgba(55,138,221,0.18)', borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 5 },
-  tagLabel: { fontSize: 12, color: colors.blue300, fontWeight: '600' },
-  detailsTable: { borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(133,183,235,0.22)', borderRadius: radius.md, overflow: 'hidden' },
-  detailRow: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: spacing.md, paddingHorizontal: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(133,183,235,0.15)' },
-  detailLabel: { flex: 1, fontSize: 13, color: colors.textOnNavyFaint, marginLeft: spacing.xs },
-  detailValue: { flex: 2, fontSize: 13, fontWeight: '600', color: colors.white, textAlign: 'right' },
+  tag: { backgroundColor: 'rgba(142,98,52,0.18)', borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 5 },
+  tagLabel: { fontSize: 12, color: cc.accentText, fontWeight: '600' },
+  detailsTable: { borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(236,223,208,0.22)', borderRadius: radius.md, overflow: 'hidden' },
+  detailRow: { flexDirection: 'row', alignItems: 'flex-start', paddingVertical: spacing.md, paddingHorizontal: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(236,223,208,0.15)' },
+  detailLabel: { flex: 1, fontSize: 13, color: cc.textMuted, marginLeft: spacing.xs },
+  detailValue: { flex: 2, fontSize: 13, fontWeight: '600', color: cc.text, textAlign: 'right' },
   gallery: { paddingHorizontal: gutter, paddingBottom: spacing.lg, gap: spacing.sm },
   galleryItem: { width: 160, position: 'relative' },
   galleryImage: { width: 160, height: 120, borderRadius: radius.md, marginBottom: spacing.xs },
-  galleryLabel: { fontSize: 11.5, color: colors.textOnNavy, textAlign: 'center' },
+  galleryLabel: { fontSize: 11.5, color: cc.textSoft, textAlign: 'center' },
   galleryOverlay: { position: 'absolute', top: 0, left: 0, right: 0, height: 120, borderRadius: radius.md, backgroundColor: 'rgba(0,0,0,0)', alignItems: 'center', justifyContent: 'center' },
 });
 
@@ -445,14 +445,14 @@ const lb = StyleSheet.create({
   slide: { width: SW, height: SH, alignItems: 'center', justifyContent: 'center' },
   image: { width: SW, height: SH },
   labelWrap: { position: 'absolute', left: 0, right: 0, alignItems: 'center', paddingHorizontal: gutter },
-  labelText: { fontSize: 13, color: 'rgba(255,255,255,0.75)', fontWeight: '500', textAlign: 'center', backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 5 },
+  labelText: { fontSize: 13, color: 'rgba(236,223,208,0.75)', fontWeight: '500', textAlign: 'center', backgroundColor: 'rgba(0,0,0,0.45)', borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 5 },
   counter: { position: 'absolute', alignSelf: 'center', backgroundColor: 'rgba(0,0,0,0.5)', borderRadius: radius.pill, paddingHorizontal: spacing.md, paddingVertical: 5 },
-  counterText: { fontSize: 13, color: colors.white, fontWeight: '600' },
+  counterText: { fontSize: 13, color: cc.text, fontWeight: '600' },
   arrow: { position: 'absolute', top: '50%', marginTop: -24, width: 48, height: 48, borderRadius: 24, backgroundColor: 'rgba(0,0,0,0.45)', alignItems: 'center', justifyContent: 'center' },
   arrowLeft: { left: spacing.md },
   arrowRight: { right: spacing.md },
   dots: { position: 'absolute', left: 0, right: 0, flexDirection: 'row', justifyContent: 'center', gap: 6 },
-  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.35)' },
-  dotActive: { backgroundColor: colors.white, width: 18 },
+  dot: { width: 7, height: 7, borderRadius: 4, backgroundColor: 'rgba(236,223,208,0.35)' },
+  dotActive: { backgroundColor: cc.text, width: 18 },
   closeBtn: { position: 'absolute', right: spacing.md, width: 40, height: 40, borderRadius: 20, backgroundColor: 'rgba(0,0,0,0.5)', alignItems: 'center', justifyContent: 'center' },
 });

@@ -25,7 +25,7 @@ import {
 import { apiFetch } from '../../../services/apiClient';
 import RwandaLocationPicker from '../../../components/common/RwandaLocationPicker';
 import { EMPTY_LOCATION, matchesLocation, locationLabel } from '../../../utils/placeLocation';
-import { colors, typography, spacing, radius, gutter } from '../../../theme';
+import { typography, spacing, radius, gutter } from '../../../theme';
 import { coffeeColors as cc } from '../../../theme/colors';
 
 const PRICE_LABELS = { 1: '$', 2: '$$', 3: '$$$' };
@@ -86,7 +86,7 @@ function FilterSection({ title, children, defaultOpen = false }) {
     <View style={ss.section}>
       <Pressable onPress={() => setOpen((o) => !o)} style={ss.sectionHeader} accessibilityRole="button">
         <Text style={ss.sectionTitle}>{title}</Text>
-        <MaterialCommunityIcons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={colors.blue300} />
+        <MaterialCommunityIcons name={open ? 'chevron-up' : 'chevron-down'} size={18} color={cc.accentText} />
       </Pressable>
       {open && <View style={ss.sectionBody}>{children}</View>}
     </View>
@@ -110,11 +110,11 @@ function CoffeeShopCard({ shop, onPress, distance }) {
       <View style={cs.photoWell}>
         {photo
           ? <Image source={{ uri: photo }} style={cs.photo} resizeMode="cover" />
-          : <MaterialCommunityIcons name="coffee-outline" size={36} color={colors.blue300} />}
+          : <MaterialCommunityIcons name="coffee-outline" size={36} color={cc.accentText} />}
         <View style={cs.priceBadge}>
           <Text style={cs.priceBadgeLabel}>{PRICE_LABELS[shop.price] || '$'}</Text>
         </View>
-        <View style={[cs.statusBadge, { backgroundColor: shop.openStatus === 'Open now' ? 'rgba(46,158,91,0.85)' : 'rgba(180,60,40,0.85)' }]}>
+        <View style={[cs.statusBadge, { backgroundColor: shop.openStatus === 'Open now' ? cc.open : cc.closed }]}>
           <Text style={cs.statusLabel}>{shop.openStatus || 'Open now'}</Text>
         </View>
       </View>
@@ -148,7 +148,7 @@ function CoffeeShopCard({ shop, onPress, distance }) {
         </View>
         <View style={cs.locationRow}>
           <Text style={cs.location} numberOfLines={1}>
-            <MaterialCommunityIcons name="map-marker-outline" size={11} color={colors.blue300} />
+            <MaterialCommunityIcons name="map-marker-outline" size={11} color={cc.accentText} />
             {' '}{shop.location}
           </Text>
           {distance && (
@@ -161,7 +161,7 @@ function CoffeeShopCard({ shop, onPress, distance }) {
       </View>
       <View style={cs.cta}>
         <Text style={cs.ctaLabel}>View Coffee Shop</Text>
-        <MaterialCommunityIcons name="arrow-right" size={14} color={colors.white} />
+        <MaterialCommunityIcons name="arrow-right" size={14} color={cc.text} />
       </View>
     </Pressable>
   );
@@ -335,7 +335,7 @@ export default function CoffeeShopMarketScreen({ navigation }) {
         {/* Header */}
         <View style={styles.header}>
           <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityRole="button">
-            <MaterialCommunityIcons name="arrow-left" size={20} color={colors.white} />
+            <MaterialCommunityIcons name="arrow-left" size={20} color={cc.text} />
           </Pressable>
           <Text style={styles.headerTitle}>Explore Coffee Shops</Text>
         </View>
@@ -344,16 +344,16 @@ export default function CoffeeShopMarketScreen({ navigation }) {
         <View style={styles.chipRow}>
           <Pressable onPress={toggleNearMe} style={[styles.actionChip, userLocation && styles.actionChipActive]}>
             {nearMeLoading
-              ? <ActivityIndicator size="small" color={colors.white} />
-              : <MaterialCommunityIcons name="crosshairs-gps" size={14} color={userLocation ? '#FFFFFF' : '#8E8E93'} />}
+              ? <ActivityIndicator size="small" color={cc.text} />
+              : <MaterialCommunityIcons name="crosshairs-gps" size={14} color={userLocation ? cc.text : cc.textMuted} />}
             <Text style={[styles.actionChipLabel, userLocation && styles.actionChipLabelActive]}>{userLocation ? 'Near Me ✓' : 'Near Me'}</Text>
           </Pressable>
           <Pressable onPress={() => setViewMode(viewMode === 'list' ? 'map' : 'list')} style={[styles.actionChip, viewMode === 'map' && styles.actionChipActive]}>
-            <MaterialCommunityIcons name={viewMode === 'map' ? 'format-list-bulleted' : 'map-outline'} size={14} color={viewMode === 'map' ? '#FFFFFF' : '#8E8E93'} />
+            <MaterialCommunityIcons name={viewMode === 'map' ? 'format-list-bulleted' : 'map-outline'} size={14} color={viewMode === 'map' ? cc.text : cc.textMuted} />
             <Text style={[styles.actionChipLabel, viewMode === 'map' && styles.actionChipLabelActive]}>{viewMode === 'map' ? 'List' : 'Map'}</Text>
           </Pressable>
           <Pressable onPress={() => setSidebarOpen((o) => !o)} style={[styles.actionChip, hasFilters && styles.actionChipActive]} accessibilityRole="button">
-            <MaterialCommunityIcons name="tune" size={14} color={hasFilters ? '#FFFFFF' : '#8E8E93'} />
+            <MaterialCommunityIcons name="tune" size={14} color={hasFilters ? cc.text : cc.textMuted} />
             <Text style={[styles.actionChipLabel, hasFilters && styles.actionChipLabelActive]}>Filter{hasFilters ? ` (${activeChips.length})` : ''}</Text>
           </Pressable>
         </View>
@@ -361,7 +361,7 @@ export default function CoffeeShopMarketScreen({ navigation }) {
         {/* Search bar */}
         <View style={styles.searchBar}>
           <Pressable onPress={submitSearch} hitSlop={8}>
-            <MaterialCommunityIcons name="magnify" size={18} color={colors.blue300} style={{ marginRight: spacing.xs }} />
+            <MaterialCommunityIcons name="magnify" size={18} color={cc.accentText} style={{ marginRight: spacing.xs }} />
           </Pressable>
           <TextInput
             style={styles.searchInput}
@@ -370,11 +370,11 @@ export default function CoffeeShopMarketScreen({ navigation }) {
             onSubmitEditing={submitSearch}
             returnKeyType="search"
             placeholder="Search coffee shops..."
-            placeholderTextColor={colors.textOnNavyFaint}
+            placeholderTextColor={cc.textMuted}
           />
           {search.length > 0 && (
             <Pressable onPress={() => { setSearch(''); setCommittedSearch(''); }}>
-              <MaterialCommunityIcons name="close-circle" size={16} color={colors.blue300} />
+              <MaterialCommunityIcons name="close-circle" size={16} color={cc.accentText} />
             </Pressable>
           )}
         </View>
@@ -395,16 +395,16 @@ export default function CoffeeShopMarketScreen({ navigation }) {
           <View style={styles.results}>
             <ScrollView horizontal showsHorizontalScrollIndicator={false} style={styles.chipsRow} contentContainerStyle={styles.chipsContent}>
               {userLocation && (
-                <Pressable onPress={toggleNearMe} style={[styles.activeChip, { backgroundColor: '#1A7A4A' }]}>
-                  <MaterialCommunityIcons name="crosshairs-gps" size={12} color={colors.white} />
+                <Pressable onPress={toggleNearMe} style={[styles.activeChip, { backgroundColor: cc.primary }]}>
+                  <MaterialCommunityIcons name="crosshairs-gps" size={12} color={cc.text} />
                   <Text style={styles.activeChipLabel}>Near me</Text>
-                  <MaterialCommunityIcons name="close" size={12} color={colors.white} />
+                  <MaterialCommunityIcons name="close" size={12} color={cc.text} />
                 </Pressable>
               )}
               {activeChips.map((chip) => (
                 <Pressable key={chip.key} onPress={chip.remove} style={styles.activeChip}>
                   <Text style={styles.activeChipLabel}>{chip.label}</Text>
-                  <MaterialCommunityIcons name="close" size={12} color={colors.white} />
+                  <MaterialCommunityIcons name="close" size={12} color={cc.text} />
                 </Pressable>
               ))}
               {(activeChips.length > 0 || userLocation) && (
@@ -415,7 +415,7 @@ export default function CoffeeShopMarketScreen({ navigation }) {
             </ScrollView>
 
             {loading
-              ? <ActivityIndicator color={colors.blue300} style={{ marginTop: spacing.xl }} />
+              ? <ActivityIndicator color={cc.accentText} style={{ marginTop: spacing.xl }} />
               : viewMode === 'list'
               ? <>
                   <Text style={styles.resultCount}>
@@ -435,7 +435,7 @@ export default function CoffeeShopMarketScreen({ navigation }) {
                     contentContainerStyle={styles.list}
                     ListEmptyComponent={
                       <View style={styles.empty}>
-                        <MaterialCommunityIcons name="coffee-off-outline" size={48} color={colors.blue300} style={{ marginBottom: spacing.md }} />
+                        <MaterialCommunityIcons name="coffee-off-outline" size={48} color={cc.accentText} style={{ marginBottom: spacing.md }} />
                         <Text style={styles.emptyTitle}>No coffee shops match</Text>
                         <Text style={styles.emptyDesc}>Try removing a filter.</Text>
                         <Pressable onPress={() => setFilters(EMPTY_FILTERS)} style={styles.emptyBtn}>
@@ -463,29 +463,29 @@ export default function CoffeeShopMarketScreen({ navigation }) {
 const ss = StyleSheet.create({
   sidebar: { flex: 1 },
   sidebarContent: { paddingBottom: spacing.huge },
-  sidebarHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(133,183,235,0.2)' },
-  sidebarTitle: { fontSize: 13, fontWeight: '700', color: colors.white },
+  sidebarHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', padding: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(236,223,208,0.2)' },
+  sidebarTitle: { fontSize: 13, fontWeight: '700', color: cc.text },
   clearBtn: {},
-  clearBtnLabel: { fontSize: 12, color: colors.blue300, fontWeight: '600' },
+  clearBtnLabel: { fontSize: 12, color: cc.accentText, fontWeight: '600' },
 
-  intentSection: { padding: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(133,183,235,0.2)' },
-  intentTitle: { fontSize: 12, fontWeight: '700', color: colors.white, marginBottom: spacing.sm },
+  intentSection: { padding: spacing.md, borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(236,223,208,0.2)' },
+  intentTitle: { fontSize: 12, fontWeight: '700', color: cc.text, marginBottom: spacing.sm },
   intentGrid: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  intentChip: { flexDirection: 'row', alignItems: 'center', borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(133,183,235,0.3)', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 4, paddingHorizontal: spacing.sm, paddingVertical: 6, gap: 4, marginBottom: 4 },
-  intentChipActive: { backgroundColor: colors.blue500, borderColor: colors.blue500 },
+  intentChip: { flexDirection: 'row', alignItems: 'center', borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(236,223,208,0.3)', backgroundColor: 'rgba(236,223,208,0.06)', borderRadius: 4, paddingHorizontal: spacing.sm, paddingVertical: 6, gap: 4, marginBottom: 4 },
+  intentChipActive: { backgroundColor: cc.accent, borderColor: cc.accent },
   intentEmoji: { fontSize: 13 },
-  intentLabel: { fontSize: 11, color: colors.textOnNavy },
-  intentLabelActive: { color: colors.white, fontWeight: '600' },
+  intentLabel: { fontSize: 11, color: cc.textSoft },
+  intentLabelActive: { color: cc.text, fontWeight: '600' },
 
-  section: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(133,183,235,0.15)' },
+  section: { borderBottomWidth: StyleSheet.hairlineWidth, borderBottomColor: 'rgba(236,223,208,0.15)' },
   sectionHeader: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', paddingHorizontal: spacing.md, paddingVertical: spacing.sm + 2 },
-  sectionTitle: { fontSize: 12, fontWeight: '700', color: colors.white },
+  sectionTitle: { fontSize: 12, fontWeight: '700', color: cc.text },
   sectionBody: { paddingHorizontal: spacing.md, paddingBottom: spacing.sm },
   chipRow: { flexDirection: 'row', flexWrap: 'wrap', gap: spacing.xs },
-  chip: { borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(133,183,235,0.3)', backgroundColor: 'rgba(255,255,255,0.06)', borderRadius: 4, paddingHorizontal: spacing.sm, paddingVertical: 5, marginBottom: 3 },
-  chipActive: { backgroundColor: colors.blue500, borderColor: colors.blue500 },
-  chipLabel: { fontSize: 11, color: colors.textOnNavy },
-  chipLabelActive: { color: colors.white, fontWeight: '600' },
+  chip: { borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(236,223,208,0.3)', backgroundColor: 'rgba(236,223,208,0.06)', borderRadius: 4, paddingHorizontal: spacing.sm, paddingVertical: 5, marginBottom: 3 },
+  chipActive: { backgroundColor: cc.accent, borderColor: cc.accent },
+  chipLabel: { fontSize: 11, color: cc.textSoft },
+  chipLabelActive: { color: cc.text, fontWeight: '600' },
 });
 
 // ── Screen styles ──────────────────────────────────────────────────────────────
@@ -495,68 +495,68 @@ const styles = StyleSheet.create({
   searchBar: {
     flexDirection: 'row', alignItems: 'center',
     marginHorizontal: gutter, marginBottom: spacing.sm,
-    backgroundColor: 'rgba(255,255,255,0.12)',
+    backgroundColor: 'rgba(236,223,208,0.12)',
     borderRadius: radius.pill,
     paddingHorizontal: spacing.md, paddingVertical: spacing.xs + 2,
   },
-  searchInput: { flex: 1, fontSize: 13.5, color: colors.white },
-  backBtn: { width: 36, height: 36, borderRadius: 4, backgroundColor: 'rgba(255,255,255,0.1)', alignItems: 'center', justifyContent: 'center', marginRight: spacing.sm },
-  headerTitle: { flex: 1, ...typography.bodyStrong, fontSize: 18, color: colors.white },
+  searchInput: { flex: 1, fontSize: 13.5, color: cc.text },
+  backBtn: { width: 36, height: 36, borderRadius: 4, backgroundColor: 'rgba(236,223,208,0.1)', alignItems: 'center', justifyContent: 'center', marginRight: spacing.sm },
+  headerTitle: { flex: 1, ...typography.bodyStrong, fontSize: 18, color: cc.text },
   chipRow: { flexDirection: 'row', paddingHorizontal: gutter, marginBottom: spacing.sm, gap: spacing.xs },
-  actionChip: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: 'rgba(255,255,255,0.15)', borderRadius: 4, paddingHorizontal: spacing.sm + 2, paddingVertical: 6 },
+  actionChip: { flexDirection: 'row', alignItems: 'center', gap: 5, borderWidth: 1, borderColor: 'rgba(236,223,208,0.15)', borderRadius: 4, paddingHorizontal: spacing.sm + 2, paddingVertical: 6 },
   actionChipActive: { backgroundColor: cc.accent, borderColor: cc.accent },
-  actionChipLabel: { fontSize: 12, color: '#8E8E93', fontWeight: '600' },
-  actionChipLabelActive: { color: '#FFFFFF' },
+  actionChipLabel: { fontSize: 12, color: cc.textMuted, fontWeight: '600' },
+  actionChipLabelActive: { color: cc.text },
   body: { flex: 1 },
   backdrop: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0, zIndex: 9, backgroundColor: 'rgba(0,0,0,0.45)' },
   sidebarPane: {
     position: 'absolute', top: 0, left: 0, bottom: 0, zIndex: 10,
     width: 300, maxWidth: '88%',
-    backgroundColor: '#042C53',
-    borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: 'rgba(133,183,235,0.2)',
+    backgroundColor: cc.bg,
+    borderRightWidth: StyleSheet.hairlineWidth, borderRightColor: 'rgba(236,223,208,0.2)',
   },
   results: { flex: 1 },
   chipsRow: { maxHeight: 44 },
   chipsContent: { paddingHorizontal: gutter, paddingVertical: spacing.xs, gap: spacing.xs },
   activeChip: { flexDirection: 'row', alignItems: 'center', backgroundColor: cc.accent, borderRadius: 4, paddingHorizontal: spacing.sm, paddingVertical: 5, gap: 4 },
-  activeChipLabel: { fontSize: 11.5, color: colors.white, fontWeight: '600' },
-  clearAllChip: { backgroundColor: 'rgba(255,255,255,0.1)', borderRadius: 4, paddingHorizontal: spacing.sm, paddingVertical: 5 },
-  clearAllChipLabel: { fontSize: 11.5, color: colors.blue300 },
-  resultCount: { fontSize: 12, color: colors.textOnNavyFaint, paddingHorizontal: gutter, paddingVertical: spacing.xs },
+  activeChipLabel: { fontSize: 11.5, color: cc.text, fontWeight: '600' },
+  clearAllChip: { backgroundColor: 'rgba(236,223,208,0.1)', borderRadius: 4, paddingHorizontal: spacing.sm, paddingVertical: 5 },
+  clearAllChipLabel: { fontSize: 11.5, color: cc.accentText },
+  resultCount: { fontSize: 12, color: cc.textMuted, paddingHorizontal: gutter, paddingVertical: spacing.xs },
   list: { paddingHorizontal: gutter, paddingBottom: spacing.huge },
   empty: { alignItems: 'center', paddingTop: spacing.huge },
-  emptyTitle: { ...typography.bodyStrong, color: colors.white, marginBottom: spacing.xs },
-  emptyDesc: { fontSize: 13, color: colors.textOnNavyFaint, marginBottom: spacing.lg },
-  emptyBtn: { backgroundColor: colors.blue500, borderRadius: radius.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.md },
-  emptyBtnLabel: { fontSize: 13, fontWeight: '700', color: colors.white },
-  applyBtn: { margin: spacing.md, backgroundColor: colors.blue500, borderRadius: radius.md, paddingVertical: spacing.md, alignItems: 'center' },
-  applyBtnLabel: { fontSize: 14, fontWeight: '700', color: colors.white },
+  emptyTitle: { ...typography.bodyStrong, color: cc.text, marginBottom: spacing.xs },
+  emptyDesc: { fontSize: 13, color: cc.textMuted, marginBottom: spacing.lg },
+  emptyBtn: { backgroundColor: cc.accent, borderRadius: radius.md, paddingHorizontal: spacing.xl, paddingVertical: spacing.md },
+  emptyBtnLabel: { fontSize: 13, fontWeight: '700', color: cc.text },
+  applyBtn: { margin: spacing.md, backgroundColor: cc.accent, borderRadius: radius.md, paddingVertical: spacing.md, alignItems: 'center' },
+  applyBtnLabel: { fontSize: 14, fontWeight: '700', color: cc.text },
 });
 
 // ── Card styles ────────────────────────────────────────────────────────────────
 const cs = StyleSheet.create({
-  card: { backgroundColor: cc.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(189,232,248,0.15)', borderRadius: radius.lg, marginBottom: spacing.md, overflow: 'hidden' },
-  cardPressed: { backgroundColor: '#FDF6EE' },
+  card: { backgroundColor: cc.surface, borderWidth: StyleSheet.hairlineWidth, borderColor: 'rgba(236,223,208,0.15)', borderRadius: radius.lg, marginBottom: spacing.md, overflow: 'hidden' },
+  cardPressed: { opacity: 0.85 },
   photoWell: { width: '100%', aspectRatio: 16 / 9, backgroundColor: cc.accentSoft, alignItems: 'center', justifyContent: 'center', overflow: 'hidden' },
   photo: { position: 'absolute', top: 0, left: 0, right: 0, bottom: 0 },
   priceBadge: { position: 'absolute', top: spacing.sm, right: spacing.sm, backgroundColor: cc.primary, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  priceBadgeLabel: { fontSize: 11, fontWeight: '700', color: colors.white },
+  priceBadgeLabel: { fontSize: 11, fontWeight: '700', color: cc.text },
   statusBadge: { position: 'absolute', top: spacing.sm, left: spacing.sm, borderRadius: radius.pill, paddingHorizontal: spacing.sm, paddingVertical: 3 },
-  statusLabel: { fontSize: 10, fontWeight: '700', color: colors.white },
+  statusLabel: { fontSize: 10, fontWeight: '700', color: cc.text },
   body: { padding: spacing.md },
   nameRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between', marginBottom: 4 },
   name: { flex: 1, fontSize: 15, fontWeight: '700', color: cc.text },
   ratingPill: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(135,155,118,0.15)', borderRadius: radius.pill, paddingHorizontal: 7, paddingVertical: 3, gap: 3, marginLeft: spacing.sm },
   ratingLabel: { fontSize: 11, fontWeight: '700', color: '#F5C518' },
-  coffeeTypes: { fontSize: 12, color: colors.blue300, marginBottom: 5 },
-  attrs: { fontSize: 11, color: colors.textOnNavyFaint, marginBottom: 4 },
+  coffeeTypes: { fontSize: 12, color: cc.accentText, marginBottom: 5 },
+  attrs: { fontSize: 11, color: cc.textMuted, marginBottom: 4 },
   intentRow: { flexDirection: 'row', flexWrap: 'wrap', gap: 4, marginBottom: 6 },
-  intentChip: { backgroundColor: 'rgba(55,138,221,0.18)', borderRadius: radius.pill, paddingHorizontal: 7, paddingVertical: 3 },
-  intentLabel: { fontSize: 10, color: colors.blue300 },
+  intentChip: { backgroundColor: 'rgba(142,98,52,0.18)', borderRadius: radius.pill, paddingHorizontal: 7, paddingVertical: 3 },
+  intentLabel: { fontSize: 10, color: cc.accentText },
   locationRow: { flexDirection: 'row', alignItems: 'center', justifyContent: 'space-between' },
-  location: { fontSize: 11.5, color: colors.textOnNavyFaint, flex: 1 },
-  distBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: 'rgba(26,122,74,0.18)', borderRadius: radius.pill, paddingHorizontal: 6, paddingVertical: 2, gap: 3, marginLeft: spacing.xs },
-  distLabel: { fontSize: 10.5, fontWeight: '700', color: '#1A7A4A' },
-  cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(55,138,221,0.35)', paddingVertical: spacing.sm + 2, gap: spacing.xs },
-  ctaLabel: { fontSize: 13, fontWeight: '700', color: colors.white },
+  location: { fontSize: 11.5, color: cc.textMuted, flex: 1 },
+  distBadge: { flexDirection: 'row', alignItems: 'center', backgroundColor: cc.accentSoft, borderRadius: radius.pill, paddingHorizontal: 6, paddingVertical: 2, gap: 3, marginLeft: spacing.xs },
+  distLabel: { fontSize: 10.5, fontWeight: '700', color: cc.accentText },
+  cta: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', backgroundColor: 'rgba(142,98,52,0.35)', paddingVertical: spacing.sm + 2, gap: spacing.xs },
+  ctaLabel: { fontSize: 13, fontWeight: '700', color: cc.text },
 });
