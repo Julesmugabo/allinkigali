@@ -3,6 +3,7 @@ const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { notifyUser } = require('../pushNotifications');
+const { placeOwnerIds } = require('../clients/placeOwners');
 
 const router = express.Router();
 
@@ -46,12 +47,9 @@ router.post('/', requireAuth, async (req, res) => {
   );
   const order = rows[0];
 
-  // Notify the restaurant owner
-  const { rows: ownerRows } = await query(
-    `SELECT id FROM users WHERE restaurant_id=$1 OR coffee_shop_id=$1`, [placeId]
-  );
-  if (ownerRows[0]) {
-    notifyUser(ownerRows[0].id, {
+  // Notify the place's owners and managers
+  for (const ownerId of await placeOwnerIds(placeType, placeId)) {
+    notifyUser(ownerId, {
       title: 'New delivery order!',
       body: `Order #${order.id.slice(-6).toUpperCase()} — ${items.length} item(s) to ${deliveryAddress}`,
       data: { type: 'new_order', orderId: order.id },

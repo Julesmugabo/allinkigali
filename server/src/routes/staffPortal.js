@@ -70,9 +70,14 @@ function contractToJson(row) {
   };
 }
 
+// The portal's own pages (announcements, documents, contracts, home) are for
+// the allinkigali team only. Before this, "all staff" posts were readable by
+// any logged-in account, including restaurant owners and app customers.
+const staffOnly = requireRole('news', 'sellers', 'finance'); // the director always passes
+
 // ─── announcements ──────────────────────────────────────────────────────────
 
-router.get('/announcements', requireAuth, async (req, res) => {
+router.get('/announcements', requireAuth, staffOnly, async (req, res) => {
   const { role, sub: userId } = req.user;
 
   // Fetch all announcements visible to this user's role (or null = all staff)
@@ -126,7 +131,7 @@ router.delete('/announcements/:id', requireAuth, requireRole('director'), async 
   res.status(204).end();
 });
 
-router.post('/announcements/:id/read', requireAuth, async (req, res) => {
+router.post('/announcements/:id/read', requireAuth, staffOnly, async (req, res) => {
   await query(
     `insert into staff_announcement_reads (user_id, announcement_id)
      values ($1, $2) on conflict do nothing`,
@@ -137,7 +142,7 @@ router.post('/announcements/:id/read', requireAuth, async (req, res) => {
 
 // ─── documents ──────────────────────────────────────────────────────────────
 
-router.get('/documents', requireAuth, async (req, res) => {
+router.get('/documents', requireAuth, staffOnly, async (req, res) => {
   const { role } = req.user;
   const { rows } = await query(
     `select d.*, u.first_name || ' ' || u.last_name as created_by_name
@@ -171,7 +176,7 @@ router.delete('/documents/:id', requireAuth, requireRole('director'), async (req
 
 // ─── contracts ──────────────────────────────────────────────────────────────
 
-router.get('/contracts', requireAuth, async (req, res) => {
+router.get('/contracts', requireAuth, staffOnly, async (req, res) => {
   const { role, sub: userId } = req.user;
   // Director sees all contracts; others see only their own
   const { rows } = role === 'director'
@@ -217,7 +222,7 @@ router.delete('/contracts/:id', requireAuth, requireRole('director'), async (req
 
 // ─── home summary ────────────────────────────────────────────────────────────
 
-router.get('/home', requireAuth, async (req, res) => {
+router.get('/home', requireAuth, staffOnly, async (req, res) => {
   const { role, sub: userId } = req.user;
 
   const [annRows, unreadRow, docRows, contractRows] = await Promise.all([

@@ -4,6 +4,7 @@ const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 
 const { notifyUser } = require('../pushNotifications');
+const { placeOwnerIds } = require('../clients/placeOwners');
 
 const router = express.Router();
 
@@ -16,12 +17,13 @@ async function pushNotification(userId, title, body, type, data = {}) {
 
 // Find the user_id of any admin who has the given role assigned to them.
 // Used to notify the restaurant/coffee-shop admin of a new booking.
-async function getOwnerOf(placeId) {
-  const { rows } = await query(
-    'SELECT id FROM users WHERE restaurant_id = $1 OR coffee_shop_id = $1 LIMIT 1',
-    [String(placeId)]
-  );
-  return rows[0]?.id || null;
+// Who hears about a booking: the place's owners and managers; a place with
+// none yet (e.g. a wedding venue not onboarded) goes to Sales Partners.
+async function bookingRecipients(type, placeId) {
+  const ids = await placeOwnerIds(type, placeId);
+  if (ids.length) return ids;
+  const fallback = await getAdminWithRole('sellers');
+  return fallback ? [fallback] : [];
 }
 
 async function getAdminWithRole(role) {
@@ -71,16 +73,10 @@ router.post('/', requireAuth, async (req, res) => {
   );
   const booking = rows[0];
 
-  // Notify the place's own owner; places without one (e.g. wedding venues)
-  // go to the Sales Partners team that manages them.
-  const adminId = await getOwnerOf(placeId) || await getAdminWithRole('sellers');
-  if (adminId) await pushNotification(
-    adminId,
-    `New booking — ${placeName}`,
-    `${guestName} · ${partySize || 2} people · ${date} at ${time}`,
-    'new_booking',
-    { bookingId: booking.id, placeId, type }
-  );
+  for (const id of await bookingRecipients(type, placeId)) {
+    await pushNotification(id, `New booking — ${placeName}`, `${guestName} · ${partySize || 2} people · ${date} at ${time}`,
+      'new_booking', { bookingId: booking.id, placeId, type });
+  }
 
   res.status(201).json(toJson(booking));
 });
@@ -104,15 +100,10 @@ router.delete('/:id', requireAuth, async (req, res) => {
   const booking = rows[0];
   if (['confirmed','pending'].includes(booking.status)) {
     await query('UPDATE resto_bookings SET status=$1, updated_at=NOW() WHERE id=$2', ['cancelled', booking.id]);
-    // Notify the place's owner (or Sales Partners when it has none)
-    const adminId = await getOwnerOf(booking.place_id) || await getAdminWithRole('sellers');
-    if (adminId) await pushNotification(
-      adminId,
-      `Booking cancelled — ${booking.place_name}`,
-      `${booking.guest_name} cancelled their reservation for ${booking.date} at ${booking.time}.`,
-      'booking_cancelled',
-      { bookingId: booking.id }
-    );
+    for (const id of await bookingRecipients(booking.type, booking.place_id)) {
+      await pushNotification(id, `Booking cancelled — ${booking.place_name}`,
+        `${booking.guest_name} cancelled their reservation for ${booking.date} at ${booking.time}.`, 'booking_cancelled', { bookingId: booking.id });
+    }
   }
   res.json({ ok: true });
 });
@@ -125,6 +116,7 @@ const isPlatformStaff = (user) => user.role === 'director' || user.role === 'sel
 function ownPlace(user) {
   if (user.role === 'restaurant' && (user.restaurantId || user.restaurant_id)) return { type: 'restaurant', id: user.restaurantId || user.restaurant_id };
   if (user.role === 'coffeeshop' && (user.coffeeShopId || user.coffee_shop_id)) return { type: 'coffee_shop', id: user.coffeeShopId || user.coffee_shop_id };
+  if (user.role === 'wedding' && user.weddingVenueId) return { type: 'wedding', id: user.weddingVenueId }; // venue owners (client dashboard)
   return null;
 }
 

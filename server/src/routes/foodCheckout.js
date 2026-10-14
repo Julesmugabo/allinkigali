@@ -15,6 +15,7 @@ const express = require('express');
 const { query, getClient } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { notifyUser } = require('../pushNotifications');
+const { placeOwnerIds } = require('../clients/placeOwners');
 
 const router = express.Router();
 
@@ -114,11 +115,10 @@ router.post('/checkout', requireAuth, async (req, res) => {
     client.release();
   }
 
-  // Each place's owner hears about their own order only.
+  // Each place's owners and managers hear about their own order only.
   for (const o of orders) {
-    const { rows: [owner] } = await query('SELECT id FROM users WHERE restaurant_id=$1 OR coffee_shop_id=$1 LIMIT 1', [o.place_id]);
-    if (owner) {
-      notifyUser(owner.id, {
+    for (const ownerId of await placeOwnerIds(o.place_type, o.place_id)) {
+      notifyUser(ownerId, {
         title: 'New delivery order!',
         body: `Order #${o.id.slice(-6).toUpperCase()} — ${o.items.length} item(s) to ${o.delivery_address}`,
         data: { type: 'new_order', orderId: o.id },

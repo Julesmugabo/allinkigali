@@ -43,8 +43,13 @@ const foodCheckoutRoutes  = require('./routes/foodCheckout');
 const weddingVenuesRoutes = require('./routes/weddingVenues');
 const financeRoutes       = require('./routes/finance');
 const staffPortalRoutes   = require('./routes/staffPortal');
+const clientsRoutes       = require('./routes/clients');
+const kumezaPublicRoutes  = require('./routes/kumeza/public');
+const { supportGuard }    = require('./middleware/clientAuth');
 
 const app = express();
+// Behind nginx: take the visitor's address from X-Forwarded-For (Ku Meza's limits are per visitor).
+app.set('trust proxy', 1);
 app.use(cors({
   origin: [
     'https://allinkigali.vercel.app',
@@ -52,12 +57,14 @@ app.use(cors({
     'https://www.allinkigali.rw',
     'https://admin.allinkigali.com',
     'https://admin.allinkigali.rw',
+    'https://allinclients.allinkigali.rw',
     /\.vercel\.app$/,
     /^http:\/\/localhost:\d+$/,
   ],
   credentials: true,
 }));
 app.use(express.json());
+app.use(supportGuard); // allinkigali support views stay read-only until "Make changes"
 
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));
@@ -90,6 +97,8 @@ app.use('/reviews',        reviewsRoutes);
 app.use('/wedding-venues', weddingVenuesRoutes);
 app.use('/finance',        financeRoutes);
 app.use('/staff',          staffPortalRoutes);
+app.use('/clients',        clientsRoutes);
+app.use('/kumeza',         kumezaPublicRoutes); // customers ordering from their table
 
 // Last-resort handler so a route bug returns JSON, not an HTML stack trace,
 // to a client that only ever expects JSON.
