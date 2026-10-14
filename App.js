@@ -22,6 +22,7 @@ import { BookingProvider } from './src/context/BookingContext';
 import { FliersProvider } from './src/context/FliersContext';
 import { NewsProvider } from './src/context/NewsContext';
 import { AdsProvider } from './src/context/AdsContext';
+import { FoodCartProvider } from './src/context/FoodCartContext';
 import { navTheme, colors } from './src/theme';
 import { useUser } from './src/context/UserContext';
 import usePushNotifications from './src/hooks/usePushNotifications';
@@ -60,6 +61,10 @@ const linking = {
               CoffeeShopMarket: 'coffee-shops',
               CoffeeShopDetail: 'coffee-shop/:id',
               OrderFood: 'order-food',
+              OrderFoodPlace: 'order-food/place/:type/:id',
+              OrderFoodDish: 'order-food/place/:type/:id/dish/:dishId',
+              FoodCheckout: 'order-food/checkout',
+              FoodOrderStatus: 'order-food/status/:checkoutId',
               WeddingMarket: 'wedding-venues',
               WeddingDetail: 'wedding-venue/:id',
               Checkout: 'checkout',
@@ -133,6 +138,7 @@ export default function App() {
                 <FliersProvider>
                   <NewsProvider>
                     <AdsProvider>
+                    <FoodCartProvider>
                       {/* Fixes a real bug: an elastic/overscroll bounce on a
                           scrollable screen briefly reveals whatever sits
                           behind it. With no background here, that was the
@@ -146,6 +152,7 @@ export default function App() {
                           <AppNavigator />
                         </NavigationContainer>
                       </View>
+                    </FoodCartProvider>
                     </AdsProvider>
                   </NewsProvider>
                 </FliersProvider>

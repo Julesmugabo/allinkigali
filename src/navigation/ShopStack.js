@@ -11,6 +11,7 @@ import BusinessBookScreen from '../screens/shop/BusinessBookScreen';
 // Wide browsers get the new list/place pages; phones keep the original screens.
 import {
   RestaurantMarket, RestaurantDetail, CoffeeShopMarket, CoffeeShopDetail, WeddingMarket, WeddingDetail, OrderFood,
+  OrderFoodPlace, OrderFoodDish, FoodCheckout, FoodOrderStatus,
 } from '../screens/shop/browse/wideScreens';
 
 const Stack = createNativeStackNavigator();
@@ -36,6 +37,10 @@ export default function ShopStack() {
       <Stack.Screen name="CoffeeShopDetail" component={CoffeeShopDetail} />
 
       <Stack.Screen name="OrderFood" component={OrderFood} />
+      <Stack.Screen name="OrderFoodPlace" component={OrderFoodPlace} />
+      <Stack.Screen name="OrderFoodDish" component={OrderFoodDish} />
+      <Stack.Screen name="FoodCheckout" component={FoodCheckout} />
+      <Stack.Screen name="FoodOrderStatus" component={FoodOrderStatus} />
 
       <Stack.Screen name="WeddingMarket" component={WeddingMarket} />
       <Stack.Screen name="WeddingDetail" component={WeddingDetail} />

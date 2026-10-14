@@ -21,7 +21,7 @@ function OrderCard({ o, stage, onMove, busy }) {
   return (
     <div style={s.card}>
       <div style={s.head}><b>#{o.code}</b><span style={{ color: t.textMuted, fontSize: 12 }}>{ago(o.createdAt)}</span></div>
-      <div style={s.items}>{(o.items || []).map((i, k) => <div key={k}>{i.qty || i.quantity || 1}× {i.name}</div>)}</div>
+      <div style={s.items}>{(o.items || []).map((i, k) => <div key={k}>{i.qty || i.quantity || 1}× {i.name}{i.note ? <span style={{ color: t.warning }}> — “{i.note}”</span> : null}</div>)}</div>
       <div style={s.meta}>{o.customerName || 'Customer'} · <a href={`tel:${o.customerPhone}`}>{o.customerPhone}</a></div>
       <div style={s.meta}>{o.address}</div>
       {o.notes && <div style={{ ...s.meta, color: t.warning }}>Note: {o.notes}</div>}

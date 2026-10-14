@@ -31,6 +31,7 @@ function toJson(row, photos = []) {
     minOrder: row.min_order || 0,
     estimatedTime: row.estimated_time || null,
     openHours: row.open_hours || null,
+    deliveryZones: row.delivery_zones || null,
     isActive: row.is_active,
     createdAt: row.created_at,
     photos: photos.map((p) => ({ id: p.id, url: p.url, label: p.label, sortOrder: p.sort_order })),

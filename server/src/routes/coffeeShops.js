@@ -32,6 +32,7 @@ function toJson(row, photos = []) {
     minOrder: row.min_order || 0,
     estimatedTime: row.estimated_time || null,
     openHours: row.open_hours || null,
+    deliveryZones: row.delivery_zones || null,
     lat: row.lat ? Number(row.lat) : null,
     lng: row.lng ? Number(row.lng) : null,
     isActive: row.is_active,
