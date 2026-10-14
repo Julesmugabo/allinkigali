@@ -1,6 +1,7 @@
 /**
  * PhotoMosaic.js — one big photo with up to four smaller ones beside it;
  * the last tile says "+N photos". Any photo opens the full-screen viewer.
+ * `height` lets a page make the block shorter (the ordering page does).
  */
 import React from 'react';
 import { View, Text, Image, Pressable, StyleSheet } from 'react-native';
@@ -19,7 +20,7 @@ function Tile({ photo, onPress, style, more }) {
   );
 }
 
-export default function PhotoMosaic({ photos, icon, onOpen }) {
+export default function PhotoMosaic({ photos, icon, onOpen, height = 420 }) {
   const c = useShopTheme(); // eslint-disable-line no-unused-vars
   const styles = useShopStyles(makeStyles);
   if (!photos.length) {
@@ -33,7 +34,7 @@ export default function PhotoMosaic({ photos, icon, onOpen }) {
   const side = photos.slice(1, 5);
   const extra = photos.length - 5;
   return (
-    <View style={styles.wrap}>
+    <View style={[styles.wrap, { height }]}>
       <Tile photo={photos[0]} onPress={() => onOpen(0)} style={side.length ? styles.main : styles.full} />
       {side.length > 0 && (
         <View style={styles.side}>
@@ -49,7 +50,7 @@ export default function PhotoMosaic({ photos, icon, onOpen }) {
 
 const makeStyles = (c) => StyleSheet.create({
   wrap: { flexDirection: 'row', gap: 8, height: 420, borderRadius: radius.lg, overflow: 'hidden' },
-  empty: { alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, flexDirection: 'column', gap: 8, height: 260 },
+  empty: { alignItems: 'center', justifyContent: 'center', backgroundColor: c.surface, flexDirection: 'column', gap: 6, height: 150 },
   emptyText: { color: c.textMuted },
   tile: { overflow: 'hidden', backgroundColor: c.photoWell },
   hover: { opacity: 0.88 },

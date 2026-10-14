@@ -72,7 +72,7 @@ export default function SupplierScreen({ navigation, route }) {
             <MaterialCommunityIcons name="arrow-left" size={18} color={c.accentText} />
             <Text style={styles.backLabel}>All places</Text>
           </Pressable>
-          <PhotoMosaic photos={photos} icon={supplier.kind.icon} onOpen={setViewer} />
+          <PhotoMosaic photos={photos} icon={supplier.kind.icon} onOpen={setViewer} height={340} />
 
           <View style={styles.head}>
             <Text style={styles.name}>{supplier.name}</Text>
