@@ -9,6 +9,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import CategoryTabs from './CategoryTabs';
+import NewsTagline from './NewsTagline';
 import { colors, typography, spacing, gutter } from '../../theme';
 
 export default function NewsHeader({
@@ -44,6 +45,8 @@ export default function NewsHeader({
         </View>
       </View>
 
+      <NewsTagline onNavy style={styles.tagline} />
+
       <CategoryTabs
         categories={categories}
         activeKey={activeCategory}
@@ -65,6 +68,7 @@ const styles = StyleSheet.create({
     marginBottom: spacing.md,
   },
   brand: { flexDirection: 'row', alignItems: 'center' },
+  tagline: { marginTop: -spacing.xs, marginBottom: spacing.md },
   logoImg: { width: 36, height: 36, borderRadius: 8 },
   icons: { flexDirection: 'row', alignItems: 'center' },
   bellDot: {

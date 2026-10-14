@@ -14,6 +14,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import WebContainer from '../../web/layout/WebContainer';
 import HeroCard from '../../components/news/HeroCard';
+import NewsTagline from '../../components/news/NewsTagline';
 import NewsListItem from '../../components/news/NewsListItem';
 import AdBox from '../../components/news/AdBox';
 import FeedSkeleton from '../../components/news/FeedSkeleton';
@@ -117,6 +118,7 @@ export default function NewsFeedWide({
 
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <WebContainer>
+          <NewsTagline style={styles.tagline} />
           <View style={styles.columns}>
             {/* Left: timestamped headline stream */}
             <View style={styles.leftCol}>
@@ -209,6 +211,7 @@ const styles = StyleSheet.create({
   container: { flex: 1, backgroundColor: colors.background },
   skeletonPad: { paddingTop: spacing.xl },
   scrollContent: { paddingBottom: spacing.huge },
+  tagline: { marginTop: spacing.lg },
 
   subBar: {
     backgroundColor: colors.navy800,
