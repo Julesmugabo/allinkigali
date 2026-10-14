@@ -11,6 +11,9 @@ export const sellersApi = {
   approve: (id) => apiFetch(`/pending-listings/${id}/approve`, { method: 'POST' }),
   decline: (id, reason) => apiFetch(`/pending-listings/${id}/decline`, { method: 'POST', body: { reason } }),
 
+  weddingVisits: () => apiFetch('/resto-bookings/admin?type=wedding'),
+  setBookingStatus: (id, status, reason) => apiFetch(`/resto-bookings/${id}/status`, { method: 'PUT', body: { status, reason } }),
+
   fliers: () => apiFetch('/fliers'),
   businesses: () => apiFetch('/businesses'),
   createFlier: (body) => apiFetch('/fliers', { method: 'POST', body }),

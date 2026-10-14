@@ -1,7 +1,8 @@
 /**
  * SellersDashboard.jsx — the Sales Partners admin: new business
  * applications, every client (restaurants + coffee shops) with a way into
- * their own dashboard, deliveries, and the shop fliers strip.
+ * their own dashboard, deliveries, wedding venue visits, and the shop
+ * fliers strip.
  */
 import React from 'react';
 import { Navigate, useParams } from 'react-router-dom';
@@ -15,8 +16,9 @@ import Applications from './sections/applications/Applications';
 import Clients from './sections/clients/Clients';
 import Deliveries from './sections/deliveries/Deliveries';
 import Fliers from './sections/fliers/Fliers';
+import WeddingVisits from './sections/visits/WeddingVisits';
 
-const VIEWS = { overview: Overview, applications: Applications, clients: Clients, deliveries: Deliveries, fliers: Fliers };
+const VIEWS = { overview: Overview, applications: Applications, clients: Clients, deliveries: Deliveries, visits: WeddingVisits, fliers: Fliers };
 
 function Shell() {
   const { section = 'overview' } = useParams();

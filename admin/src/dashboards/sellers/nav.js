@@ -6,6 +6,7 @@ export const SECTIONS = [
   { key: 'applications', label: 'Applications' },
   { key: 'clients', label: 'Clients' },
   { key: 'deliveries', label: 'Deliveries' },
+  { key: 'visits', label: 'Wedding visits' },
   { key: 'fliers', label: 'Shop Fliers' },
 ];
 
