@@ -11,16 +11,19 @@ import { View, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GradientBackground from '../../components/common/GradientBackground';
-import ServicesPanel from '../../components/shop/ServicesPanel';
+import ShopHome from './home/ShopHome';
+import useIsWideWeb from '../../web/hooks/useIsWideWeb';
 import { spacing } from '../../theme';
 
 export default function ShopScreen({ navigation }) {
   const insets = useSafeAreaInsets();
+  // The wide-web front page brings its own background and layout.
+  if (useIsWideWeb()) return <ShopHome navigation={navigation} />;
 
   return (
     <GradientBackground>
       <View style={styles.flex}>
-        <ServicesPanel navigation={navigation} topPadding={insets.top + spacing.md} />
+        <ShopHome navigation={navigation} topPadding={insets.top + spacing.md} />
       </View>
     </GradientBackground>
   );

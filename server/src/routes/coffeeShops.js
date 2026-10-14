@@ -26,6 +26,8 @@ function toJson(row, photos = []) {
     price: row.price,
     rating: row.rating ? Number(row.rating) : 4.0,
     openStatus: row.open_status,
+    busyNow: row.busy_now || null,
+    deliveryEnabled: !!row.delivery_enabled,
     lat: row.lat ? Number(row.lat) : null,
     lng: row.lng ? Number(row.lng) : null,
     isActive: row.is_active,

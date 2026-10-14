@@ -26,6 +26,7 @@ function toJson(row, photos = []) {
     lat: row.lat ? Number(row.lat) : null,
     lng: row.lng ? Number(row.lng) : null,
     openStatus: row.open_status,
+    deliveryEnabled: !!row.delivery_enabled,
     isActive: row.is_active,
     createdAt: row.created_at,
     photos: photos.map((p) => ({ id: p.id, url: p.url, label: p.label, sortOrder: p.sort_order })),
