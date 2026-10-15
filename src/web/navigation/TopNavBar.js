@@ -149,9 +149,10 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     height: TOP_NAV_HEIGHT,
   },
-  brand: { marginRight: spacing.xxl },
+  // Logo and actions take equal room either side, so the sections sit in the exact middle.
+  brand: { flex: 1, alignItems: 'flex-start' },
   logo: { width: 80, height: 28 },
-  sections: { flex: 1, flexDirection: 'row', alignItems: 'center', height: '100%', gap: spacing.sm },
+  sections: { flexDirection: 'row', alignItems: 'center', justifyContent: 'center', height: '100%', gap: spacing.sm },
   // Big, clear buttons: the two halves of allinkigali.
   sectionItem: {
     flexDirection: 'row',
@@ -182,7 +183,7 @@ const styles = StyleSheet.create({
     borderRadius: 1,
     backgroundColor: colors.blue500,
   },
-  actions: { flexDirection: 'row', alignItems: 'center', gap: spacing.lg },
+  actions: { flex: 1, flexDirection: 'row', alignItems: 'center', justifyContent: 'flex-end', gap: spacing.lg },
   bellWell: { padding: spacing.xs },
   bellDot: {
     position: 'absolute',
