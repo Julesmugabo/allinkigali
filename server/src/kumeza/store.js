@@ -38,6 +38,7 @@ async function ordersOf(sessionIds) {
   return orders.map((o) => ({
     id: o.id, sessionId: o.session_id, tableId: o.table_id, deviceId: o.device_id, status: o.status, total: o.total,
     placedAt: o.placed_at, acceptedAt: o.accepted_at, readyAt: o.ready_at, servedAt: o.served_at, acceptedBy: o.accepted_by,
+    readyStations: o.ready_stations || [],
     items: items.filter((i) => i.order_id === o.id).map((i) => ({ id: i.id, name: i.name, price: i.price, qty: i.qty, notes: i.notes, station: i.station })),
   }));
 }
@@ -86,10 +87,11 @@ async function boardOf(placeType, placeId) {
   });
 }
 
-// The kitchen/bar queue: tickets in arrival order, each once.
+// The kitchen/bar queue: tickets in arrival order, each once — only from
+// tables still seated (a paid and closed table leaves the screen).
 async function kitchenOf(placeType, placeId) {
   const { rows } = await query(
-    `select o.id from table_orders o
+    `select o.id from table_orders o join table_sessions s on s.id = o.session_id and s.status = 'open'
      where o.place_type = $1 and o.place_id = $2
        and (o.status in ('placed', 'accepted', 'preparing') or (o.status = 'ready' and o.ready_at > now() - interval '20 minutes'))
      order by o.placed_at`, [placeType, placeId]);

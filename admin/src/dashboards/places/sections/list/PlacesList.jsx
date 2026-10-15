@@ -9,6 +9,7 @@ import { t } from '../../../../theme';
 import { DataTable } from '../../../../components/PageShell';
 import Button from '../../../../components/common/Button';
 import { Panel, Loading, ErrorText, RowActions } from '../../../../components/ui';
+import { openClientDashboard } from '../../../../utils/openClientDashboard';
 import { usePlaces } from '../../PlacesContext';
 import { placesApi } from '../../placesApi';
 import { isOpen } from '../overview/Overview';
@@ -58,7 +59,7 @@ export default function PlacesList() {
       key: 'a', label: '', render: (p) => (
         <RowActions>
           <Button size="sm" variant="info" onClick={() => navigate(`${type.base}/add?id=${p.id}`)}>Edit</Button>
-          <Button size="sm" variant="ghost" icon={ExternalLink} onClick={() => navigate(`/clients/${type.key}/${p.id}`)}>Open dashboard</Button>
+          <Button size="sm" variant="ghost" icon={ExternalLink} onClick={() => openClientDashboard(type.key, p.id)}>Open dashboard</Button>
           <Button size="sm" variant="danger" onClick={() => remove(p)}>Delete</Button>
         </RowActions>
       ),

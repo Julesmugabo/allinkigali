@@ -105,8 +105,10 @@ router.post('/switch', requireAuth, async (req, res) => {
 router.get('/me', requireClient(), async (req, res) => {
   const u = req.user;
   const accountUser = u.kind === 'member' && !String(u.sub).includes(':');
+  // A waiter's section, so the board can open on "my section".
+  const { rows: [m] } = req.client.memberId ? await query('select section_id from place_members where id = $1', [req.client.memberId]) : { rows: [] };
   res.json({
-    name: u.name, role: req.client.mrole, kind: u.kind, support: req.client.support,
+    name: u.name, role: req.client.mrole, kind: u.kind, support: req.client.support, sectionId: m?.section_id || null,
     place: { type: req.client.placeType, id: req.client.placeId, name: req.client.placeName },
     places: accountUser ? await memberPlaces(u.sub) : [],
   });

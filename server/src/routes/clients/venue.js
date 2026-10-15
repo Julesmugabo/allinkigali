@@ -18,7 +18,7 @@ const onlyVenues = (req, res, next) => (req.client.placeType === 'wedding' ? nex
 const FIELDS = {
   name: 'name', description: 'description', location: 'location', district: 'district', phone: 'phone',
   capacity: 'capacity', price: 'price', facilities: 'facilities', views: 'views', privacy: 'privacy',
-  photography: 'photography', photos: 'photos', openStatus: 'open_status',
+  photography: 'photography', photos: 'photos', // open_status stays with allinkigali (Sales Partners)
 };
 const toJson = (v) => ({
   id: v.id, name: v.name, description: v.description, location: v.location, district: v.district, phone: v.phone,

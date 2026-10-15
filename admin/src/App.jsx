@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { getUser, logout as apiLogout, apiFetch, setUser as saveUser } from './api';
+import { getUser, logout as apiLogout, apiFetch, STAFF_ROLES } from './api';
 import { t } from './theme';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
@@ -16,11 +16,16 @@ import DirectorDashboard   from './dashboards/director/DirectorDashboard';
 import NewsDashboard       from './dashboards/news/NewsDashboard';
 import SellersDashboard    from './dashboards/sellers/SellersDashboard';
 import PlacesDashboard     from './dashboards/places/PlacesDashboard';
-import { MyPlaceDashboard, ClientPlaceDashboard } from './dashboards/owner/OwnerDashboard';
 import FinanceDashboard    from './dashboards/finance/FinanceDashboard';
 
 export default function App() {
-  const [user, setUser] = useState(getUser);
+  // Restaurants, cafés and venues have their own dashboard now (allinclients…);
+  // an old client sign-in kept in this browser is dropped.
+  const [user, setUser] = useState(() => {
+    const u = getUser();
+    if (u && !STAFF_ROLES.includes(u.role)) { apiLogout(); return null; }
+    return u;
+  });
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
   const [unreadCount, setUnreadCount] = useState(0);
 
@@ -49,7 +54,6 @@ export default function App() {
   if (!user) return <Login onLogin={handleLogin} />;
 
   const role = user.role;
-  const canManageClients = role === 'sellers' || role === 'director';
   const isDirector = role === 'director';
 
   return (
@@ -88,11 +92,7 @@ export default function App() {
               <Route path="/restaurants/:section?" element={<PlacesDashboard kind="restaurant" />} />
               <Route path="/coffee-shops/:section?" element={<PlacesDashboard kind="coffeeshop" />} />
             </>}
-            {(role === 'restaurant' || role === 'coffeeshop') && <Route path="/my-place/:section?" element={<MyPlaceDashboard />} />}
             {role === 'finance'     && <Route path="/finance/:section?" element={<FinanceDashboard />} />}
-
-            {/* ── A client's own dashboard, opened by the Sales Partners admin or director ── */}
-            {canManageClients && <Route path="/clients/:kind/:placeId/:section?" element={<ClientPlaceDashboard />} />}
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

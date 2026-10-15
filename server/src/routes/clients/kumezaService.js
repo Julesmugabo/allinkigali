@@ -2,7 +2,8 @@
  * clients/kumezaService.js — Ku Meza during service.
  *   GET  /clients/kumeza/board                 waiter board (owner, manager, waiter, cashier)
  *   GET  /clients/kumeza/kitchen               kitchen/bar queue (owner, manager, kitchen)
- *   POST /clients/kumeza/orders/:id/<action>   confirm | reject | accept | preparing | ready | served | cancel
+ *   POST /clients/kumeza/orders/:id/<action>   confirm | reject | accept | preparing | served | cancel
+ *   POST /clients/kumeza/orders/:id/ready      { station } kitchen or bar marks its part ready
  *   POST /clients/kumeza/requests/:id/handle   waiter answered a call / bill request
  *   POST /clients/kumeza/sessions/:id/close    "Paid & close table" { paymentMethod }
  *   POST /clients/kumeza/stream-ticket         a 2-minute ticket for…
@@ -11,7 +12,7 @@
  */
 const express = require('express');
 const jwt = require('jsonwebtoken');
-const { query } = require('../../db');
+const { query, getClient } = require('../../db');
 const { requireClient } = require('../../middleware/clientAuth');
 const { boardOf, kitchenOf } = require('../../kumeza/store');
 const { publish, openStream } = require('../../kumeza/realtime');
@@ -30,11 +31,11 @@ const ACTIONS = {
   reject: { roles: FLOOR, from: ['needs_confirm'], to: 'rejected', confirmDevice: 'blocked' },
   accept: { roles: FLOOR, from: ['placed'], to: 'accepted', stamp: 'accepted' },
   preparing: { roles: KITCHEN, from: ['placed', 'accepted'], to: 'preparing', stamp: 'preparing' },
-  ready: { roles: KITCHEN, from: ['placed', 'accepted', 'preparing'], to: 'ready', stamp: 'ready' },
   served: { roles: FLOOR, from: ['accepted', 'preparing', 'ready'], to: 'served', stamp: 'served' },
   cancel: { roles: FLOOR, from: ['needs_confirm', 'placed', 'accepted', 'preparing', 'ready'], to: 'cancelled' },
 };
-const EVENT = { confirm: 'confirmed', reject: 'rejected', accept: 'accepted', preparing: 'preparing', ready: 'ready', served: 'served', cancel: 'cancelled' };
+// (A guest's own cancel is 'cancelled' and alerts the board; a waiter's isn't.)
+const EVENT = { confirm: 'confirmed', reject: 'rejected', accept: 'accepted', preparing: 'preparing', served: 'served', cancel: 'staff_cancelled' };
 
 Object.entries(ACTIONS).forEach(([name, a]) => {
   router.post(`/orders/:id/${name}`, requireClient(...a.roles), async (req, res) => {
@@ -55,6 +56,36 @@ Object.entries(ACTIONS).forEach(([name, a]) => {
     publish(key(req), { type: EVENT[name], table: t?.label });
     res.json({ ok: true, status: o.status });
   });
+});
+
+// Ready, per station: an order with food and drinks is ready to collect once
+// both the kitchen and the bar pressed Ready; each press alerts the waiter
+// ("drinks ready"). Without a station, the whole order is ready.
+router.post('/orders/:id/ready', requireClient(...KITCHEN), async (req, res) => {
+  const station = ['kitchen', 'bar'].includes(req.body?.station) ? req.body.station : null;
+  const db = await getClient();
+  let o; let done; let all;
+  try {
+    await db.query('begin');
+    ({ rows: [o] } = await db.query(
+      `select * from table_orders where id = $1 and place_type = $2 and place_id = $3
+       and status in ('placed', 'accepted', 'preparing') for update`, [req.params.id, req.client.placeType, req.client.placeId]));
+    if (!o) { await db.query('rollback'); return res.status(409).json({ error: 'This order has already moved on. The screen will refresh.' }); }
+    const { rows: stations } = await db.query('select distinct station from table_order_items where order_id = $1', [o.id]);
+    const needed = stations.map((r) => r.station);
+    done = station ? [...new Set([...o.ready_stations, station])] : needed;
+    all = needed.every((st) => done.includes(st));
+    await db.query(
+      `update table_orders set ready_stations = $1, status = case when $2 then 'ready' else status end,
+         ready_at = case when $2 then now() else ready_at end where id = $3`, [done, all, o.id]);
+    await db.query('commit');
+  } catch (e) {
+    await db.query('rollback').catch(() => {});
+    throw e;
+  } finally { db.release(); }
+  const { rows: [t] } = await query('select label from place_tables where id = $1', [o.table_id]);
+  publish(key(req), { type: all ? 'ready' : 'station_ready', station, table: t?.label });
+  res.json({ ok: true, status: all ? 'ready' : o.status, readyStations: done });
 });
 
 router.post('/requests/:id/handle', requireClient(...FLOOR), async (req, res) => {

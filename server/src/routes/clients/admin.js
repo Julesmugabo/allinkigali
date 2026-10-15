@@ -6,6 +6,9 @@
  *   POST /clients/admin/members/:id/reset-password   a new temporary password for an owner/manager
  *   GET  /clients/admin/activity                 recent support activity across all clients
  * A temporary password is shown once; the owner changes it after signing in.
+ * allinkigali staff accounts can never be linked to a place or reset here
+ * (that would hand a staff login — even the director's — to whoever resets it),
+ * and every reset shows in the client's own activity list.
  */
 const express = require('express');
 const crypto = require('crypto');
@@ -14,10 +17,16 @@ const { query } = require('../../db');
 const { requireAuth } = require('../../middleware/auth');
 const requireRole = require('../../middleware/requireRole');
 const { PLACE, isPlaceType, placeInfo, normalizePhone } = require('../../clients/places');
+const { logSupport } = require('../../clients/supportLog');
 
 const router = express.Router();
 const staff = [requireAuth, requireRole('sellers')]; // the director always passes
 const tempPassword = () => `Ak-${crypto.randomBytes(5).toString('base64url')}`;
+const STAFF_ROLES = ['director', 'news', 'sellers', 'finance'];
+const staffName = async (id) => {
+  const { rows: [u] } = await query('select first_name, last_name, email from users where id = $1', [id]);
+  return u ? [u.first_name, u.last_name].filter(Boolean).join(' ') || u.email : 'allinkigali';
+};
 
 router.get('/places', staff, async (req, res) => {
   const places = [];
@@ -50,7 +59,10 @@ router.post('/onboard', staff, async (req, res) => {
   const email = String(req.body?.email || '').trim().toLowerCase();
   if (!isPlaceType(placeType) || !(await placeInfo(placeType, placeId))) return res.status(404).json({ error: 'Choose the place.' });
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Enter the owner\'s email.' });
-  let { rows: [user] } = await query('select id, first_name, last_name from users where lower(email) = $1', [email]);
+  let { rows: [user] } = await query('select id, first_name, last_name, role from users where lower(email) = $1', [email]);
+  if (user && STAFF_ROLES.includes(user.role)) {
+    return res.status(409).json({ error: "This email belongs to an allinkigali staff account. Use the owner's own email." });
+  }
   let password = null;
   if (!user) {
     if (!String(firstName || '').trim()) return res.status(400).json({ error: 'Enter the owner\'s name.' });
@@ -65,14 +77,21 @@ router.post('/onboard', staff, async (req, res) => {
     `insert into place_members (place_type, place_id, user_id, role, name, created_by)
      values ($1, $2, $3, 'owner', $4, $5) on conflict do nothing`,
     [placeType, String(placeId), user.id, name, `allinkigali · ${req.user.email || req.user.sub}`]);
+  const support = { by: req.user.sub, name: await staffName(req.user.sub), staffRole: req.user.role };
+  await logSupport({ place: { type: placeType, id: String(placeId) }, support }, 'onboard', `${name} <${email}>`);
   res.status(201).json({ email, name, temporaryPassword: password, existingAccount: !password });
 });
 
 router.post('/members/:id/reset-password', staff, async (req, res) => {
-  const { rows: [m] } = await query("select user_id from place_members where id = $1 and role in ('owner', 'manager') and user_id is not null", [req.params.id]);
+  const { rows: [m] } = await query(
+    `select m.user_id, m.place_type, m.place_id, m.name, u.role from place_members m join users u on u.id = m.user_id
+     where m.id = $1 and m.role in ('owner', 'manager')`, [req.params.id]);
   if (!m) return res.status(404).json({ error: 'Owner not found.' });
+  if (STAFF_ROLES.includes(m.role)) return res.status(403).json({ error: "Staff accounts can't be reset here." });
   const password = tempPassword();
   await query('update users set password_hash = $1 where id = $2', [await bcrypt.hash(password, 10), m.user_id]);
+  const support = { by: req.user.sub, name: await staffName(req.user.sub), staffRole: req.user.role };
+  await logSupport({ place: { type: m.place_type, id: m.place_id }, support }, 'reset_password', m.name);
   res.json({ temporaryPassword: password });
 });
 

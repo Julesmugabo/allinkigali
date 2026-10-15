@@ -1,0 +1,34 @@
+/**
+ * SignInCard.jsx — shown once after adding someone (or giving a new PIN):
+ * exactly what to tell them. The PIN isn't shown again afterwards.
+ */
+import React from 'react';
+import { KeyRound } from 'lucide-react';
+import { t } from '../../theme';
+import Button from '../../components/common/Button';
+
+export default function SignInCard({ person, onDone }) {
+  const site = window.location.host;
+  const text = `${person.name}: sign in at ${site} → Staff, phone ${person.phone}, PIN ${person.pin}`;
+  const copy = () => navigator.clipboard?.writeText(text).catch(() => {});
+  return (
+    <div style={s.card}>
+      <KeyRound size={22} color={t.success} />
+      <div style={{ flex: 1, minWidth: 220 }}>
+        <div style={s.title}>Tell {person.name} how to sign in</div>
+        <div style={s.line}>Open <b>{site}</b> → <b>Staff</b> · phone <b>{person.phone}</b> · PIN <b style={s.pin}>{person.pin}</b></div>
+        <div style={s.note}>The PIN is shown only now. You can always give a new one with “Change”.</div>
+      </div>
+      <Button size="sm" variant="ghost" onClick={copy}>Copy</Button>
+      <Button size="sm" variant="success" onClick={onDone}>Done</Button>
+    </div>
+  );
+}
+
+const s = {
+  card: { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', background: 'rgba(74,222,128,0.1)', border: `1px solid ${t.success}55`, borderRadius: 10, padding: '12px 14px', marginBottom: 16 },
+  title: { fontWeight: 700, color: t.text },
+  line: { color: t.textSecondary, fontSize: 14, marginTop: 2 },
+  pin: { color: t.success, letterSpacing: 2, fontSize: 16 },
+  note: { color: t.textMuted, fontSize: 12, marginTop: 4 },
+};

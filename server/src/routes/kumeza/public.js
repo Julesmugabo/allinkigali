@@ -31,10 +31,10 @@ async function withTable(req, res) {
 }
 
 router.post('/code', async (req, res) => {
-  if (limited('code', req.ip)) return res.status(429).json({ error: 'Too many tries. Wait a few minutes or scan the QR code.' });
+  if (limited('code', req.ip)) return res.status(429).json({ error: 'Too many tries. Wait a few minutes or scan the QR code.', code: 'TOO_MANY_TRIES' });
   const code = cleanCode(req.body?.code);
   const { rows: [t] } = code ? await query('select qr_token from place_tables where short_code = $1 and active', [code]) : { rows: [] };
-  if (!t) return res.status(404).json({ error: 'No table has this code. Check the card on your table.' });
+  if (!t) return res.status(404).json({ error: 'No table has this code. Check the card on your table.', code: 'BAD_CODE' });
   res.json({ token: t.qr_token });
 });
 
@@ -60,25 +60,25 @@ router.get('/t/:token/tab', async (req, res) => {
 
 router.post('/t/:token/orders', async (req, res) => {
   const deviceId = deviceOf(req);
-  if (!validDevice(deviceId)) return res.status(400).json({ error: 'Please reload the page and try again.' });
+  if (!validDevice(deviceId)) return res.status(400).json({ error: 'Please reload the page and try again.', code: 'RELOAD' });
   const found = await withTable(req, res);
   if (!found) return;
   const { table, place } = found;
-  if (!isOpenNow(place)) return res.status(409).json({ error: `${place.name} is closed right now.` });
+  if (!isOpenNow(place)) return res.status(409).json({ error: `${place.name} is closed right now.`, code: 'CLOSED' });
   if (limited('orderPerDevice', deviceId) || limited('orderPerTable', table.id)) {
-    return res.status(429).json({ error: 'Too many orders at once. Wait a moment or call your waiter.' });
+    return res.status(429).json({ error: 'Too many orders at once. Wait a moment or call your waiter.', code: 'TOO_MANY' });
   }
   const { lat, lng } = req.body || {};
   let distance = null;
   if (Number.isFinite(lat) && Number.isFinite(lng) && place.lat != null && place.lng != null) {
     distance = distanceM({ lat, lng }, { lat: Number(place.lat), lng: Number(place.lng) });
-    if (distance > FAR_M) return res.status(403).json({ error: `You seem to be far from ${place.name}. Ku Meza orders are only for people at the table.` });
+    if (distance > FAR_M) return res.status(403).json({ error: `You seem to be far from ${place.name}. Ku Meza orders are only for people at the table.`, code: 'FAR' });
   }
 
   const menu = new Map((await menuFor(table.place_type, table.place_id)).map((d) => [d.id, d]));
   const lines = (req.body?.items || []).slice(0, 30).map((i) => ({ dish: menu.get(String(i.menuItemId)), qty: Math.min(Math.max(parseInt(i.qty, 10) || 0, 0), 20), notes: String(i.notes || '').slice(0, 200) }));
-  if (!lines.length || lines.some((l) => !l.qty)) return res.status(400).json({ error: 'Your order is empty.' });
-  if (lines.some((l) => !l.dish)) return res.status(409).json({ error: 'Some dishes are not available any more. Please check your order.' });
+  if (!lines.length || lines.some((l) => !l.qty)) return res.status(400).json({ error: 'Your order is empty.', code: 'EMPTY' });
+  if (lines.some((l) => !l.dish)) return res.status(409).json({ error: 'Some dishes are not available any more. Please check your order.', code: 'UNAVAILABLE' });
   const total = lines.reduce((s, l) => s + l.dish.price * l.qty, 0);
 
   const db = await getClient();
@@ -95,7 +95,7 @@ router.post('/t/:token/orders', async (req, res) => {
     }
     await db.query('insert into table_devices (session_id, device_id, distance_m) values ($1, $2, $3) on conflict do nothing', [session.id, deviceId, distance]);
     const { rows: [dev] } = await db.query('select status from table_devices where session_id = $1 and device_id = $2', [session.id, deviceId]);
-    if (dev.status === 'blocked') { await db.query('rollback'); return res.status(403).json({ error: 'The waiter could not confirm you at this table. Please call a waiter.' }); }
+    if (dev.status === 'blocked') { await db.query('rollback'); return res.status(403).json({ error: 'The waiter could not confirm you at this table. Please call a waiter.', code: 'BLOCKED' }); }
     status = dev.status === 'confirmed' ? 'placed' : 'needs_confirm';
     const { rows: [order] } = await db.query(
       `insert into table_orders (session_id, table_id, place_type, place_id, device_id, status, total)
@@ -123,7 +123,7 @@ router.post('/t/:token/orders/:id/cancel', async (req, res) => {
   const { rowCount } = await query(
     `update table_orders set status = 'cancelled' where id = $1 and table_id = $2 and device_id = $3
      and status in ('needs_confirm', 'placed', 'accepted')`, [req.params.id, found.table.id, deviceOf(req)]);
-  if (!rowCount) return res.status(409).json({ error: 'The kitchen has already started this order. Please ask your waiter.' });
+  if (!rowCount) return res.status(409).json({ error: 'The kitchen has already started this order. Please ask your waiter.', code: 'TOO_LATE' });
   publish(placeKey(found.table), { type: 'cancelled', table: found.table.label });
   res.json({ tab: await tabOf(await openSessionOf(found.table.id), deviceOf(req)) });
 });
@@ -135,8 +135,8 @@ router.post('/t/:token/requests', async (req, res) => {
   if (!found) return;
   const session = await openSessionOf(found.table.id);
   const { rows: [dev] } = session ? await query('select status from table_devices where session_id = $1 and device_id = $2', [session.id, deviceId]) : { rows: [] };
-  if (dev?.status !== 'confirmed') return res.status(403).json({ error: 'Your waiter will be with you as soon as your first order is confirmed.' });
-  if (limited('requestPerDevice', deviceId)) return res.status(429).json({ error: 'Your waiter has already been called.' });
+  if (dev?.status !== 'confirmed') return res.status(403).json({ error: 'Your waiter will be with you as soon as your first order is confirmed.', code: 'NOT_CONFIRMED' });
+  if (limited('requestPerDevice', deviceId)) return res.status(429).json({ error: 'Your waiter has already been called.', code: 'ALREADY_CALLED' });
   const { rows: [open] } = await query('select id from service_requests where session_id = $1 and type = $2 and handled_at is null', [session.id, type]);
   if (!open) {
     await query('insert into service_requests (session_id, table_id, place_type, place_id, type) values ($1, $2, $3, $4, $5)',

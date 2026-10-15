@@ -1,0 +1,108 @@
+/* table.css — the guests' Ku Meza page: light and readable in a bright room,
+   phone first, allinkigali navy for restaurants and the espresso/caramel
+   look for coffee shops (.km-coffee). No web fonts, so it opens fast. */
+
+:root {
+  --bg: #F3F6FA; --card: #FFFFFF; --text: #10213A; --soft: #475A73; --muted: #8492A6; --line: #E2E8F0;
+  --brand: #042C53; --brand-text: #FFFFFF; --brand-soft: #85B7EB; --accent: #378ADD; --pill: #E6F0FB;
+  --cta: #1A7A4A; --cta-text: #FFFFFF; --warn: #B45309; --warn-bg: #FEF3C7; --danger: #B91C1C;
+}
+.km-coffee {
+  --bg: #F7F1EA; --card: #FFFDFA; --text: #2B1D12; --soft: #5E4A3A; --muted: #9A8574; --line: #EADFD3;
+  --brand: #1B1612; --brand-text: #ECDFD0; --brand-soft: #E1B98C; --accent: #8E6234; --pill: #F3E6D8;
+  --cta: #3A2414; --cta-text: #F3C493;
+}
+
+* { box-sizing: border-box; }
+html, body { margin: 0; padding: 0; background: var(--bg); }
+body { font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Noto Sans", Ubuntu, Arial, sans-serif; -webkit-text-size-adjust: 100%; }
+button, input { font: inherit; }
+button { cursor: pointer; }
+
+.km { min-height: 100vh; background: var(--bg); color: var(--text); padding-bottom: 96px; }
+.km-loading { min-height: 100vh; background: linear-gradient(var(--brand) 0 76px, var(--bg) 76px); }
+.km-main { max-width: 640px; margin: 0 auto; padding: 12px 14px 0; }
+
+/* Header */
+.km-top { position: sticky; top: 0; z-index: 20; display: flex; align-items: center; gap: 12px; background: var(--brand); color: var(--brand-text); padding: 12px 14px; padding-top: max(12px, env(safe-area-inset-top)); }
+.km-top-text { flex: 1; min-width: 0; }
+.km-title { font-size: 18px; font-weight: 800; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.km-sub { color: var(--brand-soft); font-size: 14px; font-weight: 700; margin-top: 2px; }
+.km-langs { display: flex; background: rgba(255,255,255,0.1); border-radius: 999px; padding: 3px; }
+.km-langs button { background: transparent; border: 0; color: var(--brand-text); opacity: 0.7; font-size: 12px; font-weight: 800; padding: 6px 9px; border-radius: 999px; }
+.km-langs button.on { background: var(--brand-text); color: var(--brand); opacity: 1; }
+
+.km-closed { background: var(--warn-bg); color: var(--warn); border-radius: 12px; padding: 12px 14px; font-weight: 700; margin-bottom: 12px; }
+
+/* The table's running tab */
+.km-tab { background: var(--card); border: 1px solid var(--line); border-radius: 16px; padding: 14px; margin-bottom: 16px; }
+.km-tab h2 { font-size: 16px; margin: 0 0 8px; }
+.km-order { border-top: 1px solid var(--line); padding: 10px 0; }
+.km-order:first-of-type { border-top: 0; }
+.km-order-head { display: flex; justify-content: space-between; align-items: center; gap: 8px; }
+.km-pill { display: inline-block; background: var(--pill); color: var(--accent); border-radius: 999px; padding: 4px 10px; font-size: 13px; font-weight: 800; }
+.st-needs_confirm .km-pill { background: var(--warn-bg); color: var(--warn); }
+.st-ready .km-pill, .st-served .km-pill { background: #DCFCE7; color: #15803D; }
+.st-cancelled .km-pill, .st-rejected .km-pill { background: #F1F5F9; color: var(--muted); }
+.km-who { color: var(--muted); font-size: 12px; }
+.km-order-items { list-style: none; margin: 8px 0 0; padding: 0; font-size: 15px; line-height: 1.45; }
+.km-order-items em { color: var(--soft); font-style: normal; font-size: 13px; }
+.km-order-foot { display: flex; justify-content: space-between; align-items: center; color: var(--soft); font-size: 13px; margin-top: 4px; }
+.km-link { background: none; border: 0; color: var(--danger); font-weight: 700; padding: 4px 0; }
+.km-tab-total { display: flex; justify-content: space-between; border-top: 1px dashed var(--line); padding-top: 10px; margin-top: 4px; font-size: 15px; }
+.km-actions { display: flex; gap: 8px; margin-top: 12px; }
+.km-actions .km-btn { flex: 1; }
+
+/* Menu */
+.km-cats { position: sticky; top: 64px; z-index: 10; display: flex; gap: 8px; overflow-x: auto; padding: 10px 14px; margin: 0 -14px 4px; background: var(--bg); scrollbar-width: none; }
+.km-cats::-webkit-scrollbar { display: none; }
+.km-cats a { flex: none; background: var(--card); color: var(--text); border: 1px solid var(--line); border-radius: 999px; padding: 7px 14px; font-size: 14px; font-weight: 700; text-decoration: none; }
+.km-cat { scroll-margin-top: 120px; }
+.km-cat h3 { font-size: 17px; margin: 14px 0 8px; }
+.km-dish { display: flex; gap: 12px; align-items: center; background: var(--card); border: 1px solid var(--line); border-radius: 14px; padding: 10px; margin-bottom: 10px; }
+.km-dish img { width: 76px; height: 76px; border-radius: 10px; object-fit: cover; flex: none; background: var(--line); }
+.km-dish-text { flex: 1; min-width: 0; }
+.km-dish-name { font-weight: 800; font-size: 15px; }
+.km-dish-desc { color: var(--soft); font-size: 13px; line-height: 1.35; margin-top: 2px; display: -webkit-box; -webkit-line-clamp: 2; -webkit-box-orient: vertical; overflow: hidden; }
+.km-price { font-weight: 800; color: var(--accent); margin-top: 4px; font-size: 14px; }
+.km-add { flex: none; width: 40px; height: 40px; border-radius: 12px; border: 0; background: var(--cta); color: var(--cta-text); font-size: 24px; font-weight: 700; line-height: 1; }
+.km-stepper { flex: none; display: flex; align-items: center; gap: 2px; background: var(--pill); border-radius: 12px; padding: 3px; }
+.km-stepper button { width: 34px; height: 34px; border: 0; border-radius: 9px; background: var(--card); color: var(--text); font-size: 20px; font-weight: 800; line-height: 1; }
+.km-stepper span { min-width: 22px; text-align: center; font-weight: 800; }
+.km-empty { color: var(--soft); text-align: center; padding: 30px 10px; }
+
+/* Buttons */
+.km-btn { display: inline-flex; align-items: center; justify-content: center; gap: 10px; border: 0; border-radius: 14px; padding: 13px 16px; font-size: 15px; font-weight: 800; text-decoration: none; }
+.km-btn:disabled { opacity: 0.55; cursor: default; }
+.km-btn-cta { background: var(--cta); color: var(--cta-text); }
+.km-btn-ghost { background: var(--pill); color: var(--accent); font-size: 14px; padding: 12px 10px; }
+
+/* Bottom bar and the order sheet */
+.km-cartbar { position: fixed; left: 0; right: 0; bottom: 0; z-index: 30; padding: 10px 14px; padding-bottom: max(10px, env(safe-area-inset-bottom)); background: linear-gradient(transparent, var(--bg) 35%); }
+.km-cartbar .km-btn { width: 100%; max-width: 612px; margin: 0 auto; display: flex; justify-content: space-between; box-shadow: 0 6px 20px rgba(0,0,0,0.18); }
+.km-sheet-bg { position: fixed; inset: 0; z-index: 40; background: rgba(8,15,28,0.55); display: flex; align-items: flex-end; justify-content: center; }
+.km-sheet { width: 100%; max-width: 640px; max-height: 88vh; overflow-y: auto; background: var(--card); color: var(--text); border-radius: 20px 20px 0 0; padding: 16px 16px max(16px, env(safe-area-inset-bottom)); }
+.km-sheet-head { display: flex; justify-content: space-between; align-items: center; }
+.km-sheet-head h2 { margin: 0; font-size: 19px; }
+.km-x { border: 0; background: var(--pill); color: var(--text); width: 36px; height: 36px; border-radius: 50%; font-size: 22px; line-height: 1; }
+.km-line { border-bottom: 1px solid var(--line); padding: 12px 0; }
+.km-line-top { display: flex; align-items: center; gap: 10px; }
+.km-line-name { flex: 1; font-weight: 700; min-width: 0; }
+.km-line-price { min-width: 84px; text-align: right; }
+.km-note { width: 100%; margin-top: 8px; border: 1px solid var(--line); background: var(--bg); color: var(--text); border-radius: 10px; padding: 9px 11px; font-size: 14px; }
+.km-total { display: flex; justify-content: space-between; font-size: 18px; padding: 14px 0 6px; }
+.km-fine { color: var(--soft); font-size: 13px; line-height: 1.45; margin: 6px 0; }
+.km-send { width: 100%; justify-content: space-between; margin-top: 10px; }
+
+.km-toast { position: fixed; left: 50%; bottom: 88px; transform: translateX(-50%); z-index: 50; max-width: calc(100vw - 32px); background: #10213A; color: #fff; border-radius: 12px; padding: 12px 16px; font-weight: 700; font-size: 14px; box-shadow: 0 8px 24px rgba(0,0,0,0.25); }
+.km-foot { text-align: center; color: var(--muted); font-size: 12px; padding: 24px 0 8px; }
+
+/* Code page and notices */
+.km-code h1 { font-size: 24px; margin: 18px 0 6px; }
+.km-code p { color: var(--soft); }
+.km-code form { display: flex; flex-direction: column; gap: 12px; margin-top: 16px; }
+.km-code input { border: 2px solid var(--line); background: var(--card); color: var(--text); border-radius: 14px; padding: 14px; font-size: 28px; font-weight: 800; letter-spacing: 6px; text-align: center; font-family: ui-monospace, Consolas, monospace; }
+.km-code input:focus, .km-note:focus { outline: none; border-color: var(--accent); }
+.km-error { color: var(--danger); font-weight: 700; }
+.km-notice { text-align: center; padding-top: 40px; }
+.km-notice p { font-size: 17px; font-weight: 700; margin-bottom: 20px; }
