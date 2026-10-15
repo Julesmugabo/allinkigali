@@ -26,7 +26,7 @@ export default function SignInCard({ person, onDone }) {
 }
 
 const s = {
-  card: { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', background: 'rgba(145,213,31,0.14)', border: `1px solid ${t.lime}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16 },
+  card: { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', background: 'rgba(55,138,221,0.14)', border: `1px solid ${t.lime}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16 },
   title: { fontWeight: 700, color: t.text },
   line: { color: t.textSecondary, fontSize: 14, marginTop: 2 },
   pin: { color: t.text, letterSpacing: 2, fontSize: 16, background: '#FFFFFF', borderRadius: 6, padding: '1px 8px' },

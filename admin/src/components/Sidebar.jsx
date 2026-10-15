@@ -60,7 +60,7 @@ export default function Sidebar({ user, onLogout, open, onToggle, unreadCount })
       <aside style={{ ...styles.sidebar, ...(open ? styles.sidebarOpen : {}) }}>
         {/* Brand */}
         <div style={{ ...styles.brand, ...(window.innerWidth < 768 ? { paddingLeft: 64 } : {}) }}>
-          <NavLink to="/" aria-label="Home"><img src="/logo-wordmark-dark.png" alt="AllInKigali" style={styles.brandWordmark} /></NavLink>
+          <NavLink to="/" aria-label="Home"><img src="/logo-wordmark.png" alt="AllInKigali" style={styles.brandWordmark} /></NavLink>
           <div style={styles.brandSub}>Staff Portal</div>
         </div>
 
@@ -75,7 +75,7 @@ export default function Sidebar({ user, onLogout, open, onToggle, unreadCount })
               onClick={() => window.innerWidth < 768 && onToggle()}
               style={({ isActive }) => ({ ...styles.navLink, ...(isActive ? styles.navLinkActive : {}) })}
             >
-              <link.icon size={17} color={t.lime} strokeWidth={2.2} />
+              <link.icon size={17} color={t.sideIcon} strokeWidth={2.2} />
               <span style={{ flex: 1 }}>{link.label}</span>
               {link.to === '/announcements' && unreadCount > 0 && (
                 <span style={styles.badge}>{unreadCount > 9 ? '9+' : unreadCount}</span>
@@ -126,14 +126,14 @@ const styles = {
   sidebar: {
     position: 'fixed', top: 0, left: 0, bottom: 0,
     width: 260, background: t.bgSidebar,
-    borderRight: `1px solid ${t.border}`,
+    borderRight: 'none',
     display: 'flex', flexDirection: 'column',
     zIndex: 100,
     transform: 'translateX(-100%)',
     transition: 'transform 0.2s ease',
   },
   sidebarOpen: { transform: 'translateX(0)' },
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(17,17,17,0.35)', zIndex: 99 },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(4,44,83,0.35)', zIndex: 99 },
   toggle: {
     position: 'fixed', top: 12, left: 12, zIndex: 101,
     background: t.bgCard, color: t.text,
@@ -149,20 +149,20 @@ const styles = {
     objectFit: 'contain', display: 'block',
     marginBottom: 4,
   },
-  brandSub: { color: t.textMuted, fontSize: 11, fontWeight: 500, letterSpacing: 0.3, paddingLeft: 2 },
+  brandSub: { color: t.sideMuted, fontSize: 11, fontWeight: 500, letterSpacing: 0.3, paddingLeft: 2 },
 
   nav: { flex: 1, padding: '8px 12px', overflowY: 'auto', display: 'flex', flexDirection: 'column', gap: 2 },
   sectionLabel: {
-    color: t.textMuted, fontSize: 10, fontWeight: 700,
+    color: t.sideMuted, fontSize: 10, fontWeight: 700,
     letterSpacing: 0.8, padding: '4px 12px 2px',
   },
   navLink: {
     display: 'flex', alignItems: 'center', gap: 10,
     padding: '9px 12px', borderRadius: t.radius,
-    color: t.textSecondary, fontSize: 14, fontWeight: 500,
+    color: t.sideText, fontSize: 14, fontWeight: 500,
     textDecoration: 'none', transition: 'all 0.15s',
   },
-  navLinkActive: { background: t.bgActive, color: t.inkAccent },
+  navLinkActive: { background: t.sideActiveBg, color: '#FFFFFF', fontWeight: 600 },
   badge: {
     background: t.danger, color: '#fff',
     fontSize: 10, fontWeight: 700,
@@ -171,19 +171,19 @@ const styles = {
     padding: '0 4px',
   },
 
-  footer: { padding: 16, borderTop: `1px solid ${t.border}` },
+  footer: { padding: 16, borderTop: `1px solid ${t.sideBorder}` },
   userInfo: { display: 'flex', alignItems: 'center', gap: 10, marginBottom: 12 },
   avatar: {
     width: 36, height: 36, borderRadius: '50%',
-    background: t.bgHover, color: t.text,
+    background: t.accent, color: '#FFFFFF',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     fontSize: 13, fontWeight: 600, flexShrink: 0,
   },
-  userName: { color: t.text, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
-  userRole: { color: t.textMuted, fontSize: 12, textTransform: 'capitalize' },
+  userName: { color: t.sideText, fontSize: 13, fontWeight: 600, overflow: 'hidden', textOverflow: 'ellipsis', whiteSpace: 'nowrap' },
+  userRole: { color: t.sideMuted, fontSize: 12, textTransform: 'capitalize' },
   logoutBtn: {
     display: 'flex', alignItems: 'center', gap: 8,
     width: '100%', padding: '8px 12px', borderRadius: t.radius,
-    background: 'transparent', color: t.inkStatus || t.danger, fontSize: 13,
+    background: 'transparent', color: t.sideText, fontSize: 13,
   },
 };

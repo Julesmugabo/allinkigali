@@ -41,7 +41,7 @@ export default function StaffHome() {
       <div style={s.quickGrid}>
         <QuickCard
           icon={Bell}
-          color="#91D51F"
+          color="#378ADD"
           label="Announcements"
           value={loading ? '—' : data?.unreadAnnouncements > 0 ? `${data.unreadAnnouncements} unread` : 'Up to date'}
           badge={!loading && data?.unreadAnnouncements > 0 ? data.unreadAnnouncements : null}
@@ -49,14 +49,14 @@ export default function StaffHome() {
         />
         <QuickCard
           icon={FolderOpen}
-          color="#91D51F"
+          color="#378ADD"
           label="Shared Documents"
           value={loading ? '—' : `${data?.documentCount ?? 0} file${data?.documentCount !== 1 ? 's' : ''}`}
           onClick={() => navigate('/documents')}
         />
         <QuickCard
           icon={FileText}
-          color="#E6B92E"
+          color="#F5C518"
           label="My Contracts"
           value={loading ? '—' : `${data?.contractCount ?? 0} contract${data?.contractCount !== 1 ? 's' : ''}`}
           onClick={() => navigate('/contracts')}
@@ -151,7 +151,7 @@ const s = {
     padding: '12px 0', borderBottom: `1px solid ${t.border}`,
     cursor: 'pointer',
   },
-  annUnread: { background: 'rgba(145,213,31,0.08)', margin: '0 -20px', padding: '12px 20px' },
+  annUnread: { background: 'rgba(55,138,221,0.08)', margin: '0 -20px', padding: '12px 20px' },
   annLeft: { display: 'flex', flexDirection: 'column', alignItems: 'center', gap: 4, paddingTop: 3, minWidth: 14 },
   unreadDot: { width: 8, height: 8, borderRadius: '50%', background: t.accent },
   annTitle: { color: t.text, fontSize: 14, fontWeight: 600, marginBottom: 2 },

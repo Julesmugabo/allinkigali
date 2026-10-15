@@ -46,6 +46,6 @@ const s = {
   filters: { display: 'flex', gap: 6, flexWrap: 'wrap', flex: 1, order: 1 },
   filtersNarrow: { flexWrap: 'nowrap', overflowX: 'auto', flexBasis: '100%', order: 2, paddingBottom: 2 },
   on: { display: 'inline-flex', alignItems: 'center', gap: 6, color: t.text, fontSize: 13, fontWeight: 600 },
-  start: { display: 'inline-flex', alignItems: 'center', gap: 6, background: t.lime, color: t.text, fontWeight: 800, padding: '8px 16px' },
+  start: { display: 'inline-flex', alignItems: 'center', gap: 6, background: t.lime, color: t.onAccent, fontWeight: 800, padding: '8px 16px' },
   chip: { flex: 'none', whiteSpace: 'nowrap', background: 'transparent', color: t.textSecondary, border: `1px solid ${t.borderLight}`, borderRadius: 20, padding: '5px 12px', fontSize: 13, fontWeight: 600 },
 };

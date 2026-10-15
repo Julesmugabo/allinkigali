@@ -11,7 +11,7 @@ import { Panel, Loading, ErrorText } from '../../../../components/ui';
 import { directorApi } from '../../directorApi';
 import GrantAccessModal, { ROLES } from './GrantAccessModal';
 
-const COLORS = { director: '#E6B92E', news: '#91D51F', sellers: '#91D51F', finance: '#E6B92E', restaurant: '#FB923C', coffeeshop: '#E6B92E' };
+const COLORS = { director: '#F5C518', news: '#378ADD', sellers: '#378ADD', finance: '#F5C518', restaurant: '#FB923C', coffeeshop: '#F5C518' };
 const roleLabel = (r) => (r === 'director' ? 'Director' : ROLES.find((x) => x.value === r)?.label || r);
 
 export default function Team({ notify }) {

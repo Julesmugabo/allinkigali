@@ -33,7 +33,7 @@ export default function DashboardLink({ link, children = [], onNavigate }) {
           onClick={() => { if (hasChildren) setOpen(true); else if (isMobile()) onNavigate?.(); }}
           style={() => ({ ...s.link, ...(inside ? s.linkActive : {}), flex: 1 })}
         >
-          <link.icon size={17} color={t.lime} strokeWidth={2.2} />
+          <link.icon size={17} color={t.sideIcon} strokeWidth={2.2} />
           <span style={{ flex: 1 }}>{link.label}</span>
         </NavLink>
         {hasChildren && (
@@ -57,10 +57,10 @@ const s = {
   link: {
     display: 'flex', alignItems: 'center', gap: 10,
     padding: '9px 12px', borderRadius: t.radius,
-    color: t.textSecondary, fontSize: 14, fontWeight: 500,
+    color: t.sideText, fontSize: 14, fontWeight: 500,
     textDecoration: 'none', transition: 'all 0.15s',
   },
-  linkActive: { background: t.bgActive, color: t.inkAccent },
-  chevron: { background: 'transparent', color: t.textMuted, padding: '8px 6px' },
-  children: { margin: '2px 0 6px 21px', paddingLeft: 10, borderLeft: `1px solid ${t.borderLight}`, display: 'flex', flexDirection: 'column', gap: 1 },
+  linkActive: { background: t.sideActiveBg, color: '#FFFFFF', fontWeight: 600 },
+  chevron: { background: 'transparent', color: t.sideMuted, padding: '8px 6px' },
+  children: { margin: '2px 0 6px 21px', paddingLeft: 10, borderLeft: `1px solid ${t.sideBorder}`, display: 'flex', flexDirection: 'column', gap: 1 },
 };

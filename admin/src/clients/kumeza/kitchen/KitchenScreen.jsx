@@ -99,5 +99,5 @@ const s = {
   empty: { color: t.textSecondary, background: t.bgCard, borderRadius: t.radiusLg, padding: 28, textAlign: 'center' },
   readyTitle: { color: t.textMuted, fontSize: 12, fontWeight: 800, textTransform: 'uppercase', letterSpacing: 1, margin: '22px 0 8px' },
   readyRow: { display: 'flex', flexWrap: 'wrap', gap: 8 },
-  readyChip: { background: 'rgba(145,213,31,0.22)', color: t.text, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 700 },
+  readyChip: { background: 'rgba(55,138,221,0.22)', color: t.text, borderRadius: 8, padding: '6px 12px', fontSize: 13, fontWeight: 700 },
 };

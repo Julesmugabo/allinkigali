@@ -39,7 +39,7 @@ export default function DeliveryCell({ place, onSave, disabled }) {
 
 const s = {
   switch: { padding: '4px 10px', fontSize: 12, fontWeight: 600, borderRadius: 20 },
-  on: { background: '#E6B92E22', color: '#E6B92E' },
+  on: { background: '#F5C51822', color: '#F5C518' },
   off: { background: t.bgHover, color: t.textSecondary },
   link: { background: 'transparent', color: t.inkAccent, padding: 0, fontSize: 12 },
   form: { display: 'flex', gap: 4, flexWrap: 'wrap', maxWidth: 260 },

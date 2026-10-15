@@ -21,9 +21,9 @@ const FILE_TYPES = [
 
 const TYPE_COLORS = {
   pdf:   '#F87171',
-  doc:   '#91D51F',
-  sheet: '#91D51F',
-  link:  '#E6B92E',
+  doc:   '#378ADD',
+  sheet: '#378ADD',
+  link:  '#F5C518',
 };
 
 export default function Documents() {
@@ -228,7 +228,7 @@ const s = {
   },
   removeBtn: { background: 'transparent', color: t.inkStatus || t.danger, padding: 6, borderRadius: t.radius, display: 'flex', alignItems: 'center' },
 
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(17,17,17,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(4,44,83,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 },
   modal: { background: t.bgCard, borderRadius: t.radiusLg, padding: 28, width: '100%', maxWidth: 500 },
   modalHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   modalTitle: { color: t.text, fontSize: 18, fontWeight: 700, margin: 0 },

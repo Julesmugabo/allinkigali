@@ -48,10 +48,10 @@ export default function QrSheet({ placeName, tables, onClose }) {
 }
 
 const CSS = `
-.qr-overlay { position: fixed; inset: 0; z-index: 400; background: #F5F2EA; overflow-y: auto; }
-.qr-bar { position: sticky; top: 0; z-index: 1; display: flex; gap: 10px; align-items: center; padding: 12px 20px; background: #FFFFFF; border-bottom: 2px solid #91D51F; color: #111111; font-size: 14px; }
+.qr-overlay { position: fixed; inset: 0; z-index: 400; background: #F2F4F7; overflow-y: auto; }
+.qr-bar { position: sticky; top: 0; z-index: 1; display: flex; gap: 10px; align-items: center; padding: 12px 20px; background: #FFFFFF; border-bottom: 2px solid #378ADD; color: #042C53; font-size: 14px; }
 .qr-sheet { display: grid; grid-template-columns: repeat(auto-fill, minmax(290px, 1fr)); gap: 16px; padding: 20px; max-width: 1100px; margin: 0 auto; }
-.qr-card { background: #fff; color: #111; border: 1px solid rgba(17,17,17,0.12); border-radius: 12px; padding: 18px 14px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; font-family: Inter, Arial, sans-serif; }
+.qr-card { background: #fff; color: #111; border: 1px solid rgba(4,44,83,0.12); border-radius: 12px; padding: 18px 14px; text-align: center; display: flex; flex-direction: column; align-items: center; gap: 6px; font-family: Inter, Arial, sans-serif; }
 .qr-place { font-size: 14px; font-weight: 700; color: #444; }
 .qr-table { font-size: 30px; font-weight: 900; line-height: 1.1; }
 .qr-scan { font-size: 12px; color: #333; }

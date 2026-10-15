@@ -16,7 +16,7 @@ function Group({ item, onNavigate }) {
   return (
     <div>
       <button type="button" onClick={() => setOpen((v) => !v)} style={{ ...s.link, ...(inside ? s.groupOn : {}), width: '100%' }}>
-        <item.icon size={17} color={t.lime} strokeWidth={2.2} />
+        <item.icon size={17} color={t.sideIcon} strokeWidth={2.2} />
         <span style={{ flex: 1, textAlign: 'left' }}>{item.label}</span>
         <Chevron size={15} />
       </button>
@@ -40,7 +40,7 @@ export default function ClientNav({ items, onNavigate }) {
         ? <Group key={item.label} item={item} onNavigate={onNavigate} />
         : (
           <NavLink key={item.to} to={item.to} end onClick={onNavigate} style={({ isActive }) => ({ ...s.link, ...(isActive ? s.linkOn : {}) })}>
-            <item.icon size={17} color={t.lime} strokeWidth={2.2} /><span>{item.label}</span>
+            <item.icon size={17} color={t.sideIcon} strokeWidth={2.2} /><span>{item.label}</span>
           </NavLink>
         )))}
     </nav>
@@ -49,10 +49,10 @@ export default function ClientNav({ items, onNavigate }) {
 
 const s = {
   nav: { display: 'flex', flexDirection: 'column', gap: 2, padding: '8px 12px', flex: 1, overflowY: 'auto' },
-  link: { display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: t.radius, color: t.textSecondary, fontSize: 14, fontWeight: 500, textDecoration: 'none', background: 'transparent', border: 'none', cursor: 'pointer' },
-  linkOn: { background: t.bgActive, color: t.text, fontWeight: 600 },
-  groupOn: { color: t.text },
-  children: { margin: '2px 0 6px 21px', paddingLeft: 10, borderLeft: `2px solid ${t.borderLight}`, display: 'flex', flexDirection: 'column', gap: 1 },
-  child: { padding: '6px 10px', borderRadius: 6, color: t.textSecondary, fontSize: 13, textDecoration: 'none' },
-  childOn: { color: t.text, background: t.bgActive, fontWeight: 600, boxShadow: `inset 3px 0 0 ${t.lime}` },
+  link: { display: 'flex', alignItems: 'center', gap: 10, padding: '9px 12px', borderRadius: t.radius, color: t.sideText, fontSize: 14, fontWeight: 500, textDecoration: 'none', background: 'transparent', border: 'none', cursor: 'pointer' },
+  linkOn: { background: t.sideActiveBg, color: '#FFFFFF', fontWeight: 600 },
+  groupOn: { color: '#FFFFFF' },
+  children: { margin: '2px 0 6px 21px', paddingLeft: 10, borderLeft: `2px solid ${t.sideBorder}`, display: 'flex', flexDirection: 'column', gap: 1 },
+  child: { padding: '6px 10px', borderRadius: 6, color: t.sideMuted, fontSize: 13, textDecoration: 'none' },
+  childOn: { color: '#FFFFFF', background: t.sideActiveBg, fontWeight: 600, boxShadow: `inset 3px 0 0 ${t.gold}` },
 };

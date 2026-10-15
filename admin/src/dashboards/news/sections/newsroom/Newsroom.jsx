@@ -51,7 +51,7 @@ export default function Newsroom() {
         <Kpi label="Total reads" value={fmtNum(view.reads)} />
         <Kpi label="Published today" value={view.publishedToday} color={t.success} />
         <Kpi label="Waiting for approval" value={view.pending} color={t.warning} onClick={() => go('articles')} />
-        <Kpi label="Trending now" value={view.trending} color="#E6B92E" />
+        <Kpi label="Trending now" value={view.trending} color="#F5C518" />
       </KpiGrid>
 
       <div style={s.two}>

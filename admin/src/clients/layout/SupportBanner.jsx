@@ -35,5 +35,5 @@ export default function SupportBanner({ me, onChanged }) {
 const st = {
   bar: { display: 'flex', alignItems: 'center', gap: 10, flexWrap: 'wrap', background: '#FBF3D9', color: t.text, borderBottom: `2px solid ${t.gold}`, padding: '10px 20px', fontSize: 13.5, position: 'sticky', top: 0, zIndex: 20 },
   btn: { display: 'inline-flex', alignItems: 'center', gap: 6, background: t.gold, color: t.text, border: 'none', borderRadius: 8, padding: '6px 12px', fontWeight: 700, cursor: 'pointer' },
-  ghost: { background: 'transparent', color: t.text, border: '1px solid rgba(17,17,17,0.25)' },
+  ghost: { background: 'transparent', color: t.text, border: '1px solid rgba(4,44,83,0.25)' },
 };

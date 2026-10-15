@@ -1,24 +1,24 @@
-/* clients.css — the business dashboard's page-wide look, on top of index.css:
-   warm light page, black and grey words, lime and gold for shapes. */
+/* clients.css — the dashboards' page-wide look (Staff Portal and business),
+   the allinkigali app's palette: light page, navy words, blue accents. */
 
-html, body, #root { background: #F5F2EA; color: #111111; }
+html, body, #root { background: #F2F4F7; color: #042C53; }
 
-a { color: #111111; text-decoration: underline; text-decoration-color: #91D51F; text-decoration-thickness: 2px; text-underline-offset: 3px; }
-a:hover { color: #111111; text-decoration-color: #E6B92E; }
+a { color: #185FA5; text-decoration: none; }
+a:hover { color: #378ADD; text-decoration: underline; }
 
 input, select, textarea {
-  color: #111111;
+  color: #042C53;
   background: #FFFFFF;
-  border: 1px solid rgba(17, 17, 17, 0.14);
+  border: 1px solid rgba(4, 44, 83, 0.16);
 }
 input:focus, select:focus, textarea:focus {
-  border-color: #91D51F;
-  box-shadow: 0 0 0 3px rgba(145, 213, 31, 0.25);
+  border-color: #378ADD;
+  box-shadow: 0 0 0 3px rgba(55, 138, 221, 0.20);
 }
-::placeholder { color: #9A958A; }
-input[type='checkbox'], input[type='radio'] { accent-color: #91D51F; }
+::placeholder { color: #8A97A6; }
+input[type='checkbox'], input[type='radio'] { accent-color: #378ADD; }
 
-button:focus-visible, a:focus-visible { outline: 2px solid #91D51F; outline-offset: 2px; }
+button:focus-visible, a:focus-visible { outline: 2px solid #378ADD; outline-offset: 2px; }
 
-::-webkit-scrollbar-thumb { background: #D8D1C2; }
-::-webkit-scrollbar-thumb:hover { background: #C5BCA8; }
+::-webkit-scrollbar-thumb { background: #C7D3E0; }
+::-webkit-scrollbar-thumb:hover { background: #A9BBCF; }

@@ -82,7 +82,7 @@ const s = {
   head: { display: 'flex', justifyContent: 'space-between', marginBottom: 6 },
   items: { color: t.text, marginBottom: 6, lineHeight: 1.5 },
   meta: { color: t.textSecondary, fontSize: 12 },
-  note: { background: 'rgba(230,185,46,0.25)', color: t.text, borderRadius: 4, padding: '0 5px' },
+  note: { background: 'rgba(245,197,24,0.25)', color: t.text, borderRadius: 4, padding: '0 5px' },
   total: { fontWeight: 700, marginTop: 6 },
   empty: { color: t.textMuted, fontSize: 13, textAlign: 'center', padding: 10 },
   doneRow: { display: 'flex', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderBottom: `1px solid ${t.border}`, fontSize: 13, color: t.textSecondary },

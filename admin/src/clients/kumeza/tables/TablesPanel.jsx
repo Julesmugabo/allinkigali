@@ -84,5 +84,5 @@ const s = {
   adders: { display: 'flex', flexWrap: 'wrap', gap: 10, alignItems: 'center', marginBottom: 16 },
   adder: { display: 'flex', gap: 8, alignItems: 'center', flexWrap: 'wrap' },
   muted: { color: t.textMuted, fontSize: 13 },
-  code: { fontFamily: 'ui-monospace, Consolas, monospace', fontWeight: 700, letterSpacing: 1.5, color: t.text, background: 'rgba(145,213,31,0.22)', borderRadius: 6, padding: '2px 8px' },
+  code: { fontFamily: 'ui-monospace, Consolas, monospace', fontWeight: 700, letterSpacing: 1.5, color: t.text, background: 'rgba(55,138,221,0.22)', borderRadius: 6, padding: '2px 8px' },
 };

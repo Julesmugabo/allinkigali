@@ -2,7 +2,7 @@ import { CLIENT_LOOK } from './clients/look';
 
 // The original dark set, kept for reference. Since 2026-10-15 both the
 // Staff Portal and the business dashboard use the light allinkigali look
-// (clients/look.js): #F5F2EA page, black/grey words, lime and gold shapes.
+// (clients/look.js): #F2F4F7 page, black/grey words, lime and gold shapes.
 const DARK_LOOK = {
   bg: '#0B1120',
   bgSidebar: '#0F172A',
@@ -38,6 +38,7 @@ const DARK_LOOK = {
   onAccent: '#0B1120', // words on an accent-filled button or chip
   inkAccent: '#38BDF8', // words marking the active tab or an info button
   inkStatus: null, // null: status words in their own colour
+  sideText: '#F1F5F9', sideMuted: '#94A3B8', sideActiveBg: 'rgba(56,189,248,0.12)', sideIcon: '#38BDF8', sideBorder: '#1E293B',
 };
 
 export const t = { ...DARK_LOOK, ...CLIENT_LOOK };

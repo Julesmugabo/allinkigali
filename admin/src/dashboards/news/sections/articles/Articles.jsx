@@ -64,7 +64,7 @@ export default function Articles() {
       key: 'title', label: 'Article', render: (a) => (
         <div>
           <div style={{ fontWeight: 500 }}>
-            {a.isFeatured && <Star size={13} color="#E6B92E" fill="#E6B92E" style={{ marginRight: 5, verticalAlign: -2 }} />}
+            {a.isFeatured && <Star size={13} color="#F5C518" fill="#F5C518" style={{ marginRight: 5, verticalAlign: -2 }} />}
             {a.isBreaking && <Zap size={13} color={t.danger} fill={t.danger} style={{ marginRight: 5, verticalAlign: -2 }} />}
             {a.title}
           </div>

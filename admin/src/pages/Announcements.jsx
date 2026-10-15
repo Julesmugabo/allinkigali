@@ -208,7 +208,7 @@ const s = {
   annRow: {
     padding: '16px 0', borderBottom: `1px solid ${t.border}`,
   },
-  pinnedRow: { background: 'rgba(145,213,31,0.08)', margin: '0 -20px', padding: '16px 20px' },
+  pinnedRow: { background: 'rgba(55,138,221,0.08)', margin: '0 -20px', padding: '16px 20px' },
   annMain: {},
   annHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
   annTitleRow: { display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 },
@@ -222,7 +222,7 @@ const s = {
     padding: '2px 8px', borderRadius: 20, fontSize: 11,
   },
 
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(17,17,17,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(4,44,83,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 },
   modal: { background: t.bgCard, borderRadius: t.radiusLg, padding: 28, width: '100%', maxWidth: 520 },
   modalHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   modalTitle: { color: t.text, fontSize: 18, fontWeight: 700, margin: 0 },

@@ -29,7 +29,7 @@ export default function Invoices() {
   );
 
   const columns = [
-    { key: 'invoice_number', label: 'Invoice #', render: (r) => <span style={{ color: '#91D51F' }}>{r.invoice_number}</span> },
+    { key: 'invoice_number', label: 'Invoice #', render: (r) => <span style={{ color: '#378ADD' }}>{r.invoice_number}</span> },
     { key: 'invoice_type', label: 'Type' },
     { key: 'contact_name', label: 'Contact', render: (r) => r.contact_name || '—' },
     { key: 'due_date', label: 'Due', render: (r) => fmtDate(r.due_date) },
