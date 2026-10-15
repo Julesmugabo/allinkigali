@@ -16,6 +16,7 @@ const ACTION = {
   change: ['Changed', '#F472B6'],
   onboard: ['Owner login given', t.success],
   reset_password: ['New owner password', t.warning],
+  remove_owner: ['Owner removed', t.danger],
 };
 const when = (d) => new Date(d).toLocaleString('en-GB', { day: '2-digit', month: 'short', hour: '2-digit', minute: '2-digit' });
 

@@ -45,7 +45,7 @@ const financeRoutes       = require('./routes/finance');
 const staffPortalRoutes   = require('./routes/staffPortal');
 const clientsRoutes       = require('./routes/clients');
 const kumezaPublicRoutes  = require('./routes/kumeza/public');
-const { supportGuard }    = require('./middleware/clientAuth');
+const { supportGuard, revokedGuard } = require('./middleware/clientAuth');
 
 const app = express();
 // Behind nginx: take the visitor's address from X-Forwarded-For (Ku Meza's limits are per visitor).
@@ -65,6 +65,7 @@ app.use(cors({
 }));
 app.use(express.json());
 app.use(supportGuard); // allinkigali support views stay read-only until "Make changes"
+app.use(revokedGuard); // a switched-off client sign-in stops working everywhere
 
 const path = require('path');
 app.use('/uploads', express.static(path.join(__dirname, '..', 'uploads')));

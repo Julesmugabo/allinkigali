@@ -9,6 +9,14 @@
  *
  * supportGuard  (app-wide) a support view is read-only until "Make changes";
  *   once switched on, every change it makes is logged for the client to see.
+ *
+ * revokedGuard  (app-wide) a client sign-in that was switched off (owner
+ *   removed, waiter switched off, tablet disconnected) stops working on
+ *   every route within seconds — not only on /clients.
+ *
+ * clientOwnersOnly  owner routes (/my-restaurant, booking and order admin)
+ *   act for a place only with a client-dashboard sign-in; an old app sign-in
+ *   that still says "restaurant" no longer opens them.
  */
 const jwt = require('jsonwebtoken');
 const { query } = require('../db');
@@ -64,4 +72,25 @@ function supportGuard(req, res, next) {
   next();
 }
 
-module.exports = { requireClient, supportGuard, forget };
+async function revokedGuard(req, res, next) {
+  const [scheme, token] = (req.headers.authorization || '').split(' ');
+  if (scheme !== 'Bearer' || !token) return next();
+  let p;
+  try { p = jwt.verify(token, process.env.JWT_SECRET); } catch { return next(); }
+  if (p.aud !== 'clients' || !p.place) return next();
+  try {
+    if (!(await stillActive(p))) return res.status(401).json({ error: 'This sign-in was switched off. Ask the owner.', code: 'REVOKED' });
+  } catch (e) { return next(e); }
+  next();
+}
+
+const OWNER_ROLES = ['restaurant', 'coffeeshop', 'wedding'];
+function clientOwnersOnly(req, res, next) {
+  const u = req.user;
+  if (u && OWNER_ROLES.includes(u.role) && u.aud !== 'clients') {
+    return res.status(403).json({ error: 'Restaurants, cafés and venues sign in at allinclients.allinkigali.rw.', code: 'USE_CLIENT_DASHBOARD' });
+  }
+  next();
+}
+
+module.exports = { requireClient, supportGuard, revokedGuard, clientOwnersOnly, forget };

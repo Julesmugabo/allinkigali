@@ -16,6 +16,7 @@ const ACTION = {
   change: ['Changed something', '#F472B6'],
   onboard: ['Gave an owner their sign-in', t.success],
   reset_password: ['Gave an owner a new password', t.warning],
+  remove_owner: ['Removed an owner’s sign-in', t.danger],
 };
 const ROLE = { director: 'Director', sellers: 'Sales Partner', finance: 'Finance' };
 
@@ -34,7 +35,7 @@ export default function SupportActivity({ me }) {
     { key: 'at', label: 'When', render: (r) => `${day(r.at)} · ${clock(r.at)}` },
     { key: 'who', label: 'Who', render: (r) => <>{r.who}<div style={{ color: t.textMuted, fontSize: 12 }}>{ROLE[r.role] || r.role}</div></> },
     { key: 'action', label: 'What', render: (r) => { const [label, color] = ACTION[r.action] || [r.action, t.textSecondary]; return <Badge color={color}>{label}</Badge>; } },
-    { key: 'detail', label: '', render: (r) => <span style={{ color: t.textMuted, fontSize: 12 }}>{r.action === 'change' ? what(r.detail) : ['onboard', 'reset_password'].includes(r.action) ? r.detail : ''}</span> },
+    { key: 'detail', label: '', render: (r) => <span style={{ color: t.textMuted, fontSize: 12 }}>{r.action === 'change' ? what(r.detail) : ['onboard', 'reset_password', 'remove_owner'].includes(r.action) ? r.detail : ''}</span> },
   ];
   return (
     <div>

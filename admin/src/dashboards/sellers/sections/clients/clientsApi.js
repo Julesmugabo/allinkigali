@@ -9,6 +9,7 @@ export const clientsApi = {
   places: () => apiFetch('/clients/admin/places'),
   onboard: (body) => apiFetch('/clients/admin/onboard', { method: 'POST', body }), // { placeType, placeId, firstName, lastName, email, phone }
   resetPassword: (memberId) => apiFetch(`/clients/admin/members/${memberId}/reset-password`, { method: 'POST', body: {} }),
+  removeOwner: (memberId) => apiFetch(`/clients/admin/members/${memberId}/remove`, { method: 'POST', body: {} }),
   activity: () => apiFetch('/clients/admin/activity'),
 };
 

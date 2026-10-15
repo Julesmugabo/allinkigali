@@ -7,10 +7,11 @@ const express = require('express');
 const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
+const { clientOwnersOnly } = require('../middleware/clientAuth');
 const { notifyUser } = require('../pushNotifications');
 
 const router = express.Router();
-const guard = [requireAuth, requireRole('restaurant', 'coffeeshop', 'sellers')];
+const guard = [requireAuth, requireRole('restaurant', 'coffeeshop', 'sellers'), clientOwnersOnly];
 
 // Derive context from the JWT: which table, which id, which booking type.
 // Which place this request acts on. Owners always get their own linked
@@ -238,23 +239,21 @@ router.delete('/menu/:id', ...guard, async (req, res) => {
 router.get('/reviews', ...guard, async (req, res) => {
   const ctx = getContext(req);
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
-  try {
-    const { rows } = await query(
-      `SELECT r.*, COALESCE(NULLIF(TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')), ''), u.email) as "guestName"
-       FROM reviews r
-       LEFT JOIN users u ON r.user_id = u.id
-       WHERE r.place_id = $1 AND r.place_type = $2
-       ORDER BY r.created_at DESC`,
-      [ctx.placeId, ctx.bookingType]
-    );
-    res.json(rows.map(r => ({
-      id: r.id, rating: r.rating, text: r.text,
-      guestName: r.guestName, date: r.created_at?.toISOString().slice(0,10),
-      ownerReply: r.owner_reply,
-    })));
-  } catch {
-    res.json([]);
-  }
+  // reviews.user_id is text; comparing it to the uuid directly failed, and the
+  // old catch-all turned that into an empty list, so owners never saw reviews.
+  const { rows } = await query(
+    `SELECT r.*, COALESCE(NULLIF(TRIM(COALESCE(u.first_name, '') || ' ' || COALESCE(u.last_name, '')), ''), u.email) as "guestName"
+     FROM reviews r
+     LEFT JOIN users u ON u.id::text = r.user_id
+     WHERE r.place_id = $1 AND r.place_type = $2
+     ORDER BY r.created_at DESC`,
+    [ctx.placeId, ctx.bookingType]
+  );
+  res.json(rows.map(r => ({
+    id: r.id, rating: Number(r.rating), text: r.text,
+    guestName: r.guestName || 'Guest', date: r.created_at?.toISOString().slice(0,10),
+    ownerReply: r.owner_reply,
+  })));
 });
 
 router.post('/reviews/:id/reply', ...guard, async (req, res) => {

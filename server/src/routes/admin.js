@@ -12,8 +12,10 @@ const bcrypt = require('bcryptjs');
 const { pool, query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
+const { linkOwner, unlinkAccount } = require('../clients/placeOwners');
 
 const router = express.Router();
+const OWNER_ROLES = ['restaurant', 'coffeeshop'];
 const MIGRATIONS_DIR = path.join(__dirname, '..', '..', 'migrations');
 
 function adminToJson(row) {
@@ -117,6 +119,12 @@ router.post('/assign-role', requireAuth, requireRole('director'), async (req, re
      returning id, email, first_name, last_name, role, created_at`,
     [role, normalizedEmail]
   );
+  // No longer a restaurant / coffee-shop owner (access removed, or now staff):
+  // their client-dashboard sign-in and the old place link go too.
+  if (!OWNER_ROLES.includes(role)) {
+    await query('update users set restaurant_id = null, coffee_shop_id = null where id = $1', [rows[0].id]);
+    await unlinkAccount(rows[0].id);
+  }
   res.json(adminToJson(rows[0]));
 });
 
@@ -136,6 +144,9 @@ router.post('/link-restaurant', requireAuth, requireRole('director'), async (req
   }
   const { rows } = await query(sql, params);
   if (!rows[0]) return res.status(404).json({ error: 'No account found for that email.' });
+  // The owner signs in at the client dashboard (allinclients) with this account.
+  const placeId = coffeeShopId || restaurantId;
+  if (placeId) await linkOwner(coffeeShopId ? 'coffeeshop' : 'restaurant', placeId, rows[0].id, 'allinkigali · director');
   res.json({ ...adminToJson(rows[0]), restaurantId: rows[0].restaurant_id, coffeeShopId: rows[0].coffee_shop_id });
 });
 

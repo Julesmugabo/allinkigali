@@ -4,6 +4,7 @@
  *   GET  /clients/admin/places                   every restaurant, coffee shop and venue: owners, team, activity
  *   POST /clients/admin/onboard                  give a place its owner login (new account or an existing one)
  *   POST /clients/admin/members/:id/reset-password   a new temporary password for an owner/manager
+ *   POST /clients/admin/members/:id/remove           take an owner/manager's sign-in away (e.g. the place changed hands)
  *   GET  /clients/admin/activity                 recent support activity across all clients
  * A temporary password is shown once; the owner changes it after signing in.
  * allinkigali staff accounts can never be linked to a place or reset here
@@ -18,6 +19,8 @@ const { requireAuth } = require('../../middleware/auth');
 const requireRole = require('../../middleware/requireRole');
 const { PLACE, isPlaceType, placeInfo, normalizePhone } = require('../../clients/places');
 const { logSupport } = require('../../clients/supportLog');
+const { linkOwner } = require('../../clients/placeOwners');
+const { forget } = require('../../middleware/clientAuth');
 
 const router = express.Router();
 const staff = [requireAuth, requireRole('sellers')]; // the director always passes
@@ -73,10 +76,7 @@ router.post('/onboard', staff, async (req, res) => {
       [email, await bcrypt.hash(password, 10), String(firstName).trim(), String(lastName || '').trim(), normalizePhone(req.body?.phone) ? `0${normalizePhone(req.body.phone)}` : null]));
   }
   const name = [user.first_name, user.last_name].filter(Boolean).join(' ');
-  await query(
-    `insert into place_members (place_type, place_id, user_id, role, name, created_by)
-     values ($1, $2, $3, 'owner', $4, $5) on conflict do nothing`,
-    [placeType, String(placeId), user.id, name, `allinkigali · ${req.user.email || req.user.sub}`]);
+  await linkOwner(placeType, String(placeId), user.id, `allinkigali · ${req.user.email || req.user.sub}`); // also switches a removed owner back on
   const support = { by: req.user.sub, name: await staffName(req.user.sub), staffRole: req.user.role };
   await logSupport({ place: { type: placeType, id: String(placeId) }, support }, 'onboard', `${name} <${email}>`);
   res.status(201).json({ email, name, temporaryPassword: password, existingAccount: !password });
@@ -93,6 +93,22 @@ router.post('/members/:id/reset-password', staff, async (req, res) => {
   const support = { by: req.user.sub, name: await staffName(req.user.sub), staffRole: req.user.role };
   await logSupport({ place: { type: m.place_type, id: m.place_id }, support }, 'reset_password', m.name);
   res.json({ temporaryPassword: password });
+});
+
+router.post('/members/:id/remove', staff, async (req, res) => {
+  const { rows: [m] } = await query(
+    `update place_members set active = false where id = $1 and role in ('owner', 'manager') and active
+     returning id, place_type, place_id, user_id, name`, [req.params.id]);
+  if (!m) return res.status(404).json({ error: 'Owner not found.' });
+  forget('member', m.id); // signed out within seconds
+  if (m.user_id) { // the old one-owner link too, so booking alerts stop
+    await query('update users set restaurant_id = null where id = $1 and restaurant_id = $2', [m.user_id, m.place_id]);
+    await query('update users set coffee_shop_id = null where id = $1 and coffee_shop_id = $2', [m.user_id, m.place_id]);
+    await query('update wedding_venues set owner_user_id = null where id = $1 and owner_user_id = $2', [m.place_id, String(m.user_id)]);
+  }
+  const support = { by: req.user.sub, name: await staffName(req.user.sub), staffRole: req.user.role };
+  await logSupport({ place: { type: m.place_type, id: m.place_id }, support }, 'remove_owner', m.name);
+  res.json({ ok: true });
 });
 
 router.get('/activity', staff, async (req, res) => {

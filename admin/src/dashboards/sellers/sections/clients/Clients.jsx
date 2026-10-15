@@ -6,7 +6,7 @@
  */
 import React, { useEffect, useMemo, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
-import { ExternalLink, KeyRound } from 'lucide-react';
+import { ExternalLink, KeyRound, UserMinus } from 'lucide-react';
 import { t } from '../../../../theme';
 import { DataTable, Tabs } from '../../../../components/PageShell';
 import Button from '../../../../components/common/Button';
@@ -25,7 +25,8 @@ export default function Clients() {
   const [kind, setKind] = useState('all');
   const [search, setSearch] = useState('');
   const [reset, setReset] = useState(null); // { name, password }
-  useEffect(() => { clientsApi.places().then(setPlaces).catch((e) => setError(e.message)); }, []);
+  const load = () => clientsApi.places().then(setPlaces).catch((e) => setError(e.message));
+  useEffect(() => { load(); }, []);
 
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
@@ -35,6 +36,10 @@ export default function Clients() {
       .map((p) => ({ ...p, placeId: p.id, id: `${p.type}:${p.id}` })); // a restaurant and a café can share an id
   }, [places, kind, search]);
 
+  const removeOwner = async (p, owner) => {
+    if (!window.confirm(`Take ${owner.name}'s sign-in for ${p.name} away? They are signed out within seconds. ${p.name} sees this in its activity list.`)) return;
+    try { await clientsApi.removeOwner(owner.id); load(); } catch (e) { alert(e.message); }
+  };
   const resetPassword = async (p, owner) => {
     if (!window.confirm(`Give ${owner.name} (${owner.email}) a new temporary password? Their old password stops working, and ${p.name} sees this in its activity list.`)) return;
     try { const r = await clientsApi.resetPassword(owner.id); setReset({ name: owner.name, email: owner.email, password: r.temporaryPassword }); } catch (e) { alert(e.message); }
@@ -57,6 +62,7 @@ export default function Clients() {
         <div key={o.id} style={{ display: 'flex', alignItems: 'center', gap: 6 }}>
           <span>{o.name}<span style={s.muted}> · {o.email || 'no email'}{o.role === 'manager' ? ' · manager' : ''}</span></span>
           {o.email && <button type="button" title="New temporary password" onClick={() => resetPassword(p, o)} style={s.key}><KeyRound size={13} /></button>}
+          <button type="button" title="Remove this owner" onClick={() => removeOwner(p, o)} style={s.key}><UserMinus size={13} /></button>
         </div>
       )) : <Button size="sm" variant="warning" onClick={() => navigate(`/sellers/onboard?type=${p.type}&id=${encodeURIComponent(p.placeId)}`)}>Give owner login</Button>),
     },

@@ -2,6 +2,7 @@ const express = require('express');
 const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
+const { clientOwnersOnly } = require('../middleware/clientAuth');
 const { notifyUser } = require('../pushNotifications');
 const { placeOwnerIds } = require('../clients/placeOwners');
 
@@ -81,7 +82,7 @@ router.put('/:id/cancel', requireAuth, async (req, res) => {
 });
 
 // Restaurant owner views their orders
-router.get('/restaurant-orders', requireAuth, requireRole('restaurant', 'coffeeshop', 'director'), async (req, res) => {
+router.get('/restaurant-orders', requireAuth, requireRole('restaurant', 'coffeeshop', 'director'), clientOwnersOnly, async (req, res) => {
   const restaurantId = req.user.restaurantId || req.user.restaurant_id;
   if (!restaurantId) return res.status(400).json({ error: 'No restaurant linked to account.' });
   const { rows } = await query(
@@ -95,7 +96,7 @@ router.get('/restaurant-orders', requireAuth, requireRole('restaurant', 'coffees
 });
 
 // Restaurant owner updates order status
-router.put('/:id/status', requireAuth, requireRole('restaurant', 'coffeeshop', 'director'), async (req, res) => {
+router.put('/:id/status', requireAuth, requireRole('restaurant', 'coffeeshop', 'director'), clientOwnersOnly, async (req, res) => {
   const { status } = req.body || {};
   const allowed = ['confirmed','preparing','ready','delivered','cancelled'];
   if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status.' });

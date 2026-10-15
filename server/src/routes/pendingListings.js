@@ -7,6 +7,7 @@ const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { notifyUser } = require('../pushNotifications');
+const { linkOwner } = require('../clients/placeOwners');
 
 const router = express.Router();
 
@@ -93,6 +94,8 @@ router.post('/:id/approve', ...staffGuard, async (req, res) => {
     `UPDATE users SET role=$1, ${roleCol}=$2 WHERE id=$3`,
     [role, listingId, p.user_id]
   );
+  // ...and their sign-in for the client dashboard (allinclients), same account.
+  await linkOwner(role, listingId, p.user_id, 'allinkigali · approved application');
 
   // Mark application approved
   await query(
@@ -103,7 +106,7 @@ router.post('/:id/approve', ...staffGuard, async (req, res) => {
   // Notify the owner (in-app + push)
   notifyUser(p.user_id, {
     title: '🎉 Your listing has been approved!',
-    body: `${p.business_name} is now live on allinkigali. Log in to set up your dashboard — add photos, menu and more.`,
+    body: `${p.business_name} is now live on allinkigali. Sign in at allinclients.allinkigali.rw with this account to add photos, your menu and more.`,
     data: { type: 'listing_approved', listingId },
   }).catch(() => {});
 

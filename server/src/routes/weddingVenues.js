@@ -2,6 +2,7 @@ const express = require('express');
 const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
+const { linkOwner } = require('../clients/placeOwners');
 
 const router = express.Router();
 
@@ -36,6 +37,8 @@ router.patch('/:id', requireAuth, requireRole('director', 'sellers'), async (req
     if (ownerUserId !== undefined) { params.push(ownerUserId); sets.push(`owner_user_id=$${params.length}`); }
     params.push(req.params.id);
     await query(`UPDATE wedding_venues SET ${sets.join(',')} WHERE id=$${params.length}`, params);
+    // The venue's owner signs in at the client dashboard with that account.
+    if (ownerUserId) await linkOwner('wedding', req.params.id, ownerUserId, 'allinkigali');
     res.json({ ok: true });
   } catch (e) {
     res.status(500).json({ error: e.message });

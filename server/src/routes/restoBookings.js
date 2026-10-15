@@ -1,6 +1,7 @@
 const express = require('express');
 const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const { clientOwnersOnly } = require('../middleware/clientAuth');
 const requireRole = require('../middleware/requireRole');
 
 const { notifyUser } = require('../pushNotifications');
@@ -122,7 +123,7 @@ function ownPlace(user) {
 
 
 // GET /resto-bookings/admin?type=restaurant&placeId=r1
-router.get('/admin', requireAuth, async (req, res) => {
+router.get('/admin', requireAuth, clientOwnersOnly, async (req, res) => {
   const { type, placeId } = req.query;
   // Check the caller has the right role
   const own = ownPlace(req.user);
@@ -142,7 +143,7 @@ router.get('/admin', requireAuth, async (req, res) => {
 });
 
 // PUT /resto-bookings/:id/status — admin confirms / rejects / marks noshow
-router.put('/:id/status', requireAuth, async (req, res) => {
+router.put('/:id/status', requireAuth, clientOwnersOnly, async (req, res) => {
   const { status, reason } = req.body;
   const allowed = ['confirmed','rejected','completed','noshow'];
   if (!allowed.includes(status)) return res.status(400).json({ error: 'Invalid status.' });
