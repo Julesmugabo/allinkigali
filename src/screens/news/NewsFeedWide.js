@@ -23,6 +23,7 @@ import EmptyState from '../../components/common/EmptyState';
 
 import { formatLongDate, timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius } from '../../theme';
+import RestoPromo from '../../components/news/RestoPromo';
 
 const LEFT_AD_MIN_WIDTH = 1200;
 
@@ -127,6 +128,7 @@ export default function NewsFeedWide({
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <WebContainer>
           <NewsTagline style={styles.tagline} />
+          <RestoPromo />
           <View style={styles.columns}>
             {/* Left: timestamped headline stream */}
             <View style={styles.leftCol}>

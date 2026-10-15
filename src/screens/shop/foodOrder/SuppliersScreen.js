@@ -64,7 +64,7 @@ export default function SuppliersScreen({ navigation }) {
         <WebContainer>
           <Pressable onPress={() => navigation.navigate('Shop')} style={styles.back}>
             <MaterialCommunityIcons name="arrow-left" size={18} color={c.accentText} />
-            <Text style={styles.backLabel}>Resto/Coffee</Text>
+            <Text style={styles.backLabel}>Restaurants & Cafés</Text>
           </Pressable>
           <Text style={styles.heading}>Order food</Text>
           <Text style={styles.sub}>Delivered to your door · from {suppliers.length} places · pay cash on delivery</Text>

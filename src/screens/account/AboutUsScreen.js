@@ -8,6 +8,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GradientBackground from '../../components/common/GradientBackground';
 import { colors, spacing, gutter } from '../../theme';
+import AppTopBar from '../../components/common/AppTopBar';
 
 function B({ children }) {
   return <Text style={styles.bold}>{children}</Text>;
@@ -19,10 +20,8 @@ export default function AboutUsScreen({ navigation }) {
   return (
     <GradientBackground>
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <AppTopBar variant="slim" style={{ paddingHorizontal: gutter, marginTop: spacing.xs }} />
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.back} hitSlop={8}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color={colors.white} />
-          </Pressable>
           <Text style={styles.headerTitle}>About Us</Text>
         </View>
 

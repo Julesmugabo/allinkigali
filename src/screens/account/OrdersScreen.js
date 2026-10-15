@@ -11,6 +11,7 @@ import OrderCard from '../../components/account/OrderCard';
 import EmptyState from '../../components/common/EmptyState';
 import { useOrders } from '../../context/OrdersContext';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
+import AppTopBar from '../../components/common/AppTopBar';
 
 const FILTERS = [
   { key: 'active', label: 'In progress' },
@@ -36,17 +37,9 @@ export default function OrdersScreen({ navigation, route }) {
 
   return (
     <View style={styles.container}>
+      <AppTopBar variant="slim" style={{ paddingHorizontal: gutter, marginTop: spacing.xs }} />
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
         <View style={styles.headerRow}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-            style={styles.backButton}
-          >
-            <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textOnNavy} />
-          </Pressable>
           <Text style={styles.title}>My orders</Text>
         </View>
 

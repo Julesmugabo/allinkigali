@@ -13,7 +13,8 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import GradientBackground from '../../components/common/GradientBackground';
 import ShopHome from './home/ShopHome';
 import useIsWideWeb from '../../web/hooks/useIsWideWeb';
-import { spacing } from '../../theme';
+import AppTopBar from '../../components/common/AppTopBar';
+import { spacing, gutter } from '../../theme';
 
 export default function ShopScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -23,7 +24,10 @@ export default function ShopScreen({ navigation }) {
   return (
     <GradientBackground>
       <View style={styles.flex}>
-        <ShopHome navigation={navigation} topPadding={insets.top + spacing.md} />
+        <View style={{ paddingTop: insets.top + spacing.sm, paddingHorizontal: gutter }}>
+          <AppTopBar variant="full" />
+        </View>
+        <ShopHome navigation={navigation} topPadding={spacing.md} />
       </View>
     </GradientBackground>
   );

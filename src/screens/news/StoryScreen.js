@@ -17,6 +17,7 @@ import EmptyState from '../../components/common/EmptyState';
 
 import { useNews } from '../../context/NewsContext';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
+import AppTopBar from '../../components/common/AppTopBar';
 
 export default function StoryScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
@@ -36,16 +37,8 @@ export default function StoryScreen({ route, navigation }) {
 
   return (
     <GradientBackground>
+      <AppTopBar variant="slim" style={{ paddingHorizontal: gutter, marginTop: spacing.xs }} />
       <View style={[styles.header, { paddingTop: insets.top + spacing.md }]}>
-        <Pressable
-          onPress={() => navigation.goBack()}
-          hitSlop={10}
-          accessibilityRole="button"
-          accessibilityLabel="Subira inyuma"
-          style={styles.backButton}
-        >
-          <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textOnNavy} />
-        </Pressable>
         <View style={styles.headerText}>
           {story?.isLive ? (
             <View style={styles.liveRow}>

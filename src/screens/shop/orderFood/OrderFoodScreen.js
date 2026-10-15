@@ -14,6 +14,7 @@ import { useUser } from '../../../context/UserContext';
 import GradientBackground from '../../../components/common/GradientBackground';
 import { colors, typography, spacing, radius, gutter } from '../../../theme';
 import { menuColors as mc } from '../../../theme/colors';
+import AppTopBar from '../../../components/common/AppTopBar';
 
 // ─── helpers ────────────────────────────────────────────────────────────────
 
@@ -234,6 +235,7 @@ export default function OrderFoodScreen({ navigation }) {
     return (
       <GradientBackground colorsOverride={mc.gradient}>
         <View style={{ flex: 1, paddingTop: insets.top }}>
+        <AppTopBar variant="slim" style={{ paddingHorizontal: gutter, marginTop: spacing.xs }} />
         <View style={styles.header}>
           <TouchableOpacity onPress={() => setSelectedPlace(null)} style={styles.back}>
             <MaterialCommunityIcons name="arrow-left" size={24} color={colors.white} />
@@ -381,9 +383,6 @@ export default function OrderFoodScreen({ navigation }) {
     <GradientBackground colorsOverride={mc.gradient}>
       <View style={{ flex: 1, paddingTop: insets.top }}>
         <View style={styles.header}>
-          <TouchableOpacity onPress={() => navigation.goBack()} style={styles.back}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color={colors.white} />
-          </TouchableOpacity>
           <View style={{ flex: 1 }} />
           <Text style={styles.headerTitle}>All Orders</Text>
           <CartIcon cart={cart} onPress={() => setShowCheckout(true)} />

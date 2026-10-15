@@ -15,6 +15,7 @@ import { apiFetch } from '../../../services/apiClient';
 import { useUser } from '../../../context/UserContext';
 import { colors, typography, spacing, radius, gutter } from '../../../theme';
 import { weddingColors as wc } from '../../../theme/colors';
+import AppTopBar from '../../../components/common/AppTopBar';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 const PRICE_LABELS = { 1: 'Budget-friendly', 2: 'Mid-range', 3: 'Luxury' };
@@ -191,9 +192,7 @@ export default function WeddingDetailScreen({ route, navigation }) {
               <Text style={styles.photoCountLabel}>{photos.length} photos</Text>
             </View>
           )}
-          <Pressable onPress={() => navigation.goBack()} style={[styles.overlayBtn, { top: insets.top + spacing.sm, left: gutter }]}>
-            <MaterialCommunityIcons name="arrow-left" size={20} color={colors.white} />
-          </Pressable>
+          <AppTopBar variant="overlay" style={{ top: insets.top + spacing.sm }} />
         </Pressable>
 
         {/* Main info */}

@@ -14,6 +14,7 @@ import PrimaryButton from '../../components/common/PrimaryButton';
 import { useBusinesses } from '../../context/BusinessContext';
 import { formatPrice } from '../../utils/format';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
+import AppTopBar from '../../components/common/AppTopBar';
 
 export default function BusinessDetailScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
@@ -51,15 +52,7 @@ export default function BusinessDetailScreen({ route, navigation }) {
             <MaterialCommunityIcons name={business.icon || 'store-outline'} size={56} color={colors.blue300} />
           )}
 
-          <Pressable
-            onPress={() => navigation.goBack()}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="Subira inyuma"
-            style={[styles.backButton, { top: insets.top + spacing.sm }]}
-          >
-            <MaterialCommunityIcons name="arrow-left" size={20} color={colors.white} />
-          </Pressable>
+          <AppTopBar variant="overlay" style={{ top: insets.top + spacing.sm }} />
         </View>
 
         <View style={styles.content}>

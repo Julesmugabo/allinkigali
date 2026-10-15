@@ -96,7 +96,7 @@ export default function BrowseScreen({ kind, navigation, route }) {
         <WebContainer>
           <Pressable onPress={() => navigation.navigate('Shop')} style={styles.back}>
             <MaterialCommunityIcons name="arrow-left" size={18} color={c.accentText} />
-            <Text style={styles.backLabel}>Resto/Coffee</Text>
+            <Text style={styles.backLabel}>Restaurants & Cafés</Text>
           </Pressable>
           <Text style={styles.heading}>{kind.heading}</Text>
 

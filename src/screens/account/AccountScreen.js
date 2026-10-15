@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GradientBackground from '../../components/common/GradientBackground';
 import ProfileHeader from '../../components/account/ProfileHeader';
+import AppTopBar from '../../components/common/AppTopBar';
 import SettingsList from '../../components/account/SettingsList';
 
 import { useUser } from '../../context/UserContext';
@@ -54,8 +55,11 @@ export default function AccountScreen({ navigation }) {
 
   return (
     <GradientBackground>
+      <View style={{ paddingTop: insets.top + spacing.sm, paddingHorizontal: gutter }}>
+        <AppTopBar variant="full" />
+      </View>
       <ScrollView contentContainerStyle={styles.scrollContent} showsVerticalScrollIndicator={false}>
-        <View style={[styles.top, { paddingTop: insets.top + spacing.lg }]}>
+        <View style={[styles.top, { paddingTop: spacing.lg }]}>
           <Text style={styles.screenTitle}>{isSignedIn ? 'Me' : 'Welcome'}</Text>
           {isSignedIn ? (
             <ProfileHeader user={user} waitingCount={waitingRequests} handledCount={handledRequests} />

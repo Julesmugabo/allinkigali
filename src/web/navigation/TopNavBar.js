@@ -59,6 +59,7 @@ export default function TopNavBar({ state, descriptors, navigation }) {
 
         <View style={styles.sections}>
           {state.routes.map((route, index) => {
+            if (route.name === 'AccountTab') return null; // the profile chip on the right does this
             const { options } = descriptors[route.key];
             const isFocused = state.index === index;
             const label = options.tabLabel || route.name;
@@ -75,15 +76,14 @@ export default function TopNavBar({ state, descriptors, navigation }) {
                 onPress={onPress}
                 accessibilityRole="link"
                 accessibilityState={{ selected: isFocused }}
-                style={styles.sectionItem}
+                style={({ hovered }) => [styles.sectionItem, isFocused && styles.sectionItemActive, hovered && !isFocused && styles.sectionItemHover]}
               >
                 <MaterialCommunityIcons
                   name={iconName}
-                  size={18}
-                  color={isFocused ? colors.white : colors.textOnNavyFaint}
+                  size={20}
+                  color={colors.white}
                 />
                 <Text style={[styles.sectionLabel, isFocused && styles.sectionLabelActive]}>{label}</Text>
-                {isFocused ? <View style={styles.sectionUnderline} /> : null}
               </Pressable>
             );
           })}
@@ -151,22 +151,27 @@ const styles = StyleSheet.create({
   },
   brand: { marginRight: spacing.xxl },
   logo: { width: 80, height: 28 },
-  sections: { flex: 1, flexDirection: 'row', alignItems: 'center', height: '100%' },
+  sections: { flex: 1, flexDirection: 'row', alignItems: 'center', height: '100%', gap: spacing.sm },
+  // Big, clear buttons: the two halves of allinkigali.
   sectionItem: {
     flexDirection: 'row',
     alignItems: 'center',
-    gap: spacing.xs,
-    height: '100%',
+    gap: spacing.sm,
     paddingHorizontal: spacing.lg,
+    paddingVertical: 9,
+    borderRadius: radius.pill,
   },
+  sectionItemActive: { backgroundColor: colors.blue500 },
+  sectionItemHover: { backgroundColor: 'rgba(255,255,255,0.10)' },
   sectionLabel: {
     ...typography.body,
-    fontSize: 14,
-    color: colors.textOnNavyFaint,
+    fontSize: 16,
+    fontWeight: '600',
+    color: 'rgba(255,255,255,0.88)',
   },
   sectionLabelActive: {
     color: colors.white,
-    fontWeight: '600',
+    fontWeight: '700',
   },
   sectionUnderline: {
     position: 'absolute',

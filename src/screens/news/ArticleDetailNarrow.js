@@ -16,6 +16,7 @@ import MarkdownBody from '../../components/news/MarkdownBody';
 import { useNews } from '../../context/NewsContext';
 import { timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
+import AppTopBar from '../../components/common/AppTopBar';
 
 // ── Screen ─────────────────────────────────────────────────────────────────
 
@@ -50,15 +51,7 @@ export default function ArticleDetailNarrow({ route, navigation }) {
             <MaterialCommunityIcons name="newspaper-variant-outline" size={64} color="rgba(133,183,235,0.2)" />
           )}
 
-          <Pressable
-            onPress={() => navigation.goBack()}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="Subira inyuma"
-            style={[styles.backButton, { top: insets.top + spacing.sm }]}
-          >
-            <MaterialCommunityIcons name="arrow-left" size={20} color={colors.white} />
-          </Pressable>
+          <AppTopBar variant="overlay" style={{ top: insets.top + spacing.sm }} />
 
           <ArticleLabels article={article} style={styles.labels} />
         </View>

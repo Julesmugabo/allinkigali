@@ -12,6 +12,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GradientBackground from '../../components/common/GradientBackground';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
+import AppTopBar from '../../components/common/AppTopBar';
 
 export default function SellerPlansScreen({ navigation }) {
   const insets = useSafeAreaInsets();
@@ -19,16 +20,8 @@ export default function SellerPlansScreen({ navigation }) {
   return (
     <GradientBackground>
       <View style={[styles.content, { paddingTop: insets.top + spacing.md }]}>
+        <AppTopBar variant="slim" style={{ paddingHorizontal: gutter, marginTop: spacing.xs }} />
         <View style={styles.topBar}>
-          <Pressable
-            onPress={() => navigation.goBack()}
-            hitSlop={10}
-            accessibilityRole="button"
-            accessibilityLabel="Go back"
-            style={styles.backButton}
-          >
-            <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textOnNavy} />
-          </Pressable>
           <Text style={styles.title}>Plans</Text>
         </View>
 

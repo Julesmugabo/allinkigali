@@ -10,6 +10,7 @@ import GradientBackground from '../../components/common/GradientBackground';
 import NewsListItem from '../../components/news/NewsListItem';
 import { useNews } from '../../context/NewsContext';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
+import AppTopBar from '../../components/common/AppTopBar';
 
 const PAGE = 20;
 
@@ -60,11 +61,9 @@ export default function AllArticlesScreen({ route, navigation }) {
   return (
     <GradientBackground>
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <AppTopBar variant="slim" style={{ paddingHorizontal: gutter, marginTop: spacing.xs }} />
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.back} hitSlop={10}>
-            <MaterialCommunityIcons name="arrow-left" size={22} color={colors.white} />
-          </Pressable>
           <Text style={styles.title}>All Articles</Text>
           <Text style={styles.count}>{filtered.length}</Text>
         </View>

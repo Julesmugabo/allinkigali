@@ -18,6 +18,7 @@ import EmptyState from '../../components/common/EmptyState';
 
 import { formatLongDate } from '../../utils/date';
 import { colors, typography, spacing, gutter } from '../../theme';
+import RestoPromo from '../../components/news/RestoPromo';
 
 export default function NewsFeedNarrow({
   categories,
@@ -55,6 +56,7 @@ export default function NewsFeedNarrow({
           </>
         ) : null}
 
+        <RestoPromo />
         <SectionLabel title="AMAKURU MASHYA" actionLabel="Byose" onActionPress={onSeeAllPress} />
       </View>
     ),

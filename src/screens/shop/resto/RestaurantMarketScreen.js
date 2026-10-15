@@ -29,6 +29,7 @@ import RwandaLocationPicker from '../../../components/common/RwandaLocationPicke
 import { EMPTY_LOCATION, matchesLocation, locationLabel } from '../../../utils/placeLocation';
 import { colors, typography, spacing, radius, gutter } from '../../../theme';
 import { restaurantColors as rc } from '../../../theme/colors';
+import AppTopBar from '../../../components/common/AppTopBar';
 
 const PRICE_OPTIONS = [1, 2, 3, 4];
 
@@ -320,11 +321,9 @@ export default function RestaurantMarketScreen({ navigation }) {
   return (
     <GradientBackground colorsOverride={rc.gradient}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <AppTopBar variant="slim" style={{ paddingHorizontal: gutter, marginTop: spacing.xs }} />
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityRole="button">
-            <MaterialCommunityIcons name="arrow-left" size={20} color={colors.white} />
-          </Pressable>
           <Text style={styles.headerTitle}>Book a Restaurant</Text>
         </View>
 

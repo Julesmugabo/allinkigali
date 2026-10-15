@@ -6,6 +6,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { MaterialCommunityIcons } from '@expo/vector-icons';
 import { apiFetch } from '../../services/apiClient';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
+import AppTopBar from '../../components/common/AppTopBar';
 
 const TYPE_ICON = {
   booking_confirmed: { icon: 'calendar-check', color: '#16a34a' },
@@ -88,10 +89,8 @@ export default function NotificationsScreen({ navigation }) {
 
   return (
     <View style={[styles.container, { paddingTop: insets.top }]}>
+      <AppTopBar variant="slim" style={{ paddingHorizontal: gutter, marginTop: spacing.xs }} />
       <View style={styles.header}>
-        <TouchableOpacity onPress={() => navigation.goBack()} style={styles.back}>
-          <MaterialCommunityIcons name="arrow-left" size={24} color={colors.text} />
-        </TouchableOpacity>
         <Text style={styles.title}>Notifications</Text>
         {unread > 0 && (
           <TouchableOpacity onPress={markAllRead} style={styles.markAll}>

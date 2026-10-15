@@ -19,6 +19,7 @@ import RwandaLocationPicker from '../../../components/common/RwandaLocationPicke
 import { EMPTY_LOCATION, matchesLocation } from '../../../utils/placeLocation';
 import { colors, typography, spacing, radius, gutter } from '../../../theme';
 import { weddingColors as wc } from '../../../theme/colors';
+import AppTopBar from '../../../components/common/AppTopBar';
 
 function haversineKm(lat1, lng1, lat2, lng2) {
   const R = 6371;
@@ -125,11 +126,9 @@ export default function WeddingMarketScreen({ navigation }) {
   return (
     <GradientBackground colorsOverride={wc.gradient}>
       <View style={{ flex: 1, paddingTop: insets.top }}>
+        <AppTopBar variant="slim" style={{ paddingHorizontal: gutter, marginTop: spacing.xs }} />
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.back} hitSlop={8}>
-            <MaterialCommunityIcons name="arrow-left" size={24} color={colors.white} />
-          </Pressable>
           <View style={{ flex: 1 }}>
             <Text style={styles.headerTitle}>Wedding Venues</Text>
             <Text style={styles.headerSub}>{results.length} venue{results.length !== 1 ? 's' : ''} in Kigali</Text>

@@ -21,6 +21,7 @@ import {
 import { apiFetch } from '../../../services/apiClient';
 import { colors, typography, spacing, radius, gutter } from '../../../theme';
 import { restaurantColors as rc } from '../../../theme/colors';
+import AppTopBar from '../../../components/common/AppTopBar';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
@@ -159,9 +160,7 @@ export default function RestaurantDetailScreen({ route, navigation }) {
               <Text style={styles.photosCountLabel}>{photos.length} photos</Text>
             </View>
           )}
-          <Pressable onPress={() => navigation.goBack()} style={[styles.overlayBtn, { top: insets.top + spacing.sm, left: gutter }]}>
-            <MaterialCommunityIcons name="arrow-left" size={20} color={colors.white} />
-          </Pressable>
+          <AppTopBar variant="overlay" style={{ top: insets.top + spacing.sm }} />
         </Pressable>
 
         {/* Main info */}

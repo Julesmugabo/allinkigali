@@ -28,6 +28,7 @@ import { ShopThemeProvider, COFFEE_THEME } from '../../../theme/shopThemes';
 import { EMPTY_LOCATION, matchesLocation, locationLabel } from '../../../utils/placeLocation';
 import { typography, spacing, radius, gutter } from '../../../theme';
 import { coffeeColors as cc } from '../../../theme/colors';
+import AppTopBar from '../../../components/common/AppTopBar';
 
 const PRICE_LABELS = { 1: '$', 2: '$$', 3: '$$$' };
 
@@ -333,11 +334,9 @@ export default function CoffeeShopMarketScreen({ navigation }) {
   return (
     <GradientBackground colorsOverride={cc.gradient}>
       <View style={[styles.container, { paddingTop: insets.top }]}>
+        <AppTopBar variant="slim" style={{ paddingHorizontal: gutter, marginTop: spacing.xs }} />
         {/* Header */}
         <View style={styles.header}>
-          <Pressable onPress={() => navigation.goBack()} style={styles.backBtn} accessibilityRole="button">
-            <MaterialCommunityIcons name="arrow-left" size={20} color={cc.text} />
-          </Pressable>
           <Text style={styles.headerTitle}>Explore Coffee Shops</Text>
         </View>
 

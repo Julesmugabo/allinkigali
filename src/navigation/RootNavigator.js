@@ -85,9 +85,9 @@ export default function RootNavigator() {
           name="ShopTab"
           component={ShopStack}
           options={({ route }) => ({
-            tabLabel: 'Resto/Coffee',
-            tabIcon: 'shopping-outline',
-            tabIconActive: 'shopping',
+            tabLabel: 'Restaurants & Cafés',
+            tabIcon: 'silverware-fork-knife',
+            tabIconActive: 'silverware-fork-knife',
             showsCartBadge: true,
             tabBarHidden: hideTabBarOn(route),
           })}

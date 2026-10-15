@@ -31,6 +31,7 @@ import { useBookings } from '../../context/BookingContext';
 import { notifySeller } from '../../services/sellerNotify';
 import { formatPrice } from '../../utils/format';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
+import AppTopBar from '../../components/common/AppTopBar';
 
 const DATE_OPTIONS = ['Uyu munsi', 'Ejo', 'Ejo bundi'];
 
@@ -143,16 +144,8 @@ export default function BusinessBookScreen({ route, navigation }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
+          <AppTopBar variant="slim" style={{ paddingHorizontal: gutter, marginTop: spacing.xs }} />
           <View style={styles.topBar}>
-            <Pressable
-              onPress={() => navigation.goBack()}
-              hitSlop={10}
-              accessibilityRole="button"
-              accessibilityLabel="Subira inyuma"
-              style={styles.backButton}
-            >
-              <MaterialCommunityIcons name="arrow-left" size={20} color={colors.textOnNavy} />
-            </Pressable>
             <Text style={styles.title}>Tumiza</Text>
           </View>
 

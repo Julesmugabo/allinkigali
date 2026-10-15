@@ -17,6 +17,7 @@ import { apiFetch } from '../../../services/apiClient';
 import BookingForm from '../../../components/booking/BookingForm';
 import { typography, spacing, radius, gutter } from '../../../theme';
 import { coffeeColors as cc } from '../../../theme/colors';
+import AppTopBar from '../../../components/common/AppTopBar';
 
 const PRICE_LABELS = { 1: '$', 2: '$$', 3: '$$$' };
 const { width: SW, height: SH } = Dimensions.get('window');
@@ -166,9 +167,7 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
               <Text style={styles.photosCountLabel}>{photos.length} photos</Text>
             </View>
           )}
-          <Pressable onPress={() => navigation.goBack()} style={[styles.overlayBtn, { top: insets.top + spacing.sm, left: gutter }]}>
-            <MaterialCommunityIcons name="arrow-left" size={20} color={cc.text} />
-          </Pressable>
+          <AppTopBar variant="overlay" style={{ top: insets.top + spacing.sm }} />
         </Pressable>
 
         {/* Main info */}
