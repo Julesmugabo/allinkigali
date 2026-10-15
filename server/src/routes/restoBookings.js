@@ -1,6 +1,7 @@
 const express = require('express');
 const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const requireVerified = require('../middleware/requireVerified');
 const { clientOwnersOnly } = require('../middleware/clientAuth');
 const requireRole = require('../middleware/requireRole');
 const { hasRole } = require('../middleware/requireRole');
@@ -61,7 +62,7 @@ function toJson(row) {
 // ── Customer routes ───────────────────────────────────────────────────────────
 
 // POST /resto-bookings — any logged-in user can book
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireVerified, async (req, res) => {
   const { type, placeId, placeName, guestName, guestPhone, date, time, partySize, notes } = req.body;
   if (!type || !placeId || !placeName || !guestName || !guestPhone || !date || !time) {
     return res.status(400).json({ error: 'Missing required fields.' });

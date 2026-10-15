@@ -23,6 +23,7 @@ const TextField = React.forwardRef(function TextField(
     returnKeyType = 'next',
     onSubmitEditing,
     editable = true,
+    secureTextEntry = false, // passwords: dots, never plain text
     style,
   },
   ref
@@ -65,6 +66,7 @@ const TextField = React.forwardRef(function TextField(
           returnKeyType={returnKeyType}
           onSubmitEditing={onSubmitEditing}
           editable={editable}
+          secureTextEntry={secureTextEntry}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           selectionColor={colors.blue300}

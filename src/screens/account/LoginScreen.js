@@ -56,6 +56,10 @@ export default function LoginScreen({ navigation, route }) {
 
           <SignInForm onSubmit={handleSignIn} isLoading={isLoading} serverError={error} />
 
+          <Pressable onPress={() => navigation.navigate('ForgotPassword', { returnTo })} style={styles.forgot} hitSlop={8} accessibilityRole="button">
+            <Text style={styles.forgotText}>Forgot password?</Text>
+          </Pressable>
+
           <Pressable
             onPress={() => navigation.replace('SignUp', { returnTo })}
             style={styles.link}
@@ -75,6 +79,8 @@ const styles = StyleSheet.create({
   flex: { flex: 1 },
   content: { paddingHorizontal: gutter, width: '100%', maxWidth: 480, alignSelf: 'center' },
   intro: { ...typography.body, color: colors.textOnNavyFaint, marginBottom: spacing.xl, lineHeight: 20 },
+  forgot: { alignSelf: 'flex-end', marginTop: spacing.md },
+  forgotText: { ...typography.caption, color: colors.blue300, fontWeight: '600' },
   link: { alignSelf: 'center', marginTop: spacing.xl },
   linkText: { ...typography.caption, color: colors.textOnNavyFaint },
   linkStrong: { color: colors.blue300, fontWeight: '700' },

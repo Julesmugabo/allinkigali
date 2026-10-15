@@ -14,6 +14,7 @@
 const express = require('express');
 const { query, getClient } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const requireVerified = require('../middleware/requireVerified');
 const { notifyUser } = require('../pushNotifications');
 const { placeOwnerIds } = require('../clients/placeOwners');
 
@@ -77,7 +78,7 @@ async function priceGroup(group) {
   return { place, placeType: group.placeType, items, subtotal, deliveryFee, total: subtotal + deliveryFee, expected: group.expectedSubtotal };
 }
 
-router.post('/checkout', requireAuth, async (req, res) => {
+router.post('/checkout', requireAuth, requireVerified, async (req, res) => {
   const { groups, address, landmark, phone, notes } = req.body || {};
   if (!Array.isArray(groups) || !groups.length) return res.status(400).json({ error: 'Your order is empty.' });
   if (!String(address || '').trim() || !String(phone || '').trim()) return res.status(400).json({ error: 'Add your delivery address and phone.' });

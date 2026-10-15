@@ -58,6 +58,11 @@ export default function FoodCheckoutScreen({ navigation, route }) {
       cart.removePlaces(ready.map(({ g }) => g.key));
       navigation.replace('FoodOrderStatus', { checkoutId: res.checkoutId });
     } catch (e) {
+      if (e.code === 'EMAIL_NOT_VERIFIED') {
+        setStatus({ busy: false, error: '' });
+        navigation.navigate('AccountTab', { screen: 'VerifyEmail', params: { returnTo: { tab: 'ShopTab', screen: route.name, params: route.params } } });
+        return;
+      }
       // "Prices changed" comes back with the current prices: refresh the cart so the person sees them.
       setStatus({ busy: false, error: e.message || 'Could not place your order. Please try again.' });
       apiFetch('/food-orders/catalog').then((menu) => {

@@ -7,7 +7,8 @@
  * roles, My activity, My business, Account, Preferences, Help) and Log out.
  */
 import React, { useCallback } from 'react';
-import { View, Text, ScrollView, StyleSheet } from 'react-native';
+import { View, Text, ScrollView, Pressable, StyleSheet } from 'react-native';
+import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GradientBackground from '../../components/common/GradientBackground';
@@ -22,7 +23,7 @@ import { colors, typography, spacing, radius, gutter } from '../../theme';
 
 export default function AccountScreen({ navigation }) {
   const insets = useSafeAreaInsets();
-  const { user, isSignedIn, isBootstrapping, signOut } = useUser();
+  const { user, isSignedIn, isBootstrapping, signOut, needsVerification } = useUser();
 
   const { bookings } = useBookings();
   const { getBusinessesByOwner } = useBusinesses();
@@ -59,6 +60,16 @@ export default function AccountScreen({ navigation }) {
           {isSignedIn ? (
             <ProfileHeader user={user} waitingCount={waitingRequests} handledCount={handledRequests} />
           ) : null}
+          {needsVerification ? (
+            <Pressable onPress={() => navigation.navigate('VerifyEmail')} style={styles.verify} accessibilityRole="button">
+              <MaterialCommunityIcons name="email-alert-outline" size={22} color={colors.white} />
+              <View style={{ flex: 1 }}>
+                <Text style={styles.verifyTitle}>Confirm your email</Text>
+                <Text style={styles.verifyText}>Enter the 6-digit code we sent to {user.email}. Needed to book and order.</Text>
+              </View>
+              <MaterialCommunityIcons name="chevron-right" size={20} color={colors.white} />
+            </Pressable>
+          ) : null}
         </View>
 
         {/* White sheet: everything below lives on light ground so long menus
@@ -88,6 +99,9 @@ const styles = StyleSheet.create({
     color: colors.white,
     marginBottom: spacing.lg,
   },
+  verify: { flexDirection: 'row', alignItems: 'center', gap: spacing.md, marginTop: spacing.lg, padding: spacing.md, borderRadius: radius.md, backgroundColor: 'rgba(230,185,46,0.28)', borderWidth: 1, borderColor: 'rgba(230,185,46,0.7)' },
+  verifyTitle: { ...typography.body, fontWeight: '700', color: colors.white },
+  verifyText: { ...typography.caption, color: colors.textOnNavy, marginTop: 2 },
   sheet: {
     flex: 1,
     backgroundColor: colors.background,

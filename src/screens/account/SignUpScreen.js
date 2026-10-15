@@ -33,8 +33,12 @@ export default function SignUpScreen({ navigation, route }) {
   }, [navigation, returnTo]);
 
   const handleSignUp = useCallback(async (values) => {
-    try { await signUp(values); done(); } catch { /* shown under the form via `error` */ }
-  }, [signUp, done]);
+    try {
+      const created = await signUp(values);
+      if (created?.verificationRequired && !created.emailVerified) navigation.replace('VerifyEmail', { returnTo });
+      else done();
+    } catch { /* shown under the form via `error` */ }
+  }, [signUp, done, navigation, returnTo]);
 
   return (
     <GradientBackground>

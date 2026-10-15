@@ -17,6 +17,8 @@ import ChangePasswordScreen from '../screens/account/ChangePasswordScreen';
 import InfoScreen from '../screens/account/InfoScreen';
 import LoginScreen from '../screens/account/LoginScreen';
 import SignUpScreen from '../screens/account/SignUpScreen';
+import VerifyEmailScreen from '../screens/account/VerifyEmailScreen';
+import ForgotPasswordScreen from '../screens/account/ForgotPasswordScreen';
 import NotificationsScreen from '../screens/account/NotificationsScreen';
 import MyBookingsScreen from '../screens/account/MyBookingsScreen';
 import RegisterListingScreen from '../screens/account/RegisterListingScreen';
@@ -46,6 +48,8 @@ export default function AccountStack() {
       <Stack.Screen name="Info" component={InfoScreen} options={darkScreenOptions} />
       <Stack.Screen name="Login" component={LoginScreen} options={darkScreenOptions} />
       <Stack.Screen name="SignUp" component={SignUpScreen} options={darkScreenOptions} />
+      <Stack.Screen name="VerifyEmail" component={VerifyEmailScreen} options={darkScreenOptions} />
+      <Stack.Screen name="ForgotPassword" component={ForgotPasswordScreen} options={darkScreenOptions} />
       <Stack.Screen name="Notifications" component={NotificationsScreen} />
       <Stack.Screen name="MyBookings" component={MyBookingsScreen} />
       <Stack.Screen name="RegisterListing" component={RegisterListingScreen} />

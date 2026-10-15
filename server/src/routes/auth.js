@@ -11,6 +11,8 @@ const express = require('express');
 const bcrypt = require('bcryptjs');
 const jwt = require('jsonwebtoken');
 const { query } = require('../db');
+const { sendCode, checkCode } = require('../services/emailCodes');
+const { mailerReady } = require('../services/mailer');
 const { requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
@@ -24,6 +26,7 @@ function userToJson(row) {
     phone: row.phone,
     role: row.role,
     roles: allRoles(row),
+    emailVerified: !!row.email_verified,
     restaurantId: row.restaurant_id || null,
     coffeeShopId: row.coffee_shop_id || null,
     createdAt: row.created_at,
@@ -67,7 +70,55 @@ router.post('/signup', async (req, res) => {
     [normalizedEmail, passwordHash, firstName.trim(), lastName.trim(), (phone || '').trim()]
   );
   const user = rows[0];
-  res.status(201).json({ token: signToken(user), user: userToJson(user) });
+  // A 6-digit code to confirm the email (sending problems don't block the sign-up;
+  // "Send a new code" is on the confirm screen).
+  try { await sendCode(user, 'verify'); } catch (e) { console.error('[signup] code not sent:', e.message); }
+  res.status(201).json({ token: signToken(user), user: userToJson(user), verificationRequired: mailerReady() });
+});
+
+// POST /auth/verify-email — { code } from the email
+router.post('/verify-email', requireAuth, async (req, res) => {
+  const result = await checkCode(req.user.sub, 'verify', req.body?.code);
+  if (!result.ok) {
+    return res.status(400).json({ error: result.reason === 'wrong' ? 'That code is not right. Check the email and try again.' : 'This code has expired. Ask for a new one.', code: result.reason === 'wrong' ? 'WRONG_CODE' : 'CODE_EXPIRED' });
+  }
+  const { rows: [user] } = await query('update users set email_verified = true where id = $1 returning *', [req.user.sub]);
+  res.json({ user: userToJson(user) });
+});
+
+// POST /auth/resend-verification — a fresh code (at most one a minute)
+router.post('/resend-verification', requireAuth, async (req, res) => {
+  const { rows: [user] } = await query('select * from users where id = $1', [req.user.sub]);
+  if (!user) return res.status(404).json({ error: 'Account not found.' });
+  if (user.email_verified) return res.json({ ok: true, alreadyVerified: true });
+  try { await sendCode(user, 'verify'); } catch (e) { return res.status(e.status || 500).json({ error: e.message }); }
+  res.json({ ok: true });
+});
+
+// POST /auth/forgot-password — { email }; always the same answer, so it can't
+// be used to find out which emails have accounts.
+router.post('/forgot-password', async (req, res) => {
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  const { rows: [user] } = email ? await query('select * from users where email = $1', [email]) : { rows: [] };
+  if (user) { try { await sendCode(user, 'reset'); } catch (e) { if (e.status !== 429) console.error('[forgot] code not sent:', e.message); } }
+  res.json({ ok: true, message: 'If this email has an account, we sent it a 6-digit code.' });
+});
+
+// POST /auth/reset-password — { email, code, newPassword }; signs them in.
+router.post('/reset-password', async (req, res) => {
+  const email = String(req.body?.email || '').trim().toLowerCase();
+  const { newPassword } = req.body || {};
+  if (!newPassword || newPassword.length < 6) return res.status(400).json({ error: 'Password must be at least 6 characters.' });
+  const { rows: [user] } = email ? await query('select * from users where email = $1', [email]) : { rows: [] };
+  const result = user ? await checkCode(user.id, 'reset', req.body?.code) : { ok: false, reason: 'wrong' };
+  if (!result.ok) {
+    return res.status(400).json({ error: result.reason === 'wrong' ? 'That code is not right. Check the email and try again.' : 'This code has expired. Ask for a new one.', code: result.reason === 'wrong' ? 'WRONG_CODE' : 'CODE_EXPIRED' });
+  }
+  // The code came to their inbox, so the email is theirs too.
+  const { rows: [updated] } = await query(
+    'update users set password_hash = $1, email_verified = true where id = $2 returning *',
+    [await bcrypt.hash(newPassword, 10), user.id]);
+  res.json({ token: signToken(updated), user: userToJson(updated) });
 });
 
 router.post('/login', async (req, res) => {
@@ -90,7 +141,7 @@ router.post('/login', async (req, res) => {
     return res.status(401).json({ error: 'Incorrect email or password.' });
   }
 
-  res.json({ token: signToken(user), role: user.role, user: userToJson(user) });
+  res.json({ token: signToken(user), role: user.role, user: userToJson(user), verificationRequired: mailerReady() });
 });
 
 router.post('/change-password', requireAuth, async (req, res) => {
@@ -132,7 +183,7 @@ router.patch('/me', requireAuth, async (req, res) => {
 router.get('/me', requireAuth, async (req, res) => {
   const { rows } = await query('select * from users where id = $1', [req.user.sub]);
   if (!rows[0]) return res.status(404).json({ error: 'Account not found.' });
-  res.json({ user: userToJson(rows[0]) });
+  res.json({ user: userToJson(rows[0]), verificationRequired: mailerReady() });
 });
 
 // POST /auth/google — verify a Google One Tap credential and sign in / create account
@@ -165,11 +216,14 @@ router.post('/google', async (req, res) => {
   let user = rows[0];
   if (!user) {
     const { rows: created } = await query(
-      `INSERT INTO users (email, first_name, last_name, phone, role, password_hash)
-       VALUES ($1,$2,$3,'',null,'') RETURNING *`,
+      `INSERT INTO users (email, first_name, last_name, phone, role, password_hash, email_verified)
+       VALUES ($1,$2,$3,'',null,'',true) RETURNING *`,
       [email, firstName, lastName || firstName]
     );
     user = created[0];
+  } else if (!user.email_verified) {
+    // Google has confirmed this address.
+    ({ rows: [user] } = await query('update users set email_verified = true where id = $1 returning *', [user.id]));
   }
 
   res.json({ token: signToken(user), user: userToJson(user) });

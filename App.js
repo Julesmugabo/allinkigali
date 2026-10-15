@@ -80,6 +80,8 @@ const linking = {
               OrderDetail: 'order/:id',
               Login: 'login',
               SignUp: 'signup',
+              VerifyEmail: 'verify-email',
+              ForgotPassword: 'forgot-password',
               EditProfile: 'edit-profile',
               ChangePassword: 'change-password',
               SellerDashboard: 'seller',

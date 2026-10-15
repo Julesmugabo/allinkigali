@@ -36,7 +36,9 @@ function WriteReview({ kind, placeId, user, onLogin, onPosted }) {
       await apiFetch('/reviews', { method: 'POST', body: { placeType: kind.reviewType, placeId, rating, text } });
       setState({ busy: false, error: '', done: true });
       onPosted();
-    } catch (e) { setState({ busy: false, error: e.message || 'Could not post your review.' }); }
+    } catch (e) {
+      setState({ busy: false, error: e.code === 'EMAIL_NOT_VERIFIED' ? 'Confirm your email first: open Me and enter the 6-digit code we sent you.' : e.message || 'Could not post your review.' });
+    }
   };
   return (
     <View style={styles.form}>

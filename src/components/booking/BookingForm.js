@@ -14,6 +14,7 @@ import { apiFetch } from '../../services/apiClient';
 import { withPreorder } from '../../utils/preorder';
 import { useUser } from '../../context/UserContext';
 import BookingAuthGate from './BookingAuthGate';
+import VerifyEmailBox from '../account/VerifyEmailBox';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
 
 const CAL_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -111,6 +112,7 @@ export default function BookingForm({ visible, onClose, placeId, placeName, type
   const [done, setDone]         = useState(false);
   const [error, setError]       = useState('');
   const [showAuth, setShowAuth] = useState(false);
+  const [showVerify, setShowVerify] = useState(false); // email still to confirm
   const [showCal, setShowCal]   = useState(false);
   const [calMonth, setCalMonth] = useState({ year: new Date().getFullYear(), month: new Date().getMonth() });
 
@@ -126,6 +128,7 @@ export default function BookingForm({ visible, onClose, placeId, placeName, type
     setDone(false);
     setError('');
     setShowAuth(false);
+    setShowVerify(false);
     setShowCal(false);
   };
 
@@ -154,7 +157,8 @@ export default function BookingForm({ visible, onClose, placeId, placeName, type
       });
       setDone(true);
     } catch (e) {
-      setError(e?.message || 'Booking failed. Please try again.');
+      if (e?.code === 'EMAIL_NOT_VERIFIED') setShowVerify(true);
+      else setError(e?.message || 'Booking failed. Please try again.');
     } finally {
       setLoading(false);
     }
@@ -184,7 +188,12 @@ export default function BookingForm({ visible, onClose, placeId, placeName, type
         </View>
         <Text style={styles.placeName}>{placeName}</Text>
 
-        {showAuth ? (
+        {showVerify ? (
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">
+            <Text style={styles.verifyTitle}>Confirm your email to send this booking</Text>
+            <VerifyEmailBox onVerified={(u) => { setShowVerify(false); send(u); }} />
+          </ScrollView>
+        ) : showAuth ? (
           <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">{authGate}</ScrollView>
         ) : done ? (
           <View style={styles.successBox}>
@@ -317,6 +326,7 @@ export default function BookingForm({ visible, onClose, placeId, placeName, type
 }
 
 const styles = StyleSheet.create({
+  verifyTitle: { fontSize: 17, fontWeight: '800', color: colors.white, marginVertical: spacing.md },
   backdrop: { flex: 1, backgroundColor: 'rgba(0,0,0,0.5)' },
   sheet: {
     backgroundColor: '#06355F',

@@ -23,6 +23,8 @@ export function UserProvider({ children }) {
   const [isLoading, setIsLoading] = useState(false);
   const [isBootstrapping, setIsBootstrapping] = useState(true);
   const [error, setError] = useState(null);
+  // The server says whether emails must be confirmed (only once it can send them).
+  const [verificationRequired, setVerificationRequired] = useState(false);
 
   const clearError = useCallback(() => setError(null), []);
 
@@ -34,8 +36,9 @@ export function UserProvider({ children }) {
         return;
       }
       try {
-        const { user: me } = await apiFetch('/auth/me');
+        const { user: me, verificationRequired: required } = await apiFetch('/auth/me');
         setUser(me);
+        setVerificationRequired(!!required);
       } catch {
         // Token is stale/invalid — drop it rather than staying stuck
         // "signed in" with a session the server no longer recognizes.
@@ -76,13 +79,14 @@ export function UserProvider({ children }) {
 
     setIsLoading(true);
     try {
-      const { token, user: newUser } = await apiFetch('/auth/signup', {
+      const { token, user: newUser, verificationRequired: required } = await apiFetch('/auth/signup', {
         method: 'POST',
         body: { firstName: firstName.trim(), lastName: lastName.trim(), email: email.trim(), phone, password },
       });
       await setToken(token);
       setUser(newUser);
-      return newUser;
+      setVerificationRequired(!!required);
+      return { ...newUser, verificationRequired: !!required };
     } catch (e) {
       setError(e.message);
       throw e;
@@ -110,12 +114,13 @@ export function UserProvider({ children }) {
 
     setIsLoading(true);
     try {
-      const { token, user: signedInUser } = await apiFetch('/auth/login', {
+      const { token, user: signedInUser, verificationRequired: required } = await apiFetch('/auth/login', {
         method: 'POST',
         body: { email: email.trim(), password },
       });
       await setToken(token);
       setUser(signedInUser);
+      setVerificationRequired(!!required);
       return signedInUser;
     } catch (e) {
       setError(e.message);
@@ -163,6 +168,21 @@ export function UserProvider({ children }) {
     }
   }, []);
 
+  // ── Confirming the email and resetting a forgotten password (6-digit codes) ──
+  const verifyEmail = useCallback(async (code) => {
+    const { user: updated } = await apiFetch('/auth/verify-email', { method: 'POST', body: { code } });
+    setUser(updated);
+    return updated;
+  }, []);
+  const resendVerification = useCallback(() => apiFetch('/auth/resend-verification', { method: 'POST', body: {} }), []);
+  const forgotPassword = useCallback((email) => apiFetch('/auth/forgot-password', { method: 'POST', body: { email: email.trim() } }), []);
+  const resetPassword = useCallback(async ({ email, code, newPassword }) => {
+    const { token, user: signedIn } = await apiFetch('/auth/reset-password', { method: 'POST', body: { email: email.trim(), code, newPassword } });
+    await setToken(token);
+    setUser(signedIn);
+    return signedIn;
+  }, []);
+
   const changePassword = useCallback(async ({ currentPassword, newPassword }) => {
     await apiFetch('/auth/change-password', { method: 'POST', body: { currentPassword, newPassword } });
   }, []);
@@ -188,8 +208,15 @@ export function UserProvider({ children }) {
       saveProfile,
       changePassword,
       signOut,
+      verifyEmail,
+      resendVerification,
+      forgotPassword,
+      resetPassword,
+      // Signed in with an email that still has to be confirmed.
+      needsVerification: Boolean(user && verificationRequired && !user.emailVerified),
     }),
-    [user, isLoading, isBootstrapping, error, clearError, signUp, signIn, signInWithGoogle, saveProfile, changePassword, signOut]
+    [user, isLoading, isBootstrapping, error, clearError, signUp, signIn, signInWithGoogle, saveProfile, changePassword, signOut,
+      verifyEmail, resendVerification, forgotPassword, resetPassword, verificationRequired]
   );
 
   return <UserContext.Provider value={value}>{children}</UserContext.Provider>;

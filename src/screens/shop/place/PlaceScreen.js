@@ -44,6 +44,7 @@ export default function PlaceScreen({ kind, navigation, route }) {
   const [copied, setCopied] = useState(false);
 
   // Log in, then come straight back to this place (the booking box keeps what was filled in).
+  const verify = useCallback(() => navigation.navigate('AccountTab', { screen: 'VerifyEmail', params: { returnTo: { tab: 'ShopTab', screen: route.name, params: route.params } } }), [navigation, route]);
   const login = useCallback(() => navigation.navigate('AccountTab', { screen: 'Login', params: { returnTo: { tab: 'ShopTab', screen: route.name, params: route.params } } }), [navigation, route]);
   // The menu in the same shape the Order Food menu uses.
   const dishes = useMemo(() => menu.map((m) => ({
@@ -121,7 +122,7 @@ export default function PlaceScreen({ kind, navigation, route }) {
               <LocationSection place={place} />
             </View>
             <View style={styles.side}>
-              <BookBox kind={kind} place={place} user={user} closedNow={!isOpen(place)} onLogin={login}
+              <BookBox kind={kind} place={place} user={user} closedNow={!isOpen(place)} onLogin={login} onVerify={verify}
                 dishes={tableDishes} onDishQty={hasMenu ? setDishQty : null} onBooked={() => setTable({})} />
               {delivers ? (
                 <OrderDeliveryBox place={place} onOrder={() => navigation.navigate('OrderFoodPlace', { type: kind.orderType, id: place.id })} />

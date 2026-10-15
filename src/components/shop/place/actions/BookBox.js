@@ -27,7 +27,7 @@ function nextDays(n) {
   return out;
 }
 
-export default function BookBox({ kind, place, user, closedNow, onLogin, dishes = [], onDishQty, onBooked }) {
+export default function BookBox({ kind, place, user, closedNow, onLogin, onVerify, dishes = [], onDishQty, onBooked }) {
   const c = useShopTheme(); // eslint-disable-line no-unused-vars
   const styles = useShopStyles(makeStyles);
   const box = useShopStyles(makeBoxStyles);
@@ -57,7 +57,10 @@ export default function BookBox({ kind, place, user, closedNow, onLogin, dishes 
       });
       setStatus({ busy: false, error: '', done: true, sentDishes: dishes.length });
       onBooked?.();
-    } catch (e) { setStatus({ busy: false, error: e.message || 'Could not send. Please try again.' }); }
+    } catch (e) {
+      if (e.code === 'EMAIL_NOT_VERIFIED' && onVerify) { setStatus({ busy: false, error: '' }); onVerify(); return; }
+      setStatus({ busy: false, error: e.message || 'Could not send. Please try again.' });
+    }
   };
 
   if (status.done) {

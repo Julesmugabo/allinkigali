@@ -6,6 +6,7 @@
 const express = require('express');
 const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const requireVerified = require('../middleware/requireVerified');
 
 const router = express.Router();
 const PLACE_TYPES = ['restaurant', 'coffee_shop', 'wedding'];
@@ -39,7 +40,7 @@ router.get('/', async (req, res) => {
 });
 
 // POST /reviews — { placeType, placeId, rating 1-5, text }
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireVerified, async (req, res) => {
   const { placeType, placeId, text } = req.body || {};
   const rating = Number(req.body?.rating);
   if (!PLACE_TYPES.includes(placeType) || !placeId) {

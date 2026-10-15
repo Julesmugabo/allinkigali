@@ -1,6 +1,7 @@
 const express = require('express');
 const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
+const requireVerified = require('../middleware/requireVerified');
 const requireRole = require('../middleware/requireRole');
 const { clientOwnersOnly } = require('../middleware/clientAuth');
 const { notifyUser } = require('../pushNotifications');
@@ -31,7 +32,7 @@ router.get('/delivery-places/:id/menu', async (req, res) => {
 });
 
 // POST /food-orders — place an order
-router.post('/', requireAuth, async (req, res) => {
+router.post('/', requireAuth, requireVerified, async (req, res) => {
   const { placeId, placeName, placeType, items, subtotal, deliveryFee, total,
           deliveryAddress, deliveryPhone, notes, paymentMethod } = req.body || {};
   if (!placeId || !items?.length || !deliveryAddress || !deliveryPhone) {
