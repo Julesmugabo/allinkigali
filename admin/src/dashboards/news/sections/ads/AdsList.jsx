@@ -66,5 +66,5 @@ export default function AdsList({ channel }) {
 const s = {
   thumb: { width: 90, height: 56, objectFit: 'cover', borderRadius: 6, background: t.bg },
   sub: { color: t.textMuted, fontSize: 12, marginTop: 2 },
-  broken: { display: 'inline-flex', gap: 6, alignItems: 'center', color: t.warning, fontSize: 12 },
+  broken: { display: 'inline-flex', gap: 6, alignItems: 'center', color: t.inkStatus || t.warning, fontSize: 12 },
 };

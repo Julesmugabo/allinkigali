@@ -125,5 +125,5 @@ export default function ReportView({ kind, data }) {
 const s = {
   line: { display: 'flex', justifyContent: 'space-between', padding: '8px 0', borderBottom: `1px solid ${t.border}`, color: t.textSecondary, fontSize: 14 },
   lineBold: { color: t.text, fontWeight: 700 },
-  sub: { color: t.accent, fontSize: 12, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', margin: '18px 0 4px' },
+  sub: { color: t.inkAccent, fontSize: 12, fontWeight: 700, letterSpacing: 0.5, textTransform: 'uppercase', margin: '18px 0 4px' },
 };

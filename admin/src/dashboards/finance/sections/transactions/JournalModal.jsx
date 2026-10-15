@@ -97,6 +97,6 @@ const s = {
   linesHead: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '18px 0 10px' },
   line: { display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' },
   num: { width: 110 },
-  remove: { background: 'transparent', color: t.danger, padding: 6 },
+  remove: { background: 'transparent', color: t.inkStatus || t.danger, padding: 6 },
   totals: { display: 'flex', gap: 20, flexWrap: 'wrap', color: t.textSecondary, fontSize: 13, marginTop: 6 },
 };

@@ -21,9 +21,9 @@ export default function Overview() {
       <KpiGrid>
         <Kpi label="Applications waiting" value={waiting.length} color={waiting.length ? t.warning : t.textSecondary} onClick={() => navigate('/sellers/applications')} />
         <Kpi label="Restaurants" value={places.filter((p) => p.type === 'restaurant').length} onClick={() => navigate('/restaurants/list')} />
-        <Kpi label="Coffee shops" value={places.filter((p) => p.type === 'coffeeshop').length} color="#A78BFA" onClick={() => navigate('/coffee-shops/list')} />
+        <Kpi label="Coffee shops" value={places.filter((p) => p.type === 'coffeeshop').length} color="#E6B92E" onClick={() => navigate('/coffee-shops/list')} />
         <Kpi label="Open right now" value={open.length} color={t.success} />
-        <Kpi label="Delivering" value={places.filter((p) => p.delivery_enabled).length} color="#60A5FA" onClick={() => navigate('/sellers/deliveries')} />
+        <Kpi label="Delivering" value={places.filter((p) => p.delivery_enabled).length} color="#91D51F" onClick={() => navigate('/sellers/deliveries')} />
         <Kpi label="Hidden from the app" value={places.filter((p) => p.is_active === false).length} color={t.textSecondary} />
       </KpiGrid>
       {waiting.length > 0 && (

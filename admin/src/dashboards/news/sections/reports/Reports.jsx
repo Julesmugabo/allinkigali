@@ -76,5 +76,5 @@ export default function Reports() {
 const s = {
   chips: { display: 'flex', gap: 6, flexWrap: 'wrap', marginBottom: 16 },
   chip: { padding: '6px 12px', borderRadius: 20, fontSize: 13, background: t.bgCard, color: t.textSecondary },
-  chipOn: { background: t.bgActive, color: t.accent },
+  chipOn: { background: t.bgActive, color: t.inkAccent },
 };

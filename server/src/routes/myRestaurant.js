@@ -7,6 +7,7 @@ const express = require('express');
 const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
+const { hasRole } = require('../middleware/requireRole');
 const { clientOwnersOnly } = require('../middleware/clientAuth');
 const { notifyUser } = require('../pushNotifications');
 
@@ -21,7 +22,7 @@ const guard = [requireAuth, requireRole('restaurant', 'coffeeshop', 'sellers'), 
 // old behaviour of using a place linked to their own account.
 function getContext(req) {
   const user = req.user;
-  const staff = user.role === 'director' || user.role === 'sellers';
+  const staff = hasRole(user, 'director', 'sellers');
   const { placeType, placeId } = req.query || {};
   if (staff && placeId && (placeType === 'restaurant' || placeType === 'coffee_shop')) {
     return placeType === 'restaurant'

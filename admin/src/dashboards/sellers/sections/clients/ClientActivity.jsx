@@ -13,7 +13,7 @@ import { KIND, clientsApi } from './clientsApi';
 const ACTION = {
   view: ['Opened (view only)', t.accent],
   enable_changes: ['Switched on changes', t.warning],
-  change: ['Changed', '#F472B6'],
+  change: ['Changed', '#E6B92E'],
   onboard: ['Owner login given', t.success],
   reset_password: ['New owner password', t.warning],
   remove_owner: ['Owner removed', t.danger],

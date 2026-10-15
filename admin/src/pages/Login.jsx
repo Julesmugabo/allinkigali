@@ -82,11 +82,11 @@ const styles = {
   label: { color: t.textSecondary, fontSize: 13, fontWeight: 500 },
   input: { width: '100%' },
   button: {
-    background: t.accent, color: t.bg, fontWeight: 600,
+    background: t.accent, color: t.onAccent, fontWeight: 600,
     padding: '12px 20px', marginTop: 8, fontSize: 15,
   },
   error: {
-    background: 'rgba(248,113,113,0.12)', color: t.danger,
+    background: 'rgba(248,113,113,0.12)', color: t.inkStatus || t.danger,
     padding: '10px 14px', borderRadius: t.radius, fontSize: 13,
   },
 };

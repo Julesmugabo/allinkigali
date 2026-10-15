@@ -27,7 +27,7 @@ export default function PhotosEditor({ label = 'Photos', value = [], onChange })
           <div style={s.tools}>
             <button type="button" disabled={i === 0} onClick={() => move(i, -1)} style={s.icon} title="Move up"><ArrowUp size={14} /></button>
             <button type="button" disabled={i === value.length - 1} onClick={() => move(i, 1)} style={s.icon} title="Move down"><ArrowDown size={14} /></button>
-            <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} style={{ ...s.icon, color: t.danger }} title="Remove"><X size={14} /></button>
+            <button type="button" onClick={() => onChange(value.filter((_, j) => j !== i))} style={{ ...s.icon, color: t.inkStatus || t.danger }} title="Remove"><X size={14} /></button>
           </div>
         </div>
       ))}

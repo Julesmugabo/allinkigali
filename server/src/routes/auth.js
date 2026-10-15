@@ -23,15 +23,21 @@ function userToJson(row) {
     lastName: row.last_name,
     phone: row.phone,
     role: row.role,
+    roles: allRoles(row),
     restaurantId: row.restaurant_id || null,
     coffeeShopId: row.coffee_shop_id || null,
     createdAt: row.created_at,
   };
 }
 
+// The main role first, then any extra Staff Portal dashboards.
+function allRoles(row) {
+  return [...new Set([row.role, ...(row.staff_roles || [])].filter(Boolean))];
+}
+
 function signToken(user) {
   return jwt.sign(
-    { sub: user.id, email: user.email, role: user.role, restaurantId: user.restaurant_id || null, coffeeShopId: user.coffee_shop_id || null },
+    { sub: user.id, email: user.email, role: user.role, roles: allRoles(user), restaurantId: user.restaurant_id || null, coffeeShopId: user.coffee_shop_id || null },
     process.env.JWT_SECRET,
     { expiresIn: '7d' }
   );

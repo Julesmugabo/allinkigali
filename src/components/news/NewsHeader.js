@@ -7,6 +7,7 @@ import React from 'react';
 import { View, Text, Pressable, Image, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
+import { useNavigation } from '@react-navigation/native';
 
 import CategoryTabs from './CategoryTabs';
 import NewsTagline from './NewsTagline';
@@ -20,17 +21,20 @@ export default function NewsHeader({
   unreadCount = 0,
 }) {
   const insets = useSafeAreaInsets();
+  const navigation = useNavigation();
+  // The logo always leads home: the news tab's first screen.
+  const goHome = () => navigation.navigate('NewsTab', { screen: 'News' });
 
   return (
     <View style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
       <View style={styles.topRow}>
-        <View style={styles.brand}>
+        <Pressable style={styles.brand} onPress={goHome} accessibilityRole="link" accessibilityLabel="Home">
           <Image
             source={require('../../../assets/logo-wordmark.png')}
             style={styles.logoImg}
             resizeMode="contain"
           />
-        </View>
+        </Pressable>
 
         <View style={styles.icons}>
           <Pressable

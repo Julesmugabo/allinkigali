@@ -21,9 +21,9 @@ const FILE_TYPES = [
 
 const TYPE_COLORS = {
   pdf:   '#F87171',
-  doc:   '#60A5FA',
-  sheet: '#4ADE80',
-  link:  '#A78BFA',
+  doc:   '#91D51F',
+  sheet: '#91D51F',
+  link:  '#E6B92E',
 };
 
 export default function Documents() {
@@ -203,7 +203,7 @@ export default function Documents() {
 }
 
 const s = {
-  primaryBtn: { background: t.accent, color: t.bg, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 },
+  primaryBtn: { background: t.accent, color: t.onAccent, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 },
   cancelBtn: { background: t.bgHover, color: t.text },
   muted: { color: t.textMuted, fontSize: 14, padding: '20px 0' },
   emptyState: { display: 'flex', flexDirection: 'column', alignItems: 'center', padding: '48px 0' },
@@ -222,25 +222,25 @@ const s = {
   cardActions: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 4 },
   openBtn: {
     display: 'flex', alignItems: 'center', gap: 5,
-    background: t.bgActive, color: t.accent,
+    background: t.bgActive, color: t.inkAccent,
     padding: '6px 12px', borderRadius: t.radius,
     fontSize: 13, fontWeight: 500, textDecoration: 'none', flex: 1, justifyContent: 'center',
   },
-  removeBtn: { background: 'transparent', color: t.danger, padding: 6, borderRadius: t.radius, display: 'flex', alignItems: 'center' },
+  removeBtn: { background: 'transparent', color: t.inkStatus || t.danger, padding: 6, borderRadius: t.radius, display: 'flex', alignItems: 'center' },
 
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(17,17,17,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 },
   modal: { background: t.bgCard, borderRadius: t.radiusLg, padding: 28, width: '100%', maxWidth: 500 },
   modalHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   modalTitle: { color: t.text, fontSize: 18, fontWeight: 700, margin: 0 },
   closeBtn: { background: 'transparent', color: t.textSecondary, padding: 4, display: 'flex', alignItems: 'center' },
   field: { display: 'flex', flexDirection: 'column', gap: 4 },
   label: { color: t.textSecondary, fontSize: 13, fontWeight: 500 },
-  error: { background: 'rgba(248,113,113,0.12)', color: t.danger, padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 12 },
+  error: { background: 'rgba(248,113,113,0.12)', color: t.inkStatus || t.danger, padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 12 },
   typeRow: { display: 'flex', gap: 8, flexWrap: 'wrap', marginTop: 4 },
   typeChip: { padding: '5px 12px', borderRadius: 20, background: t.bgHover, color: t.textSecondary, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: `1px solid ${t.border}` },
-  typeChipActive: { background: t.bgActive, color: t.accent, borderColor: t.accent },
+  typeChipActive: { background: t.bgActive, color: t.inkAccent, borderColor: t.accent },
   roleGrid: { display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   roleChip: { padding: '5px 12px', borderRadius: 20, background: t.bgHover, color: t.textSecondary, fontSize: 12, fontWeight: 500, cursor: 'pointer', border: `1px solid ${t.border}` },
-  roleChipActive: { background: t.bgActive, color: t.accent, borderColor: t.accent },
+  roleChipActive: { background: t.bgActive, color: t.inkAccent, borderColor: t.accent },
   modalActions: { display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 },
 };

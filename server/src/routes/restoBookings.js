@@ -3,6 +3,7 @@ const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const { clientOwnersOnly } = require('../middleware/clientAuth');
 const requireRole = require('../middleware/requireRole');
+const { hasRole } = require('../middleware/requireRole');
 
 const { notifyUser } = require('../pushNotifications');
 const { placeOwnerIds } = require('../clients/placeOwners');
@@ -113,7 +114,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
 
 // Sales Partners admin and director manage every booking; a restaurant or
 // coffee-shop owner only the bookings of the place linked to their account.
-const isPlatformStaff = (user) => user.role === 'director' || user.role === 'sellers';
+const isPlatformStaff = (user) => hasRole(user, 'director', 'sellers');
 function ownPlace(user) {
   if (user.role === 'restaurant' && (user.restaurantId || user.restaurant_id)) return { type: 'restaurant', id: user.restaurantId || user.restaurant_id };
   if (user.role === 'coffeeshop' && (user.coffeeShopId || user.coffee_shop_id)) return { type: 'coffee_shop', id: user.coffeeShopId || user.coffee_shop_id };

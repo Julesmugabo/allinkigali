@@ -1,6 +1,6 @@
 import React, { useState, useCallback, useEffect } from 'react';
 import { Routes, Route, Navigate } from 'react-router-dom';
-import { getUser, logout as apiLogout, apiFetch, STAFF_ROLES } from './api';
+import { getUser, logout as apiLogout, apiFetch, STAFF_ROLES, rolesOf } from './api';
 import { t } from './theme';
 import Login from './pages/Login';
 import Sidebar from './components/Sidebar';
@@ -23,7 +23,7 @@ export default function App() {
   // an old client sign-in kept in this browser is dropped.
   const [user, setUser] = useState(() => {
     const u = getUser();
-    if (u && !STAFF_ROLES.includes(u.role)) { apiLogout(); return null; }
+    if (u && !rolesOf(u).some((r) => STAFF_ROLES.includes(r))) { apiLogout(); return null; }
     return u;
   });
   const [sidebarOpen, setSidebarOpen] = useState(window.innerWidth >= 768);
@@ -53,8 +53,8 @@ export default function App() {
 
   if (!user) return <Login onLogin={handleLogin} />;
 
-  const role = user.role;
-  const isDirector = role === 'director';
+  const has = (r) => rolesOf(user).includes(r); // one person can hold several dashboards
+  const isDirector = has('director');
 
   return (
     <div style={styles.layout}>
@@ -86,13 +86,13 @@ export default function App() {
             </>}
 
             {/* ── Role-specific dashboards ── */}
-            {role === 'news'        && <Route path="/news/:section?" element={<NewsDashboard />} />}
-            {role === 'sellers'     && <>
+            {!isDirector && has('news') && <Route path="/news/:section?" element={<NewsDashboard />} />}
+            {!isDirector && has('sellers') && <>
               <Route path="/sellers/:section?" element={<SellersDashboard />} />
               <Route path="/restaurants/:section?" element={<PlacesDashboard kind="restaurant" />} />
               <Route path="/coffee-shops/:section?" element={<PlacesDashboard kind="coffeeshop" />} />
             </>}
-            {role === 'finance'     && <Route path="/finance/:section?" element={<FinanceDashboard />} />}
+            {!isDirector && has('finance') && <Route path="/finance/:section?" element={<FinanceDashboard />} />}
 
             <Route path="*" element={<Navigate to="/" replace />} />
           </Routes>

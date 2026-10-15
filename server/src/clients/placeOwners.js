@@ -29,8 +29,8 @@ async function placeOwnerIds(placeType, placeId) {
 }
 
 async function linkOwner(placeType, placeId, userId, by) {
-  const { rows: [u] } = await query('select first_name, last_name, email, role from users where id = $1', [userId]);
-  if (!u || STAFF_ROLES.includes(u.role)) return false;
+  const { rows: [u] } = await query('select first_name, last_name, email, role, staff_roles from users where id = $1', [userId]);
+  if (!u || STAFF_ROLES.includes(u.role) || (u.staff_roles || []).length) return false;
   const name = [u.first_name, u.last_name].filter(Boolean).join(' ').trim() || u.email;
   const { rows: [m] } = await query(
     `insert into place_members (place_type, place_id, user_id, role, name, created_by)

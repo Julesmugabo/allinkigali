@@ -39,7 +39,7 @@ const s = {
   wrap: { display: 'flex', alignItems: 'center', gap: 12, flexWrap: 'wrap', marginBottom: 20 },
   chips: { display: 'flex', gap: 6, flexWrap: 'wrap' },
   chip: { padding: '6px 12px', borderRadius: 20, fontSize: 13, background: t.bgCard, color: t.textSecondary },
-  chipActive: { background: t.bgActive, color: t.accent },
+  chipActive: { background: t.bgActive, color: t.inkAccent },
   custom: { display: 'flex', alignItems: 'center', gap: 8 },
   range: { color: t.textMuted, fontSize: 12 },
 };

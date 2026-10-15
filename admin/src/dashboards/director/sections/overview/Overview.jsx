@@ -39,13 +39,13 @@ export default function Overview() {
       <KpiGrid>
         <Kpi label="Articles published" value={d.articles.filter((a) => a.status === 'published' && !a.isArchived).length} hint={`${fmtNum(d.articles.reduce((s, a) => s + (a.views || 0), 0))} reads`} onClick={() => navigate('/news')} />
         <Kpi label="Restaurants" value={d.places.filter((p) => p.type === 'restaurant').length} color="#FB923C" onClick={() => navigate('/restaurants')} />
-        <Kpi label="Coffee shops" value={d.places.filter((p) => p.type === 'coffeeshop').length} color="#A78BFA" onClick={() => navigate('/coffee-shops')} />
+        <Kpi label="Coffee shops" value={d.places.filter((p) => p.type === 'coffeeshop').length} color="#E6B92E" onClick={() => navigate('/coffee-shops')} />
         <Kpi label="Marketplace shops" value={d.shops.length} hint={`${d.shops.length - unverified} verified`} color={t.success} onClick={() => navigate('/overview/marketplace')} />
         <Kpi label="Staff with access" value={d.team.length} onClick={() => navigate('/overview/team')} />
       </KpiGrid>
       {d.finance && (
         <KpiGrid>
-          <Kpi label="Cash & bank" value={`RWF ${fmtNum(cards.cashBank)}`} color="#60A5FA" onClick={() => navigate('/finance')} />
+          <Kpi label="Cash & bank" value={`RWF ${fmtNum(cards.cashBank)}`} color="#91D51F" onClick={() => navigate('/finance')} />
           <Kpi label="Income this month" value={`RWF ${fmtNum(cards.income)}`} color={t.success} />
           <Kpi label="Expenses this month" value={`RWF ${fmtNum(cards.expenses)}`} color={t.danger} />
           <Kpi label="Owed to us" value={`RWF ${fmtNum(cards.receivables)}`} color={t.warning} />

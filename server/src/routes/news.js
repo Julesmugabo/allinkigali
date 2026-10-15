@@ -9,6 +9,7 @@ const express = require('express');
 const { query } = require('../db');
 const { attachUserIfPresent, requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
+const { hasRole } = require('../middleware/requireRole');
 
 const { notifyAll } = require('../pushNotifications');
 
@@ -23,7 +24,7 @@ function cleanLabels(labels) {
 }
 
 function isNewsAdmin(user) {
-  return user && (user.role === 'news' || user.role === 'director');
+  return hasRole(user, 'news', 'director');
 }
 
 function articleToJson(row) {

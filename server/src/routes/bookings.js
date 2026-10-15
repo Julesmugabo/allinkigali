@@ -11,11 +11,12 @@
  */
 const express = require('express');
 const { query } = require('../db');
+const { hasRole } = require('../middleware/requireRole');
 const { attachUserIfPresent, requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-const isBookingAdmin = (user) => Boolean(user && (user.role === 'sellers' || user.role === 'director'));
+const isBookingAdmin = (user) => hasRole(user, 'sellers', 'director');
 
 function bookingToJson(row) {
   return {

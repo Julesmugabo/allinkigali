@@ -71,13 +71,13 @@ export default function Contracts() {
   };
 
   const statusOf = (c) => {
-    if (!c.validUntil) return { label: 'Active', color: t.success };
+    if (!c.validUntil) return { label: 'Active', color: t.inkStatus || t.success };
     const exp = new Date(c.validUntil);
     const now = new Date();
     const daysLeft = Math.ceil((exp - now) / 86400000);
-    if (daysLeft < 0) return { label: 'Expired', color: t.danger };
-    if (daysLeft <= 30) return { label: `Expires in ${daysLeft}d`, color: t.warning };
-    return { label: 'Active', color: t.success };
+    if (daysLeft < 0) return { label: 'Expired', color: t.inkStatus || t.danger };
+    if (daysLeft <= 30) return { label: `Expires in ${daysLeft}d`, color: t.inkStatus || t.warning };
+    return { label: 'Active', color: t.inkStatus || t.success };
   };
 
   if (loading) return <div style={{ padding: 40, color: t.textSecondary }}>Loading...</div>;
@@ -200,22 +200,22 @@ export default function Contracts() {
 }
 
 const s = {
-  primaryBtn: { background: t.accent, color: t.bg, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 },
+  primaryBtn: { background: t.accent, color: t.onAccent, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 },
   cancelBtn: { background: t.bgHover, color: t.text },
   iconBtn: { background: 'transparent', padding: 6, borderRadius: 6, display: 'flex', alignItems: 'center' },
   openBtn: {
     display: 'flex', alignItems: 'center', gap: 4,
-    background: t.bgActive, color: t.accent,
+    background: t.bgActive, color: t.inkAccent,
     padding: '5px 10px', borderRadius: t.radius,
     fontSize: 12, fontWeight: 500, textDecoration: 'none',
   },
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(17,17,17,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 },
   modal: { background: t.bgCard, borderRadius: t.radiusLg, padding: 28, width: '100%', maxWidth: 500 },
   modalHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   modalTitle: { color: t.text, fontSize: 18, fontWeight: 700, margin: 0 },
   closeBtn: { background: 'transparent', color: t.textSecondary, padding: 4, display: 'flex', alignItems: 'center' },
   field: { display: 'flex', flexDirection: 'column', gap: 4 },
   label: { color: t.textSecondary, fontSize: 13, fontWeight: 500 },
-  error: { background: 'rgba(248,113,113,0.12)', color: t.danger, padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 12 },
+  error: { background: 'rgba(248,113,113,0.12)', color: t.inkStatus || t.danger, padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 12 },
   modalActions: { display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 },
 };

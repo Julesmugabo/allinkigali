@@ -8,6 +8,7 @@ import {
 import { t } from '../theme';
 import DashboardLink from './sidebar/DashboardLink';
 import { SUB_NAV } from '../navigation/subNav';
+import { rolesOf } from '../api';
 
 // ─── Portal links (visible to ALL staff) ───────────────────────────────────
 const PORTAL_LINKS = [
@@ -41,7 +42,10 @@ const ROLE_LINKS = {
 };
 
 export default function Sidebar({ user, onLogout, open, onToggle, unreadCount }) {
-  const dashboardLinks = ROLE_LINKS[user.role] || [];
+  // Every dashboard the person holds (director: all of them), each once.
+  const roles = rolesOf(user);
+  const dashboardLinks = (roles.includes('director') ? ROLE_LINKS.director : roles.flatMap((r) => ROLE_LINKS[r] || []))
+    .filter((l, i, all) => all.findIndex((x) => x.to === l.to) === i);
 
   return (
     <>
@@ -56,7 +60,7 @@ export default function Sidebar({ user, onLogout, open, onToggle, unreadCount })
       <aside style={{ ...styles.sidebar, ...(open ? styles.sidebarOpen : {}) }}>
         {/* Brand */}
         <div style={{ ...styles.brand, ...(window.innerWidth < 768 ? { paddingLeft: 64 } : {}) }}>
-          <img src="/logo-wordmark.png" alt="AllInKigali" style={styles.brandWordmark} />
+          <NavLink to="/" aria-label="Home"><img src="/logo-wordmark-dark.png" alt="AllInKigali" style={styles.brandWordmark} /></NavLink>
           <div style={styles.brandSub}>Staff Portal</div>
         </div>
 
@@ -71,7 +75,7 @@ export default function Sidebar({ user, onLogout, open, onToggle, unreadCount })
               onClick={() => window.innerWidth < 768 && onToggle()}
               style={({ isActive }) => ({ ...styles.navLink, ...(isActive ? styles.navLinkActive : {}) })}
             >
-              <link.icon size={17} />
+              <link.icon size={17} color={t.lime} strokeWidth={2.2} />
               <span style={{ flex: 1 }}>{link.label}</span>
               {link.to === '/announcements' && unreadCount > 0 && (
                 <span style={styles.badge}>{unreadCount > 9 ? '9+' : unreadCount}</span>
@@ -83,7 +87,7 @@ export default function Sidebar({ user, onLogout, open, onToggle, unreadCount })
           {dashboardLinks.length > 0 && (
             <>
               <div style={{ ...styles.sectionLabel, marginTop: 16 }}>
-                {user.role === 'director' ? 'DASHBOARDS' : 'MY DASHBOARD'}
+                {roles.includes('director') || dashboardLinks.length > 1 ? 'DASHBOARDS' : 'MY DASHBOARD'}
               </div>
               {dashboardLinks.map((link) => (
                 <DashboardLink
@@ -105,7 +109,7 @@ export default function Sidebar({ user, onLogout, open, onToggle, unreadCount })
             </div>
             <div style={{ minWidth: 0 }}>
               <div style={styles.userName}>{user.firstName} {user.lastName}</div>
-              <div style={styles.userRole}>{user.role}</div>
+              <div style={styles.userRole}>{roles.join(' · ')}</div>
             </div>
           </div>
           <button onClick={onLogout} style={styles.logoutBtn}>
@@ -129,7 +133,7 @@ const styles = {
     transition: 'transform 0.2s ease',
   },
   sidebarOpen: { transform: 'translateX(0)' },
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.5)', zIndex: 99 },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(17,17,17,0.35)', zIndex: 99 },
   toggle: {
     position: 'fixed', top: 12, left: 12, zIndex: 101,
     background: t.bgCard, color: t.text,
@@ -158,7 +162,7 @@ const styles = {
     color: t.textSecondary, fontSize: 14, fontWeight: 500,
     textDecoration: 'none', transition: 'all 0.15s',
   },
-  navLinkActive: { background: t.bgActive, color: t.accent },
+  navLinkActive: { background: t.bgActive, color: t.inkAccent },
   badge: {
     background: t.danger, color: '#fff',
     fontSize: 10, fontWeight: 700,
@@ -180,6 +184,6 @@ const styles = {
   logoutBtn: {
     display: 'flex', alignItems: 'center', gap: 8,
     width: '100%', padding: '8px 12px', borderRadius: t.radius,
-    background: 'transparent', color: t.danger, fontSize: 13,
+    background: 'transparent', color: t.inkStatus || t.danger, fontSize: 13,
   },
 };

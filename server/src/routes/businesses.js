@@ -14,6 +14,7 @@ const express = require('express');
 const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
+const { hasRole } = require('../middleware/requireRole');
 
 const router = express.Router();
 
@@ -92,7 +93,7 @@ router.get('/', async (_req, res) => {
   res.json(rows.map(businessToJson));
 });
 
-const isStaff = (user) => user && (user.role === 'sellers' || user.role === 'director');
+const isStaff = (user) => hasRole(user, 'sellers', 'director');
 const STAFF_ONLY = ['verified', 'ownerId', 'rating', 'reviewCount'];
 const withoutStaffFields = (body) => Object.fromEntries(Object.entries(body).filter(([k]) => !STAFF_ONLY.includes(k)));
 

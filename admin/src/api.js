@@ -83,6 +83,8 @@ export async function apiDownload(path, filename) {
 // Who can use the Staff Portal. Restaurants, coffee shops and wedding venues
 // sign in to their own client dashboard instead.
 export const STAFF_ROLES = ['director', 'news', 'sellers', 'finance'];
+// Every role an account holds (a staff member can have several dashboards).
+export const rolesOf = (user) => (user?.roles?.length ? user.roles : [user?.role]).filter(Boolean);
 const CLIENT_ROLES = ['restaurant', 'coffeeshop', 'wedding'];
 const CLIENTS_SITE = (import.meta.env.VITE_CLIENTS_URL || 'https://business.allinkigali.rw').replace(/^https?:\/\//, '').replace(/\/$/, '');
 
@@ -91,8 +93,11 @@ export async function login(email, password) {
     method: 'POST',
     body: { email, password },
   });
-  if (CLIENT_ROLES.includes(data.user?.role)) throw new Error(`Businesses sign in at ${CLIENTS_SITE} — your dashboard moved there.`);
-  if (!STAFF_ROLES.includes(data.user?.role)) throw new Error('This account has no admin role.');
+  const roles = rolesOf(data.user);
+  if (!roles.some((r) => STAFF_ROLES.includes(r))) {
+    if (roles.some((r) => CLIENT_ROLES.includes(r))) throw new Error(`Businesses sign in at ${CLIENTS_SITE} — your dashboard moved there.`);
+    throw new Error('This account has no admin role.');
+  }
   setToken(data.token);
   setUser(data.user);
   return data.user;

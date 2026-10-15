@@ -200,7 +200,7 @@ export default function Announcements() {
 }
 
 const s = {
-  primaryBtn: { background: t.accent, color: t.bg, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 },
+  primaryBtn: { background: t.accent, color: t.onAccent, fontWeight: 600, display: 'flex', alignItems: 'center', gap: 6 },
   cancelBtn: { background: t.bgHover, color: t.text },
   iconBtn: { background: 'transparent', padding: 6, borderRadius: 6, display: 'flex', alignItems: 'center' },
   muted: { color: t.textMuted, fontSize: 14, padding: '20px 0' },
@@ -208,7 +208,7 @@ const s = {
   annRow: {
     padding: '16px 0', borderBottom: `1px solid ${t.border}`,
   },
-  pinnedRow: { background: 'rgba(56,189,248,0.04)', margin: '0 -20px', padding: '16px 20px' },
+  pinnedRow: { background: 'rgba(145,213,31,0.08)', margin: '0 -20px', padding: '16px 20px' },
   annMain: {},
   annHeader: { display: 'flex', alignItems: 'flex-start', justifyContent: 'space-between', gap: 8 },
   annTitleRow: { display: 'flex', alignItems: 'center', gap: 6, flex: 1, minWidth: 0 },
@@ -222,14 +222,14 @@ const s = {
     padding: '2px 8px', borderRadius: 20, fontSize: 11,
   },
 
-  overlay: { position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 },
+  overlay: { position: 'fixed', inset: 0, background: 'rgba(17,17,17,0.35)', display: 'flex', alignItems: 'center', justifyContent: 'center', zIndex: 200, padding: 16 },
   modal: { background: t.bgCard, borderRadius: t.radiusLg, padding: 28, width: '100%', maxWidth: 520 },
   modalHeader: { display: 'flex', alignItems: 'center', justifyContent: 'space-between', marginBottom: 16 },
   modalTitle: { color: t.text, fontSize: 18, fontWeight: 700, margin: 0 },
   closeBtn: { background: 'transparent', color: t.textSecondary, padding: 4, display: 'flex', alignItems: 'center' },
   field: { display: 'flex', flexDirection: 'column', gap: 4 },
   label: { color: t.textSecondary, fontSize: 13, fontWeight: 500 },
-  error: { background: 'rgba(248,113,113,0.12)', color: t.danger, padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 12 },
+  error: { background: 'rgba(248,113,113,0.12)', color: t.inkStatus || t.danger, padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 12 },
   roleGrid: { display: 'flex', flexWrap: 'wrap', gap: 8, marginTop: 4 },
   roleChip: {
     display: 'flex', alignItems: 'center', gap: 4,
@@ -238,7 +238,7 @@ const s = {
     fontSize: 12, fontWeight: 500, cursor: 'pointer',
     border: `1px solid ${t.border}`,
   },
-  roleChipActive: { background: t.bgActive, color: t.accent, borderColor: t.accent },
+  roleChipActive: { background: t.bgActive, color: t.inkAccent, borderColor: t.accent },
   pinRow: { display: 'flex', alignItems: 'center', gap: 8, marginTop: 14 },
   modalActions: { display: 'flex', justifyContent: 'flex-end', gap: 8, marginTop: 20 },
 };

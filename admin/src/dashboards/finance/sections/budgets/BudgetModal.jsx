@@ -77,5 +77,5 @@ const s = {
   label: { color: t.textSecondary, fontSize: 13, fontWeight: 500 },
   head: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', margin: '18px 0 10px' },
   line: { display: 'flex', gap: 8, marginBottom: 8, alignItems: 'center' },
-  remove: { background: 'transparent', color: t.danger, padding: 6 },
+  remove: { background: 'transparent', color: t.inkStatus || t.danger, padding: 6 },
 };

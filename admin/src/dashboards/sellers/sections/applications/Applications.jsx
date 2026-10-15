@@ -11,7 +11,7 @@ import { Panel, Loading, ErrorText, RowActions } from '../../../../components/ui
 import { useSellers } from '../../SellersContext';
 import { sellersApi } from '../../sellersApi';
 
-const COLORS = { pending: '#FBBF24', approved: '#34D399', declined: '#F87171' };
+const COLORS = { pending: '#E6B92E', approved: '#91D51F', declined: '#F87171' };
 
 export default function Applications() {
   const { applications, loading, error, changed, notify } = useSellers();

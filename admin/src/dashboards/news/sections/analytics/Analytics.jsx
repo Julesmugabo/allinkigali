@@ -33,7 +33,7 @@ export default function Analytics() {
       <KpiGrid>
         <Kpi label="Total reads" value={fmtNum(articles.reduce((sum, a) => sum + (a.views || 0), 0))} />
         <Kpi label="Published articles" value={published.length} color={t.success} />
-        <Kpi label="Average reads per article" value={fmtNum(published.length ? Math.round(published.reduce((s2, a) => s2 + (a.views || 0), 0) / published.length) : 0)} color="#A78BFA" />
+        <Kpi label="Average reads per article" value={fmtNum(published.length ? Math.round(published.reduce((s2, a) => s2 + (a.views || 0), 0) / published.length) : 0)} color="#E6B92E" />
       </KpiGrid>
       <ErrorText>{error}</ErrorText>
       <div style={s.chips}>
@@ -54,7 +54,7 @@ export default function Analytics() {
               <BarList color="#2DD4BF" rows={data.cats.map((c) => ({ key: c.category, label: `${categoryLabel(c.category)} (${c.articles})`, value: Number(c.total_views || 0) }))} />
             </Panel>
             <Panel title="By author" style={{ marginBottom: 0 }}>
-              <BarList color="#A78BFA" empty="Put bylines on articles to see author performance."
+              <BarList color="#E6B92E" empty="Put bylines on articles to see author performance."
                 rows={data.auths.map((a) => ({ key: a.id, label: `${a.name} (${a.articles})`, value: Number(a.total_views || 0) }))} />
             </Panel>
           </div>
@@ -67,6 +67,6 @@ export default function Analytics() {
 const s = {
   chips: { display: 'flex', gap: 6, marginBottom: 16 },
   chip: { padding: '6px 12px', borderRadius: 20, fontSize: 13, background: t.bgCard, color: t.textSecondary },
-  chipOn: { background: t.bgActive, color: t.accent },
+  chipOn: { background: t.bgActive, color: t.inkAccent },
   two: { display: 'grid', gridTemplateColumns: 'repeat(auto-fit, minmax(320px, 1fr))', gap: 20 },
 };

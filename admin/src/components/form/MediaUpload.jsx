@@ -74,6 +74,6 @@ const s = {
   row: { display: 'flex', gap: 12, alignItems: 'flex-start' },
   preview: { width: 110, height: 72, objectFit: 'cover', borderRadius: 8, border: `1px solid ${t.borderLight}`, background: t.bg },
   warn: { padding: '8px 10px', borderRadius: 6, background: 'rgba(251,191,36,0.12)', color: t.inkStatus || t.warning, fontSize: 12, lineHeight: 1.5 },
-  err: { color: t.danger, fontSize: 12 },
+  err: { color: t.inkStatus || t.danger, fontSize: 12 },
   hint: { color: t.textMuted, fontSize: 12 },
 };

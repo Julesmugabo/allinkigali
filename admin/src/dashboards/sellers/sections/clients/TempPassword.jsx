@@ -34,6 +34,6 @@ export default function TempPassword({ title, email, password, onDone }) {
 const s = {
   card: { display: 'flex', gap: 12, alignItems: 'center', flexWrap: 'wrap', background: 'rgba(74,222,128,0.1)', border: `1px solid ${t.success}55`, borderRadius: 10, padding: '12px 14px', marginBottom: 16, color: t.text },
   line: { color: t.textSecondary, fontSize: 14, marginTop: 2 },
-  pw: { color: t.success, fontFamily: 'ui-monospace, Consolas, monospace', fontSize: 15 },
+  pw: { color: t.inkStatus || t.success, fontFamily: 'ui-monospace, Consolas, monospace', fontSize: 15 },
   note: { color: t.textMuted, fontSize: 12, marginTop: 4 },
 };

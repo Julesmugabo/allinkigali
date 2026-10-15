@@ -38,7 +38,7 @@ export default function TransactionsTable({ rows, emptyText, showActions = true 
 
   const columns = [
     { key: 'txn_date', label: 'Date', render: (r) => fmtDate(r.txn_date) },
-    { key: 'txn_ref', label: 'Ref', render: (r) => <span style={{ color: '#38BDF8' }}>{r.txn_ref}</span> },
+    { key: 'txn_ref', label: 'Ref', render: (r) => <span style={{ color: '#91D51F' }}>{r.txn_ref}</span> },
     { key: 'txn_type', label: 'Type' },
     { key: 'description', label: 'Description' },
     { key: 'amount', label: 'Amount', render: (r) => <Money value={r.amount} type={r.txn_type} /> },

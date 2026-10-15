@@ -16,6 +16,7 @@ const { linkOwner, unlinkAccount } = require('../clients/placeOwners');
 
 const router = express.Router();
 const OWNER_ROLES = ['restaurant', 'coffeeshop'];
+const STAFF_DASHBOARDS = ['news', 'sellers', 'finance'];
 const MIGRATIONS_DIR = path.join(__dirname, '..', '..', 'migrations');
 
 function adminToJson(row) {
@@ -25,6 +26,7 @@ function adminToJson(row) {
     firstName: row.first_name,
     lastName: row.last_name,
     role: row.role,
+    roles: [...new Set([row.role, ...(row.staff_roles || [])].filter(Boolean))],
     createdAt: row.created_at,
   };
 }
@@ -68,7 +70,7 @@ router.post('/migrate', requireAuth, requireRole('director'), async (_req, res) 
 router.get('/admins', requireAuth, requireRole('director'), async (_req, res) => {
   // Owners also show the place they're linked to.
   const { rows } = await query(
-    `select u.id, u.email, u.first_name, u.last_name, u.role, u.created_at,
+    `select u.id, u.email, u.first_name, u.last_name, u.role, u.staff_roles, u.created_at,
             u.restaurant_id, u.coffee_shop_id, coalesce(r.name, c.name) as place_name
      from users u
      left join restaurants r on r.id = u.restaurant_id
@@ -79,12 +81,19 @@ router.get('/admins', requireAuth, requireRole('director'), async (_req, res) =>
 });
 
 router.post('/assign-role', requireAuth, requireRole('director'), async (req, res) => {
-  const { email, role, password, firstName, lastName } = req.body || {};
+  const { email, password, firstName, lastName } = req.body || {};
   if (!email || !email.trim()) return res.status(400).json({ error: 'email is required.' });
   const ASSIGNABLE = ['news', 'sellers', 'restaurant', 'coffeeshop', 'ibibanza', 'inzuzamacye', 'salehouse', 'allingadget', 'uruhurwiza', 'finance'];
-  if (role !== null && !ASSIGNABLE.includes(role)) {
-    return res.status(400).json({ error: `role must be one of: ${ASSIGNABLE.join(', ')}, or null to revoke.` });
+  // `roles` (several Staff Portal dashboards for one person) or the older single `role`; empty/null revokes.
+  const roles = [...new Set(Array.isArray(req.body?.roles) ? req.body.roles : (req.body?.role ? [req.body.role] : []))];
+  if (roles.some((r) => !ASSIGNABLE.includes(r))) {
+    return res.status(400).json({ error: `roles must be from: ${ASSIGNABLE.join(', ')} (never director).` });
   }
+  if (roles.length > 1 && roles.some((r) => !STAFF_DASHBOARDS.includes(r))) {
+    return res.status(400).json({ error: 'Only News, Sales Partners and Finance can be combined. An owner has one role.' });
+  }
+  const role = roles[0] || null;
+  const staffRoles = roles.slice(1);
 
   const normalizedEmail = email.trim().toLowerCase();
 
@@ -105,19 +114,19 @@ router.post('/assign-role', requireAuth, requireRole('director'), async (req, re
 
     const passwordHash = await bcrypt.hash(password, 10);
     const { rows: created } = await query(
-      `insert into users (email, password_hash, first_name, last_name, role)
-       values ($1, $2, $3, $4, $5)
-       returning id, email, first_name, last_name, role, created_at`,
-      [normalizedEmail, passwordHash, firstName.trim(), (lastName || '').trim(), role]
+      `insert into users (email, password_hash, first_name, last_name, role, staff_roles)
+       values ($1, $2, $3, $4, $5, $6)
+       returning id, email, first_name, last_name, role, staff_roles, created_at`,
+      [normalizedEmail, passwordHash, firstName.trim(), (lastName || '').trim(), role, staffRoles]
     );
     return res.status(201).json({ ...adminToJson(created[0]), created: true });
   }
 
   // Account exists — just update the role.
   const { rows } = await query(
-    `update users set role = $1 where email = $2
-     returning id, email, first_name, last_name, role, created_at`,
-    [role, normalizedEmail]
+    `update users set role = $1, staff_roles = $2 where email = $3
+     returning id, email, first_name, last_name, role, staff_roles, created_at`,
+    [role, staffRoles, normalizedEmail]
   );
   // No longer a restaurant / coffee-shop owner (access removed, or now staff):
   // their client-dashboard sign-in and the old place link go too.

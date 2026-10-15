@@ -9,7 +9,8 @@ import React, { useEffect, useState } from 'react';
 import { Menu, X, LogOut } from 'lucide-react';
 import { t } from '../../theme';
 import { session, ROLE_LABEL, PLACE_LABEL } from '../session';
-import { navFor } from '../nav';
+import { navFor, homeFor } from '../nav';
+import { Link } from 'react-router-dom';
 import ClientNav from './ClientNav';
 import SupportBanner from './SupportBanner';
 
@@ -35,7 +36,7 @@ export default function ClientLayout({ me, onChanged, children }) {
       {open && sliding() && <div onClick={() => setOpen(false)} style={s.overlay} />}
       <aside style={{ ...s.side, ...(open ? s.sideOpen : {}) }}>
         <div style={{ ...s.brand, paddingLeft: sliding() ? 64 : 20 }}>
-          <img src="/logo-wordmark-dark.png" alt="AllinKigali" style={{ height: 24 }} />
+          <Link to={homeFor(me)} onClick={close} aria-label="Home"><img src="/logo-wordmark-dark.png" alt="AllinKigali" style={{ height: 24 }} /></Link>
           <div style={s.sub}>Business</div>
         </div>
         <div style={s.place}>

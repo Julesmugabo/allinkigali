@@ -77,6 +77,6 @@ export default function PlacesList() {
 
 const s = {
   switch: { padding: '4px 10px', fontSize: 12, fontWeight: 600, borderRadius: 20, minWidth: 68 },
-  on: { background: `${t.success}20`, color: t.success },
+  on: { background: `${t.success}20`, color: t.inkStatus || t.success },
   off: { background: t.bgHover, color: t.textSecondary },
 };

@@ -31,8 +31,8 @@ export default function Overview() {
       <KpiGrid>
         <Kpi label={`${type.title} listed`} value={active.length} hint={places.length - active.length ? `${places.length - active.length} hidden` : undefined} onClick={() => navigate(`${type.base}/list`)} />
         <Kpi label="Open now" value={active.filter(isOpen).length} color={t.success} />
-        <Kpi label="Delivery on" value={active.filter((p) => p.delivery_enabled).length} color="#A78BFA" />
-        <Kpi label="Average rating" value={avg === '—' ? avg : `★ ${avg}`} color="#FBBF24" />
+        <Kpi label="Delivery on" value={active.filter((p) => p.delivery_enabled).length} color="#E6B92E" />
+        <Kpi label="Average rating" value={avg === '—' ? avg : `★ ${avg}`} color="#E6B92E" />
         <Kpi label="Bookings waiting" value={pending} color={t.warning} onClick={() => navigate(`${type.base}/bookings`)} />
         <Kpi label="Confirmed for today" value={todays} color={t.accent} />
       </KpiGrid>

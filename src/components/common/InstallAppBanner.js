@@ -101,11 +101,11 @@ export default function InstallAppBanner() {
         </View>
 
         <View style={styles.body}>
-          <Text style={styles.title}>Shyiraho allinkigali kuri telefone yawe</Text>
+          <Text style={styles.title}>Install allinkigali on your phone</Text>
           <Text style={styles.subtitle}>
             {platform === 'ios'
-              ? "Kanda 󰒖 Share hanyuma uhitemo \"Add to Home Screen\""
-              : 'Nta interineti ikenewe buri gihe — ifungura vuba nk\'app'}
+              ? 'Tap Share, then choose "Add to Home Screen"'
+              : 'Opens fast, just like an app'}
           </Text>
         </View>
 
@@ -119,7 +119,7 @@ export default function InstallAppBanner() {
           onPress={dismiss}
           hitSlop={10}
           accessibilityRole="button"
-          accessibilityLabel="Funga"
+          accessibilityLabel="Close"
           style={styles.closeButton}
         >
           <MaterialCommunityIcons name="close" size={16} color={colors.textOnNavyFaint} />

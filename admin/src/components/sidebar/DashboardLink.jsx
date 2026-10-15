@@ -33,7 +33,7 @@ export default function DashboardLink({ link, children = [], onNavigate }) {
           onClick={() => { if (hasChildren) setOpen(true); else if (isMobile()) onNavigate?.(); }}
           style={() => ({ ...s.link, ...(inside ? s.linkActive : {}), flex: 1 })}
         >
-          <link.icon size={17} />
+          <link.icon size={17} color={t.lime} strokeWidth={2.2} />
           <span style={{ flex: 1 }}>{link.label}</span>
         </NavLink>
         {hasChildren && (
@@ -60,7 +60,7 @@ const s = {
     color: t.textSecondary, fontSize: 14, fontWeight: 500,
     textDecoration: 'none', transition: 'all 0.15s',
   },
-  linkActive: { background: t.bgActive, color: t.accent },
+  linkActive: { background: t.bgActive, color: t.inkAccent },
   chevron: { background: 'transparent', color: t.textMuted, padding: '8px 6px' },
   children: { margin: '2px 0 6px 21px', paddingLeft: 10, borderLeft: `1px solid ${t.borderLight}`, display: 'flex', flexDirection: 'column', gap: 1 },
 };

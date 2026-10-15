@@ -62,8 +62,8 @@ router.post('/onboard', staff, async (req, res) => {
   const email = String(req.body?.email || '').trim().toLowerCase();
   if (!isPlaceType(placeType) || !(await placeInfo(placeType, placeId))) return res.status(404).json({ error: 'Choose the place.' });
   if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(email)) return res.status(400).json({ error: 'Enter the owner\'s email.' });
-  let { rows: [user] } = await query('select id, first_name, last_name, role from users where lower(email) = $1', [email]);
-  if (user && STAFF_ROLES.includes(user.role)) {
+  let { rows: [user] } = await query('select id, first_name, last_name, role, staff_roles from users where lower(email) = $1', [email]);
+  if (user && (STAFF_ROLES.includes(user.role) || (user.staff_roles || []).length)) {
     return res.status(409).json({ error: "This email belongs to an allinkigali staff account. Use the owner's own email." });
   }
   let password = null;
@@ -84,10 +84,10 @@ router.post('/onboard', staff, async (req, res) => {
 
 router.post('/members/:id/reset-password', staff, async (req, res) => {
   const { rows: [m] } = await query(
-    `select m.user_id, m.place_type, m.place_id, m.name, u.role from place_members m join users u on u.id = m.user_id
+    `select m.user_id, m.place_type, m.place_id, m.name, u.role, u.staff_roles from place_members m join users u on u.id = m.user_id
      where m.id = $1 and m.role in ('owner', 'manager')`, [req.params.id]);
   if (!m) return res.status(404).json({ error: 'Owner not found.' });
-  if (STAFF_ROLES.includes(m.role)) return res.status(403).json({ error: "Staff accounts can't be reset here." });
+  if (STAFF_ROLES.includes(m.role) || (m.staff_roles || []).length) return res.status(403).json({ error: "Staff accounts can't be reset here." });
   const password = tempPassword();
   await query('update users set password_hash = $1 where id = $2', [await bcrypt.hash(password, 10), m.user_id]);
   const support = { by: req.user.sub, name: await staffName(req.user.sub), staffRole: req.user.role };

@@ -26,7 +26,7 @@ export function ModalActions({ children }) {
 
 const styles = {
   overlay: {
-    position: 'fixed', inset: 0, background: 'rgba(0,0,0,0.6)',
+    position: 'fixed', inset: 0, background: 'rgba(17,17,17,0.35)',
     display: 'flex', alignItems: 'center', justifyContent: 'center',
     zIndex: 200, padding: 16,
   },

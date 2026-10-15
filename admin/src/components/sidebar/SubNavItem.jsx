@@ -42,7 +42,7 @@ export default function SubNavItem({ item, onNavigate }) {
 
 const s = {
   child: { display: 'block', padding: '6px 10px', borderRadius: 6, color: t.textMuted, fontSize: 13, textDecoration: 'none' },
-  childActive: { color: t.accent, background: 'rgba(56,189,248,0.08)', fontWeight: 600 },
+  childActive: { color: t.inkAccent, background: t.bgActive, fontWeight: 600 },
   group: { display: 'flex', alignItems: 'center', width: '100%', background: 'transparent', border: 'none', cursor: 'pointer' },
   groupActive: { color: t.text, fontWeight: 600 },
   nested: { margin: '1px 0 4px 12px', paddingLeft: 8, borderLeft: `1px solid ${t.borderLight}`, display: 'flex', flexDirection: 'column', gap: 1 },

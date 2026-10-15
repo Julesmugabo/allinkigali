@@ -68,6 +68,6 @@ const s = {
   clear: { background: 'transparent', color: t.textMuted, padding: 4 },
   panel: { background: t.bgCard, borderRadius: t.radius, padding: 12, marginTop: 6, maxWidth: 820, boxShadow: t.shadowLg },
   row: { display: 'flex', alignItems: 'center', gap: 10, padding: '8px 4px', borderBottom: `1px solid ${t.border}`, color: t.text, fontSize: 13 },
-  kind: { color: t.accent, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', width: 86 },
+  kind: { color: t.inkAccent, fontSize: 11, fontWeight: 700, textTransform: 'uppercase', width: 86 },
   muted: { color: t.textMuted, fontSize: 13, padding: 8 },
 };

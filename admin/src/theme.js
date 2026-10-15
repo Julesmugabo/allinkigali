@@ -1,8 +1,9 @@
 import { CLIENT_LOOK } from './clients/look';
 
-// The Staff Portal's dark set. The business dashboard (clients.html, marked
-// data-app="clients") swaps in its own light colours from clients/look.js.
-const STAFF_LOOK = {
+// The original dark set, kept for reference. Since 2026-10-15 both the
+// Staff Portal and the business dashboard use the light allinkigali look
+// (clients/look.js): #F5F2EA page, black/grey words, lime and gold shapes.
+const DARK_LOOK = {
   bg: '#0B1120',
   bgSidebar: '#0F172A',
   bgCard: '#1E293B',
@@ -39,6 +40,4 @@ const STAFF_LOOK = {
   inkStatus: null, // null: status words in their own colour
 };
 
-const isClientsPage = typeof document !== 'undefined' && document.documentElement.dataset.app === 'clients';
-
-export const t = isClientsPage ? { ...STAFF_LOOK, ...CLIENT_LOOK } : STAFF_LOOK;
+export const t = { ...DARK_LOOK, ...CLIENT_LOOK };

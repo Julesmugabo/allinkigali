@@ -39,6 +39,6 @@ export default function Intents() {
 const s = {
   grid: { display: 'grid', gridTemplateColumns: 'repeat(auto-fill, minmax(280px, 1fr))', gap: 16 },
   attrs: { color: t.textMuted, fontSize: 12, marginBottom: 10 },
-  shop: { display: 'block', background: 'transparent', color: t.accent, padding: '4px 0', fontSize: 14, textAlign: 'left' },
-  none: { color: t.warning, fontSize: 13 },
+  shop: { display: 'block', background: 'transparent', color: t.inkAccent, padding: '4px 0', fontSize: 14, textAlign: 'left' },
+  none: { color: t.inkStatus || t.warning, fontSize: 13 },
 };

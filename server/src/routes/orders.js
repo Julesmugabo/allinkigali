@@ -8,11 +8,12 @@
  */
 const express = require('express');
 const { query } = require('../db');
+const { hasRole } = require('../middleware/requireRole');
 const { attachUserIfPresent, requireAuth } = require('../middleware/auth');
 
 const router = express.Router();
 
-const isOrderAdmin = (user) => Boolean(user && (user.role === 'sellers' || user.role === 'director'));
+const isOrderAdmin = (user) => hasRole(user, 'sellers', 'director');
 
 function orderToJson(row) {
   return {

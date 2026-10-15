@@ -33,8 +33,10 @@ router.post('/exchange', async (req, res) => {
   try { data = readSupportCode(String(req.body?.code || '')); } catch {
     return res.status(401).json({ error: 'This link has expired. Open the client again from the Staff Portal.' });
   }
-  const { rows: [staff] } = await query('select id, role, first_name, last_name, email from users where id = $1', [data.by]);
-  if (!staff || !STAFF_ROLES.includes(staff.role)) return res.status(403).json({ error: 'Not allowed.' });
+  const { rows: [staff] } = await query('select id, role, staff_roles, first_name, last_name, email from users where id = $1', [data.by]);
+  const held = staff ? [staff.role, ...(staff.staff_roles || [])] : [];
+  if (!staff || !held.some((r) => STAFF_ROLES.includes(r))) return res.status(403).json({ error: 'Not allowed.' });
+  staff.role = ['director', 'sellers', 'finance'].find((r) => held.includes(r)); // the strongest one decides
   const place = await placeInfo(data.placeType, data.placeId);
   if (!place) return res.status(404).json({ error: 'Place not found.' });
   const name = [staff.first_name, staff.last_name].filter(Boolean).join(' ') || staff.email;

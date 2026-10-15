@@ -61,7 +61,7 @@ export default function Marketplace({ notify }) {
       <KpiGrid>
         <Kpi label="Shops" value={shops.length} />
         <Kpi label="Not verified" value={shops.filter((s) => !s.verified).length} color={t.warning} />
-        <Kpi label="Profile views" value={fmtNum(shops.reduce((s, b) => s + (b.views || 0), 0))} color="#60A5FA" />
+        <Kpi label="Profile views" value={fmtNum(shops.reduce((s, b) => s + (b.views || 0), 0))} color="#91D51F" />
         <Kpi label="Customer requests" value={requests.length} hint={`${requests.filter((r) => r.status === 'new').length} new`} color={t.success} />
       </KpiGrid>
       <Panel title="Shops">

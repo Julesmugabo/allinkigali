@@ -144,6 +144,6 @@ const s = {
   headline: { width: '100%', fontSize: 22, fontWeight: 700, background: 'transparent', border: 'none', borderBottom: `1px solid ${t.borderLight}`, borderRadius: 0, padding: '6px 0' },
   body: { width: '100%', resize: 'vertical', fontSize: 15, lineHeight: 1.6, borderRadius: '0 0 8px 8px' },
   count: { color: t.textMuted, fontSize: 12 },
-  fieldErr: { color: t.danger, fontSize: 12, marginTop: 6 },
+  fieldErr: { color: t.inkStatus || t.danger, fontSize: 12, marginTop: 6 },
   restore: { display: 'flex', gap: 10, alignItems: 'center', flexWrap: 'wrap', background: t.bgActive, color: t.text, fontSize: 13, padding: '10px 14px', borderRadius: 10, marginBottom: 14 },
 };
