@@ -1,7 +1,9 @@
 /**
- * NewsHeader.js — Umutwe wa ecran y'amakuru.
- * The app's top bar (logo, bell, profile), the tagline and the category strip.
- * The category strip itself lives in CategoryTabs so this file stays readable.
+ * NewsHeader.js — the top of the news page on phones, in two parts:
+ *   NewsHeader      pinned: the app's top bar (logo, bell, profile) stays
+ *                   on screen while you scroll
+ *   NewsHeaderBand  scrolls with the news: the tagline and the categories
+ *                   (put it first in the list's header)
  */
 import React from 'react';
 import { View, StyleSheet } from 'react-native';
@@ -12,34 +14,27 @@ import CategoryTabs from './CategoryTabs';
 import NewsTagline from './NewsTagline';
 import { colors, spacing, gutter } from '../../theme';
 
-export default function NewsHeader({
-  categories,
-  activeCategory,
-  onCategoryChange,
-  onNotificationsPress,
-  unreadCount = 0,
-}) {
+export default function NewsHeader() {
   const insets = useSafeAreaInsets();
-
   return (
-    <View style={[styles.container, { paddingTop: insets.top + spacing.sm }]}>
-      <AppTopBar variant="full" style={{ marginBottom: spacing.md }} />
+    <View style={[styles.bar, { paddingTop: insets.top + spacing.sm }]}>
+      <AppTopBar variant="full" />
+    </View>
+  );
+}
 
+export function NewsHeaderBand({ categories, activeCategory, onCategoryChange }) {
+  return (
+    <View style={styles.band}>
       <NewsTagline onNavy style={styles.tagline} />
-
-      <CategoryTabs
-        categories={categories}
-        activeKey={activeCategory}
-        onChange={onCategoryChange}
-      />
+      <CategoryTabs categories={categories} activeKey={activeCategory} onChange={onCategoryChange} />
     </View>
   );
 }
 
 const styles = StyleSheet.create({
-  container: {
-    backgroundColor: colors.navy800,
-    paddingHorizontal: gutter,
-  },
-  tagline: { marginTop: -spacing.xs, marginBottom: spacing.md },
+  bar: { backgroundColor: colors.navy800, paddingHorizontal: gutter, paddingBottom: spacing.sm },
+  // Sits flush under the pinned bar, edge to edge, at the top of the list.
+  band: { backgroundColor: colors.navy800, marginHorizontal: -gutter, marginTop: -spacing.md, marginBottom: spacing.md, paddingHorizontal: gutter, paddingTop: spacing.xs },
+  tagline: { marginTop: 0, marginBottom: spacing.md },
 });

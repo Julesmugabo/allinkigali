@@ -7,7 +7,7 @@
 import React, { useMemo } from 'react';
 import { View, Text, FlatList, RefreshControl, StyleSheet } from 'react-native';
 
-import NewsHeader from '../../components/news/NewsHeader';
+import NewsHeader, { NewsHeaderBand } from '../../components/news/NewsHeader';
 import HeroCard from '../../components/news/HeroCard';
 import TrendingRail from '../../components/news/TrendingRail';
 import NewsListItem from '../../components/news/NewsListItem';
@@ -42,6 +42,7 @@ export default function NewsFeedNarrow({
   const listHeader = useMemo(
     () => (
       <View>
+        <NewsHeaderBand categories={categories} activeCategory={activeCategory} onCategoryChange={onCategoryChange} />
         <View style={styles.dateRow}>
           <Text style={styles.dateLabel}>{formatLongDate()}</Text>
           <View style={styles.liveDot} />
@@ -60,18 +61,12 @@ export default function NewsFeedNarrow({
         <SectionLabel title="AMAKURU MASHYA" actionLabel="Byose" onActionPress={onSeeAllPress} />
       </View>
     ),
-    [feed, trendAds, handleArticlePress, handleStoryPress, onSeeAllPress]
+    [feed, trendAds, handleArticlePress, handleStoryPress, onSeeAllPress, categories, activeCategory, onCategoryChange]
   );
 
   return (
     <View style={styles.container}>
-      <NewsHeader
-        categories={categories}
-        activeCategory={activeCategory}
-        onCategoryChange={onCategoryChange}
-        onNotificationsPress={onNotificationsPress}
-        unreadCount={unreadCount}
-      />
+      <NewsHeader />
 
       <FlatList
         data={isLoading ? [] : feedItems}
@@ -83,7 +78,12 @@ export default function NewsFeedNarrow({
             <NewsListItem article={item.article} onPress={handleArticlePress} />
           )
         }
-        ListHeaderComponent={isLoading ? <FeedSkeleton /> : listHeader}
+        ListHeaderComponent={isLoading ? (
+          <View>
+            <NewsHeaderBand categories={categories} activeCategory={activeCategory} onCategoryChange={onCategoryChange} />
+            <FeedSkeleton />
+          </View>
+        ) : listHeader}
         ListEmptyComponent={
           isLoading ? null : loadFailed && !articles.length ? (
             <EmptyState
