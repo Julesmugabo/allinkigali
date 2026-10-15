@@ -121,6 +121,9 @@ router.post('/reset-password', async (req, res) => {
   res.json({ token: signToken(updated), user: userToJson(updated) });
 });
 
+// GET /auth/config — what the sign-in pages may offer (emails switch on with Brevo).
+router.get('/config', (_req, res) => res.json({ emailsEnabled: mailerReady() }));
+
 router.post('/login', async (req, res) => {
   const { email, password } = req.body || {};
   if (!email || !password) {

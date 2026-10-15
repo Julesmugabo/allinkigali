@@ -2,7 +2,7 @@
  * LoginScreen.js — Log in: Google first (one tap, where available), then
  * email and password. Afterwards you go back to where you were.
  */
-import React, { useCallback, useEffect } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { Text, Pressable, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
@@ -13,6 +13,7 @@ import GoogleButton from '../../components/account/GoogleButton';
 import OrDivider from '../../components/account/OrDivider';
 
 import { useUser } from '../../context/UserContext';
+import { apiFetch } from '../../services/apiClient';
 import { isGoogleAvailable } from '../../services/googleAuth';
 import { colors, typography, spacing, gutter } from '../../theme';
 
@@ -22,6 +23,10 @@ export default function LoginScreen({ navigation, route }) {
 
   // Don't show an error left over from a previous attempt on another screen.
   useEffect(() => { clearError(); }, [clearError]);
+
+  // "Forgot password?" only once the server can email the code (Brevo connected).
+  const [emailsEnabled, setEmailsEnabled] = useState(false);
+  useEffect(() => { apiFetch('/auth/config').then((c) => setEmailsEnabled(!!c?.emailsEnabled)).catch(() => {}); }, []);
 
   // Back to where they were: the page that sent them here (returnTo), else
   // the previous screen, else the Me tab.
@@ -56,9 +61,11 @@ export default function LoginScreen({ navigation, route }) {
 
           <SignInForm onSubmit={handleSignIn} isLoading={isLoading} serverError={error} />
 
-          <Pressable onPress={() => navigation.navigate('ForgotPassword', { returnTo })} style={styles.forgot} hitSlop={8} accessibilityRole="button">
-            <Text style={styles.forgotText}>Forgot password?</Text>
-          </Pressable>
+          {emailsEnabled ? (
+            <Pressable onPress={() => navigation.navigate('ForgotPassword', { returnTo })} style={styles.forgot} hitSlop={8} accessibilityRole="button">
+              <Text style={styles.forgotText}>Forgot password?</Text>
+            </Pressable>
+          ) : null}
 
           <Pressable
             onPress={() => navigation.replace('SignUp', { returnTo })}
