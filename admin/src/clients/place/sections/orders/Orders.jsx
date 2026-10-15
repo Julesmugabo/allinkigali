@@ -21,10 +21,10 @@ function OrderCard({ o, stage, onMove, busy }) {
   return (
     <div style={s.card}>
       <div style={s.head}><b>#{o.code}</b><span style={{ color: t.textMuted, fontSize: 12 }}>{ago(o.createdAt)}</span></div>
-      <div style={s.items}>{(o.items || []).map((i, k) => <div key={k}>{i.qty || i.quantity || 1}× {i.name}{i.note ? <span style={{ color: t.warning }}> — “{i.note}”</span> : null}</div>)}</div>
+      <div style={s.items}>{(o.items || []).map((i, k) => <div key={k}>{i.qty || i.quantity || 1}× {i.name}{i.note ? <span style={s.note}> “{i.note}”</span> : null}</div>)}</div>
       <div style={s.meta}>{o.customerName || 'Customer'} · <a href={`tel:${o.customerPhone}`}>{o.customerPhone}</a></div>
       <div style={s.meta}>{o.address}</div>
-      {o.notes && <div style={{ ...s.meta, color: t.warning }}>Note: {o.notes}</div>}
+      {o.notes && <div style={s.meta}><span style={s.note}>Note: {o.notes}</span></div>}
       <div style={s.total}>{Number(o.total).toLocaleString()} RWF · {String(o.paymentMethod || '').replace(/_/g, ' ')}</div>
       <div style={{ display: 'flex', gap: 6, marginTop: 8 }}>
         <Button size="sm" variant="success" disabled={busy} onClick={() => onMove(o, stage.next)}>{stage.action}</Button>
@@ -65,7 +65,7 @@ export default function Orders() {
         {showDone && done.map((o) => (
           <div key={o.id} style={s.doneRow}>
             <span>#{o.code} · {(o.items || []).length} item(s) · {new Date(o.createdAt).toLocaleString('en-GB')}</span>
-            <span style={{ color: o.status === 'delivered' ? t.success : t.danger }}>{o.status} · {Number(o.total).toLocaleString()} RWF</span>
+            <span style={{ color: t.inkStatus || (o.status === 'delivered' ? t.success : t.danger) }}><span style={{ display: 'inline-block', width: 8, height: 8, borderRadius: 4, marginRight: 6, background: o.status === 'delivered' ? t.success : t.danger }} />{o.status} · {Number(o.total).toLocaleString()} RWF</span>
           </div>
         ))}
       </Panel>
@@ -82,6 +82,7 @@ const s = {
   head: { display: 'flex', justifyContent: 'space-between', marginBottom: 6 },
   items: { color: t.text, marginBottom: 6, lineHeight: 1.5 },
   meta: { color: t.textSecondary, fontSize: 12 },
+  note: { background: 'rgba(230,185,46,0.25)', color: t.text, borderRadius: 4, padding: '0 5px' },
   total: { fontWeight: 700, marginTop: 6 },
   empty: { color: t.textMuted, fontSize: 13, textAlign: 'center', padding: 10 },
   doneRow: { display: 'flex', justifyContent: 'space-between', gap: 10, padding: '7px 0', borderBottom: `1px solid ${t.border}`, fontSize: 13, color: t.textSecondary },

@@ -1,5 +1,5 @@
 /**
- * ClientsApp.jsx — the client dashboard (allinclients.allinkigali.rw), where
+ * ClientsApp.jsx — the client dashboard (business.allinkigali.rw), where
  * restaurants, coffee shops and wedding venues run their business. The
  * sign-in decides the place and the pages:
  *   /place/…    a restaurant's or café's own pages (today, Order Food, bookings, menu…)
@@ -76,9 +76,9 @@ export default function ClientsApp() {
 function Splash({ text, onRetry }) {
   return (
     <div style={{ minHeight: '100vh', display: 'flex', flexDirection: 'column', gap: 14, alignItems: 'center', justifyContent: 'center', background: t.bg, color: t.textSecondary, fontFamily: t.font, padding: 24, textAlign: 'center' }}>
-      <img src="/logo-wordmark.png" alt="AllinKigali" style={{ height: 28, opacity: 0.9 }} />
+      <img src="/logo-wordmark-dark.png" alt="AllinKigali" style={{ height: 26 }} />
       <div>{text}</div>
-      {onRetry && <button type="button" onClick={onRetry} style={{ background: t.accent, color: t.bg, fontWeight: 700 }}>Try again</button>}
+      {onRetry && <button type="button" onClick={onRetry} style={{ background: t.accent, color: t.onAccent, fontWeight: 700 }}>Try again</button>}
     </div>
   );
 }

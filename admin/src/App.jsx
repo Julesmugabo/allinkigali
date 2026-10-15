@@ -19,7 +19,7 @@ import PlacesDashboard     from './dashboards/places/PlacesDashboard';
 import FinanceDashboard    from './dashboards/finance/FinanceDashboard';
 
 export default function App() {
-  // Restaurants, cafés and venues have their own dashboard now (allinclients…);
+  // Restaurants, cafés and venues have their own dashboard now (business.allinkigali.rw);
   // an old client sign-in kept in this browser is dropped.
   const [user, setUser] = useState(() => {
     const u = getUser();

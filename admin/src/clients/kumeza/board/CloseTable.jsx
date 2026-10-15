@@ -47,9 +47,9 @@ export default function CloseTable({ table, onCancel, onConfirm }) {
 const s2 = {
   total: { fontSize: 32, fontWeight: 800, color: t.text },
   sub: { color: t.textSecondary, fontSize: 13, marginBottom: 12 },
-  warn: { background: 'rgba(251,191,36,0.12)', color: t.warning, borderRadius: 8, padding: '8px 10px', fontSize: 13, marginBottom: 8 },
+  warn: { background: 'rgba(230,185,46,0.18)', color: t.text, borderLeft: `3px solid ${t.gold}`, borderRadius: 8, padding: '8px 10px', fontSize: 13, marginBottom: 8 },
   label: { color: t.textSecondary, fontSize: 13, margin: '14px 0 8px' },
   methods: { display: 'flex', gap: 8 },
   method: { flex: 1, background: t.bg, color: t.textSecondary, border: `1px solid ${t.borderLight}`, fontWeight: 700 },
-  methodOn: { background: 'rgba(74,222,128,0.15)', color: t.success, borderColor: t.success },
+  methodOn: { background: 'rgba(145,213,31,0.22)', color: t.text, borderColor: t.lime },
 };

@@ -1,6 +1,6 @@
 /**
  * clients/index.js — everything under /clients: the client dashboard's own
- * API (allinclients.allinkigali.rw). One file per part.
+ * API (business.allinkigali.rw). One file per part.
  */
 const express = require('express');
 

@@ -25,7 +25,7 @@ export default function OrderBlock({ order, busy, onAction }) {
   return (
     <div style={{ ...s.block, opacity: done ? 0.6 : 1 }}>
       <div style={s.head}>
-        <span style={{ ...s.status, color: st.color }}>{st.label}</span>
+        <span style={s.status}><span style={{ ...s.dot, background: st.color }} />{st.label}</span>
         <span style={s.when}>{clock(order.placedAt)} · {rwf(order.total)}</span>
       </div>
       {partReady(order) && (
@@ -62,12 +62,13 @@ export default function OrderBlock({ order, busy, onAction }) {
 const s = {
   block: { borderTop: `1px solid ${t.borderLight}`, padding: '10px 0' },
   head: { display: 'flex', justifyContent: 'space-between', gap: 8, alignItems: 'baseline' },
-  status: { fontSize: 12.5, fontWeight: 700 },
+  status: { display: 'inline-flex', alignItems: 'center', gap: 6, fontSize: 12.5, fontWeight: 700, color: t.text },
+  dot: { width: 8, height: 8, borderRadius: 4, flex: 'none' },
   when: { color: t.textMuted, fontSize: 12, whiteSpace: 'nowrap' },
-  part: { marginTop: 6, background: 'rgba(74,222,128,0.12)', color: t.success, fontSize: 12.5, fontWeight: 700, borderRadius: 6, padding: '4px 8px' },
+  part: { marginTop: 6, background: 'rgba(145,213,31,0.22)', color: t.text, fontSize: 12.5, fontWeight: 700, borderRadius: 6, padding: '4px 8px' },
   items: { listStyle: 'none', margin: '6px 0 0', display: 'flex', flexDirection: 'column', gap: 3 },
   item: { fontSize: 14, color: t.text },
-  note: { color: t.warning, fontSize: 12.5, marginLeft: 22 },
+  note: { color: t.text, fontSize: 12.5, marginLeft: 22, background: 'rgba(230,185,46,0.22)', borderRadius: 4, padding: '1px 6px', display: 'inline-block' },
   actions: { display: 'flex', flexWrap: 'wrap', gap: 6, marginTop: 8, alignItems: 'center' },
-  hint: { width: '100%', color: t.warning, fontSize: 12 },
+  hint: { width: '100%', color: t.textSecondary, fontSize: 12 },
 };

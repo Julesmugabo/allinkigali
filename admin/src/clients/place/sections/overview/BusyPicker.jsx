@@ -7,9 +7,9 @@ import { Panel } from '../../../../components/ui';
 import { useOwner } from '../../OwnerContext';
 
 const LEVELS = [
-  { key: 'quiet', label: 'Quiet', color: '#34D399' },
-  { key: 'moderate', label: 'Moderate', color: '#FBBF24' },
-  { key: 'full', label: 'Full', color: '#F87171' },
+  { key: 'quiet', label: 'Quiet', color: t.lime },
+  { key: 'moderate', label: 'Moderate', color: t.gold },
+  { key: 'full', label: 'Full', color: t.danger },
 ];
 
 export default function BusyPicker() {
@@ -25,7 +25,7 @@ export default function BusyPicker() {
       <div style={{ display: 'flex', gap: 10 }}>
         {LEVELS.map((l) => (
           <button key={l.key} onClick={() => pick(l.key)}
-            style={{ ...s.btn, borderColor: busy === l.key ? l.color : t.borderLight, color: busy === l.key ? l.color : t.textSecondary, background: busy === l.key ? `${l.color}1a` : 'transparent' }}>
+            style={{ ...s.btn, borderColor: busy === l.key ? l.color : t.borderLight, color: busy === l.key ? t.text : t.textSecondary, fontWeight: busy === l.key ? 700 : 500, background: busy === l.key ? `${l.color}33` : 'transparent' }}>
             {l.label}
           </button>
         ))}

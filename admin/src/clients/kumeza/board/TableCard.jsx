@@ -25,7 +25,7 @@ export default function TableCard({ table, now, busy, onOrder, onRequest, onClos
           {table.section ? <div style={st.section}>{table.section}</div> : null}
         </div>
         <div style={{ textAlign: 'right' }}>
-          <div style={{ ...st.state, background: `${state.color}22`, color: state.color }}>{state.label}</div>
+          <div style={{ ...st.state, background: `${state.color}33` }}><span style={{ ...st.dot, background: state.color }} />{state.label}</div>
           {s ? <div style={st.since}>seated {ago(s.openedAt, now)}</div> : null}
         </div>
       </div>
@@ -34,7 +34,7 @@ export default function TableCard({ table, now, busy, onOrder, onRequest, onClos
         const R = REQUEST[r.type];
         return (
           <div key={r.id} style={st.request}>
-            <R.icon size={16} />
+            <R.icon size={16} color={t.danger} />
             <span style={{ flex: 1 }}>{R.text} · {ago(r.at, now)}</span>
             <Button size="sm" variant="ghost" disabled={busy} onClick={() => onRequest(r)}>On my way</Button>
           </div>
@@ -62,11 +62,12 @@ const st = {
   head: { display: 'flex', justifyContent: 'space-between', gap: 10, alignItems: 'flex-start' },
   label: { fontSize: 19, fontWeight: 800, color: t.text },
   section: { color: t.textMuted, fontSize: 12, marginTop: 2 },
-  state: { display: 'inline-block', borderRadius: 20, padding: '3px 10px', fontSize: 12, fontWeight: 800 },
+  state: { display: 'inline-flex', alignItems: 'center', gap: 6, borderRadius: 20, padding: '3px 10px', fontSize: 12, fontWeight: 800, color: t.text },
+  dot: { width: 8, height: 8, borderRadius: 4 },
   since: { color: t.textMuted, fontSize: 11.5, marginTop: 4 },
-  request: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(248,113,113,0.12)', color: '#FCA5A5', borderRadius: 8, padding: '6px 8px', fontSize: 13.5, fontWeight: 700 },
+  request: { display: 'flex', alignItems: 'center', gap: 8, background: 'rgba(229,72,77,0.10)', color: t.text, borderRadius: 8, padding: '6px 8px', fontSize: 13.5, fontWeight: 700 },
   foot: { display: 'flex', justifyContent: 'space-between', alignItems: 'center', gap: 8, borderTop: `1px solid ${t.borderLight}`, paddingTop: 10, marginTop: 2 },
   totalLabel: { color: t.textMuted, fontSize: 11.5 },
   total: { fontSize: 16, fontWeight: 800, color: t.text },
-  toConfirm: { color: t.warning, fontSize: 11.5, marginTop: 2 },
+  toConfirm: { color: t.textSecondary, fontSize: 11.5, marginTop: 2 },
 };

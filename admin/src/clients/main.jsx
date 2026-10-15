@@ -1,5 +1,5 @@
 /**
- * main.jsx — the client dashboard (allinclients.allinkigali.rw): restaurants,
+ * main.jsx — the client dashboard (business.allinkigali.rw): restaurants,
  * coffee shops and wedding venues run their business here. Same codebase as
  * the Staff Portal, its own sign-in.
  */
@@ -9,6 +9,7 @@ import { BrowserRouter } from 'react-router-dom';
 import { configureApi } from '../api';
 import ClientsApp from './ClientsApp';
 import '../index.css';
+import './clients.css';
 
 configureApi({ tokenKey: 'client-token', userKey: 'client-user' });
 document.body.style.overflow = 'auto'; // the page itself scrolls here (the Staff Portal scrolls its main panel)

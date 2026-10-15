@@ -11,7 +11,10 @@ import { DataTable, Tabs, Badge } from '../PageShell';
 import Button from '../common/Button';
 import { RowActions } from '../ui';
 
-const COLORS = { pending: '#FBBF24', confirmed: '#34D399', rejected: '#F87171', cancelled: '#94A3B8', completed: '#60A5FA', noshow: '#FB923C' };
+// The business dashboard uses its lime / gold / red; the Staff Portal its own set.
+const COLORS = t.inkStatus
+  ? { pending: t.gold, confirmed: t.lime, rejected: t.danger, cancelled: t.textMuted, completed: t.textMuted, noshow: t.danger }
+  : { pending: '#FBBF24', confirmed: '#34D399', rejected: '#F87171', cancelled: '#94A3B8', completed: '#60A5FA', noshow: '#FB923C' };
 const REASONS = ['Fully booked', 'Closed that day', 'Party too large', 'Private event', 'Other'];
 
 const fmtDay = (d) => (d ? new Date(d).toLocaleDateString('en-GB', { weekday: 'short', day: '2-digit', month: 'short' }) : '—');
@@ -43,7 +46,7 @@ export default function BookingsTable({ bookings, onStatus, showPlace = false })
           <div style={{ fontWeight: 500 }}>{b.guestName || '—'}</div>
           <div style={{ color: t.textMuted, fontSize: 12 }}>
             {b.guestPhone ? <a href={`tel:${b.guestPhone}`}>{b.guestPhone}</a> : ''}
-            {b.noshowCount > 0 && <span style={{ color: COLORS.noshow }}> · {b.noshowCount} past no-show(s)</span>}
+            {b.noshowCount > 0 && <span style={{ color: t.inkStatus || COLORS.noshow, fontWeight: t.inkStatus ? 600 : undefined }}> · {b.noshowCount} past no-show(s)</span>}
           </div>
         </div>
       ),

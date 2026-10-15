@@ -21,12 +21,12 @@ export function useFlash() {
 export default function Flash({ flash }) {
   if (!flash) return null;
   return (
-    <div key={flash.id} style={{ ...s.flash, background: flash.isError ? t.danger : t.success, color: flash.isError ? '#2B0B0B' : '#052E16' }}>
+    <div key={flash.id} style={{ ...s.flash, borderLeft: `5px solid ${flash.isError ? t.danger : t.lime}` }}>
       {flash.text}
     </div>
   );
 }
 
 const s = {
-  flash: { position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 300, maxWidth: 'calc(100vw - 32px)', padding: '12px 18px', borderRadius: 10, fontWeight: 700, fontSize: 14, boxShadow: t.shadowLg },
+  flash: { position: 'fixed', left: '50%', bottom: 24, transform: 'translateX(-50%)', zIndex: 300, maxWidth: 'calc(100vw - 32px)', padding: '12px 18px', borderRadius: 10, fontWeight: 700, fontSize: 14, boxShadow: t.shadowLg, background: t.bgCard, color: t.text },
 };

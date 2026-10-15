@@ -1,28 +1,34 @@
 /**
  * tableState.js — how the waiter board reads a table: one state per table
  * (most urgent first) for the card's colour, and the labels and colours of
- * an order's status.
+ * an order's status. Lime = go (new order, ready), gold = needs you (new
+ * guest, bill), red = a guest is calling; the words stay black.
  */
+import { LIME, GOLD, RED } from '../../look';
+
+const SAND = '#CDBF98';
+const GREY = '#B7B0A2';
+
 export const STATE = {
-  confirm: { label: 'New guest — confirm', color: '#FBBF24', urgent: true },
-  call: { label: 'Calling a waiter', color: '#F87171', urgent: true },
-  bill: { label: 'Wants the bill', color: '#F472B6', urgent: true },
-  new: { label: 'New order — accept', color: '#38BDF8', urgent: true },
-  ready: { label: 'Ready to serve', color: '#4ADE80', urgent: true },
-  preparing: { label: 'Preparing', color: '#FB923C' },
-  served: { label: 'Served', color: '#A78BFA' },
-  free: { label: 'Free', color: '#64748B' },
+  confirm: { label: 'New guest — confirm', color: GOLD, urgent: true },
+  call: { label: 'Calling a waiter', color: RED, urgent: true },
+  bill: { label: 'Wants the bill', color: GOLD, urgent: true },
+  new: { label: 'New order — accept', color: LIME, urgent: true },
+  ready: { label: 'Ready to serve', color: LIME, urgent: true },
+  preparing: { label: 'Preparing', color: SAND },
+  served: { label: 'Served', color: GREY },
+  free: { label: 'Free', color: GREY },
 };
 
 export const ORDER = {
-  needs_confirm: { label: 'Waiting for you to confirm the guest', color: '#FBBF24' },
-  placed: { label: 'New', color: '#38BDF8' },
-  accepted: { label: 'Accepted', color: '#A5B4FC' },
-  preparing: { label: 'Preparing', color: '#FB923C' },
-  ready: { label: 'Ready to serve', color: '#4ADE80' },
-  served: { label: 'Served', color: '#94A3B8' },
-  cancelled: { label: 'Cancelled', color: '#64748B' },
-  rejected: { label: 'Not confirmed', color: '#64748B' },
+  needs_confirm: { label: 'Waiting for you to confirm the guest', color: GOLD },
+  placed: { label: 'New', color: LIME },
+  accepted: { label: 'Accepted', color: SAND },
+  preparing: { label: 'Preparing', color: SAND },
+  ready: { label: 'Ready to serve', color: LIME },
+  served: { label: 'Served', color: GREY },
+  cancelled: { label: 'Cancelled', color: GREY },
+  rejected: { label: 'Not confirmed', color: GREY },
 };
 
 export const liveOrders = (session) => (session?.orders || []).filter((o) => !['cancelled', 'rejected'].includes(o.status));

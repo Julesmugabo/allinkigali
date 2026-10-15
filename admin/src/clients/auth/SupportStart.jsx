@@ -24,7 +24,7 @@ export default function SupportStart({ onSignedIn }) {
       .catch((e) => setError(e.message));
   }, [onSignedIn, navigate]);
   return (
-    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.bg, color: error ? t.danger : t.textSecondary, fontFamily: t.font, padding: 24, textAlign: 'center' }}>
+    <div style={{ minHeight: '100vh', display: 'flex', alignItems: 'center', justifyContent: 'center', background: t.bg, color: error ? t.text : t.textSecondary, fontFamily: t.font, padding: 24, textAlign: 'center' }}>
       {error || 'Opening the client\'s dashboard…'}
     </div>
   );

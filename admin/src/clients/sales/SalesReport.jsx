@@ -56,7 +56,7 @@ export default function SalesReport({ me }) {
       <KpiGrid>
         <Kpi label="Total sales" value={rwf(all)} color={t.success} />
         <Kpi label="Dine-in (Ku Meza)" value={rwf(totals.dineIn)} hint={`${totals.tables} table${totals.tables === 1 ? '' : 's'} paid`} />
-        <Kpi label="Order Food deliveries" value={rwf(totals.delivery)} hint={`${totals.deliveryOrders} delivered`} color="#A78BFA" />
+        <Kpi label="Order Food deliveries" value={rwf(totals.delivery)} hint={`${totals.deliveryOrders} delivered`} color={t.gold} />
         <Kpi label="Average per table" value={totals.tables ? rwf(Math.round(totals.dineIn / totals.tables)) : '—'} color={t.textSecondary} />
       </KpiGrid>
       <div style={s.two}>
@@ -64,7 +64,7 @@ export default function SalesReport({ me }) {
           <BarList rows={report.byMethod.map((m) => ({ key: m.method, label: `${METHOD[m.method] || m.method} · ${m.tables}`, value: m.total }))} color={t.success} empty="No tables closed yet." />
         </Panel>
         <Panel title="Closed by" style={{ flex: 1, minWidth: 280 }}>
-          <BarList rows={report.byStaff.map((p) => ({ key: p.name, label: `${p.name} · ${p.tables}`, value: p.total }))} empty="No tables closed yet." />
+          <BarList rows={report.byStaff.map((p) => ({ key: p.name, label: `${p.name} · ${p.tables}`, value: p.total }))} color={t.gold} empty="No tables closed yet." />
         </Panel>
       </div>
       <Panel title="Day by day">

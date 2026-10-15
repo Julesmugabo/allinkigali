@@ -84,7 +84,7 @@ export async function apiDownload(path, filename) {
 // sign in to their own client dashboard instead.
 export const STAFF_ROLES = ['director', 'news', 'sellers', 'finance'];
 const CLIENT_ROLES = ['restaurant', 'coffeeshop', 'wedding'];
-const CLIENTS_SITE = (import.meta.env.VITE_CLIENTS_URL || 'https://allinclients.allinkigali.rw').replace(/^https?:\/\//, '').replace(/\/$/, '');
+const CLIENTS_SITE = (import.meta.env.VITE_CLIENTS_URL || 'https://business.allinkigali.rw').replace(/^https?:\/\//, '').replace(/\/$/, '');
 
 export async function login(email, password) {
   const data = await apiFetch('/auth/login', {

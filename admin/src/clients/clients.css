@@ -1,0 +1,24 @@
+/* clients.css — the business dashboard's page-wide look, on top of index.css:
+   warm light page, black and grey words, lime and gold for shapes. */
+
+html, body, #root { background: #F5F2EA; color: #111111; }
+
+a { color: #111111; text-decoration: underline; text-decoration-color: #91D51F; text-decoration-thickness: 2px; text-underline-offset: 3px; }
+a:hover { color: #111111; text-decoration-color: #E6B92E; }
+
+input, select, textarea {
+  color: #111111;
+  background: #FFFFFF;
+  border: 1px solid rgba(17, 17, 17, 0.14);
+}
+input:focus, select:focus, textarea:focus {
+  border-color: #91D51F;
+  box-shadow: 0 0 0 3px rgba(145, 213, 31, 0.25);
+}
+::placeholder { color: #9A958A; }
+input[type='checkbox'], input[type='radio'] { accent-color: #91D51F; }
+
+button:focus-visible, a:focus-visible { outline: 2px solid #91D51F; outline-offset: 2px; }
+
+::-webkit-scrollbar-thumb { background: #D8D1C2; }
+::-webkit-scrollbar-thumb:hover { background: #C5BCA8; }

@@ -11,9 +11,9 @@ import { Panel, ErrorText, Loading } from '../../components/ui';
 import { day, clock } from '../common/format';
 
 const ACTION = {
-  view: ['Opened your dashboard (view only)', t.accent],
+  view: ['Opened your dashboard (view only)', t.textMuted],
   enable_changes: ['Switched on changes', t.warning],
-  change: ['Changed something', '#F472B6'],
+  change: ['Changed something', t.warning],
   onboard: ['Gave an owner their sign-in', t.success],
   reset_password: ['Gave an owner a new password', t.warning],
   remove_owner: ['Removed an owner’s sign-in', t.danger],

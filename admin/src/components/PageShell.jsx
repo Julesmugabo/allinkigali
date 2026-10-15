@@ -67,14 +67,17 @@ export function DataTable({ columns, rows, onRowClick, emptyText }) {
   );
 }
 
+// With ink set (client dashboard) the words stay dark and a dot carries the colour.
 export function Badge({ children, color }) {
+  const c = color || t.accent;
   return (
     <span style={{
-      display: 'inline-block', padding: '3px 10px', borderRadius: 20,
-      fontSize: 12, fontWeight: 600,
-      background: `${color || t.accent}20`,
-      color: color || t.accent,
+      display: t.inkStatus ? 'inline-flex' : 'inline-block', alignItems: 'center', gap: 6, padding: '3px 10px', borderRadius: 20,
+      fontSize: 12, fontWeight: 600, whiteSpace: t.inkStatus ? 'nowrap' : undefined,
+      background: `${c}${t.inkStatus ? '2E' : '20'}`,
+      color: t.inkStatus || c,
     }}>
+      {t.inkStatus && <span style={{ width: 7, height: 7, borderRadius: 4, background: c, flex: 'none' }} />}
       {children}
     </span>
   );
@@ -151,7 +154,7 @@ const styles = {
     borderBottom: '2px solid transparent', marginBottom: -1,
     whiteSpace: 'nowrap',
   },
-  tabActive: { color: t.accent, borderBottomColor: t.accent },
+  tabActive: { color: t.inkAccent, borderBottomColor: t.accent, fontWeight: t.inkStatus ? 600 : undefined },
   tabCount: {
     marginLeft: 6, fontSize: 11, padding: '2px 6px',
     borderRadius: 10, background: t.bgHover, color: t.textSecondary,

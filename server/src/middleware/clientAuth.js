@@ -88,7 +88,7 @@ const OWNER_ROLES = ['restaurant', 'coffeeshop', 'wedding'];
 function clientOwnersOnly(req, res, next) {
   const u = req.user;
   if (u && OWNER_ROLES.includes(u.role) && u.aud !== 'clients') {
-    return res.status(403).json({ error: 'Restaurants, cafés and venues sign in at allinclients.allinkigali.rw.', code: 'USE_CLIENT_DASHBOARD' });
+    return res.status(403).json({ error: 'Restaurants, cafés and venues sign in at business.allinkigali.rw.', code: 'USE_CLIENT_DASHBOARD' });
   }
   next();
 }

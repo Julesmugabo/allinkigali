@@ -6,7 +6,7 @@
  */
 import { apiFetch } from '../api';
 
-export const CLIENTS_URL = (import.meta.env.VITE_CLIENTS_URL || 'https://allinclients.allinkigali.rw').replace(/\/$/, '');
+export const CLIENTS_URL = (import.meta.env.VITE_CLIENTS_URL || 'https://business.allinkigali.rw').replace(/\/$/, '');
 
 export async function openClientDashboard(placeType, placeId) {
   const tab = window.open('', '_blank'); // opened during the click, so pop-up blockers allow it

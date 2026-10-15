@@ -144,7 +144,7 @@ router.post('/link-restaurant', requireAuth, requireRole('director'), async (req
   }
   const { rows } = await query(sql, params);
   if (!rows[0]) return res.status(404).json({ error: 'No account found for that email.' });
-  // The owner signs in at the client dashboard (allinclients) with this account.
+  // The owner signs in at the client dashboard (business.allinkigali.rw) with this account.
   const placeId = coffeeShopId || restaurantId;
   if (placeId) await linkOwner(coffeeShopId ? 'coffeeshop' : 'restaurant', placeId, rows[0].id, 'allinkigali · director');
   res.json({ ...adminToJson(rows[0]), restaurantId: rows[0].restaurant_id, coffeeShopId: rows[0].coffee_shop_id });

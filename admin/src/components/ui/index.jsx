@@ -23,11 +23,13 @@ export function KpiGrid({ children }) {
   return <div style={s.kpiGrid}>{children}</div>;
 }
 
+// With ink set (client dashboard) the number stays dark and a bar on the left carries the colour.
 export function Kpi({ label, value, color = t.accent, onClick, hint }) {
+  const bar = t.inkStatus ? { borderLeft: `4px solid ${color}` } : {};
   return (
-    <div onClick={onClick} style={{ ...s.kpi, cursor: onClick ? 'pointer' : 'default' }}>
+    <div onClick={onClick} style={{ ...s.kpi, ...bar, cursor: onClick ? 'pointer' : 'default' }}>
       <div style={s.kpiLabel}>{label}</div>
-      <div style={{ ...s.kpiValue, color }}>{value}</div>
+      <div style={{ ...s.kpiValue, color: t.inkStatus || color }}>{value}</div>
       {hint && <div style={s.kpiHint}>{hint}</div>}
     </div>
   );
@@ -69,10 +71,10 @@ const s = {
   kpiValue: { fontSize: 20, fontWeight: 700 },
   kpiHint: { color: t.textMuted, fontSize: 12, marginTop: 4 },
   muted: { color: t.textMuted, fontSize: 14, padding: '24px 0', textAlign: 'center' },
-  error: { background: 'rgba(248,113,113,0.12)', color: t.danger, padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 12 },
+  error: { background: 'rgba(248,113,113,0.12)', color: t.inkStatus || t.danger, borderLeft: t.inkStatus ? `3px solid ${t.danger}` : undefined, padding: '10px 14px', borderRadius: 8, fontSize: 13, marginBottom: 12 },
   toast: {
     position: 'fixed', bottom: 24, right: 24, zIndex: 300,
-    background: t.success, color: '#052E16', fontWeight: 600, fontSize: 14,
+    background: t.success, color: t.inkStatus || '#052E16', fontWeight: 600, fontSize: 14,
     padding: '12px 18px', borderRadius: 10, boxShadow: t.shadowLg,
   },
 };

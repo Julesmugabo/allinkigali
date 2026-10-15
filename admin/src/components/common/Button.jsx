@@ -9,12 +9,12 @@ import React from 'react';
 import { t } from '../../theme';
 
 const VARIANTS = {
-  primary: { background: t.accent, color: t.bg, fontWeight: 600 },
+  primary: { background: t.accent, color: t.onAccent, fontWeight: 600 },
   ghost: { background: t.bgHover, color: t.text },
-  success: { background: `${t.success}20`, color: t.success, fontWeight: 600 },
-  danger: { background: `${t.danger}20`, color: t.danger, fontWeight: 600 },
-  warning: { background: `${t.warning}20`, color: t.warning, fontWeight: 600 },
-  info: { background: t.bgActive, color: t.accent, fontWeight: 600 },
+  success: { background: `${t.success}${t.inkStatus ? '33' : '20'}`, color: t.inkStatus || t.success, fontWeight: 600 },
+  danger: { background: `${t.danger}20`, color: t.inkStatus || t.danger, fontWeight: 600 },
+  warning: { background: `${t.warning}${t.inkStatus ? '33' : '20'}`, color: t.inkStatus || t.warning, fontWeight: 600 },
+  info: { background: t.bgActive, color: t.inkAccent, fontWeight: 600 },
 };
 
 export default function Button({ variant = 'primary', size, icon: Icon, children, style, ...rest }) {

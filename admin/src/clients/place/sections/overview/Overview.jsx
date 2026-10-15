@@ -34,9 +34,9 @@ export default function Overview() {
       <KpiGrid>
         <Kpi label="Guests expected today" value={covers} hint={`${todays.length} booking(s)`} color={t.success} />
         <Kpi label="Bookings waiting for you" value={waiting.length} color={waiting.length ? t.warning : t.textSecondary} onClick={() => navigate(`${base}/bookings`)} />
-        <Kpi label="Orders in progress" value={openOrders.length} color="#A78BFA" onClick={() => navigate(`${base}/orders`)} />
+        <Kpi label="Orders in progress" value={openOrders.length} color={t.gold} onClick={() => navigate(`${base}/orders`)} />
         <Kpi label="Menu items" value={menu.length} onClick={() => navigate(`${base}/menu`)} />
-        <Kpi label="Rating" value={profile.rating ? `★ ${Number(profile.rating).toFixed(1)}` : '—'} color="#FBBF24" />
+        <Kpi label="Rating" value={profile.rating ? `★ ${Number(profile.rating).toFixed(1)}` : '—'} color={t.gold} />
         <Kpi label="Right now" value={/^open/i.test(profile.open_status || '') ? 'Open' : 'Closed'} color={/^open/i.test(profile.open_status || '') ? t.success : t.danger} onClick={() => navigate(`${base}/settings`)} />
       </KpiGrid>
       {isCafe && <BusyPicker />}

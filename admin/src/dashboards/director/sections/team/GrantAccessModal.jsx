@@ -56,7 +56,7 @@ export default function GrantAccessModal({ onDone, onClose }) {
       <FormGrid>
         <Field label="Email" type="email" value={form.email} onChange={(v) => { set('email')(v); setNeedsAccount(false); }} full disabled={needsAccount} />
         <SelectField label="Role" value={form.role} onChange={(v) => setForm((f) => ({ ...f, role: v, placeId: '' }))} options={ROLES} full />
-        {isOwner && <SelectField label={form.role === 'restaurant' ? 'Their restaurant' : 'Their coffee shop'} value={form.placeId} onChange={set('placeId')} options={placeOptions} placeholder="— Pick —" full hint="They sign in at allinclients.allinkigali.rw with this email (the business dashboard)." />}
+        {isOwner && <SelectField label={form.role === 'restaurant' ? 'Their restaurant' : 'Their coffee shop'} value={form.placeId} onChange={set('placeId')} options={placeOptions} placeholder="— Pick —" full hint="They sign in at business.allinkigali.rw with this email (the business dashboard)." />}
         {needsAccount && (
           <>
             <Field label="First name *" value={form.firstName} onChange={set('firstName')} />

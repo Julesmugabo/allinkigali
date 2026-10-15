@@ -1,7 +1,7 @@
 /**
  * Tablets.jsx — Team › Tablets: screens that stay signed in on their own,
  * like the kitchen's or the bar's tablet. Add one, then type the 6-digit
- * code on the tablet (allinclients… → "Connect a kitchen or bar tablet").
+ * code on the tablet (business.allinkigali.rw/device → "Connect a kitchen or bar tablet").
  * The code works once, for 10 minutes. Disconnect a lost tablet here.
  */
 import React, { useCallback, useEffect, useState } from 'react';
@@ -57,7 +57,7 @@ export default function Tablets({ show }) {
     <Panel title="Tablets">
       {code && (
         <div style={s.code}>
-          <MonitorSmartphone size={26} color={t.accent} />
+          <MonitorSmartphone size={26} color={t.lime} />
           <div style={{ flex: 1, minWidth: 220 }}>
             <div style={{ fontWeight: 700 }}>Connect “{code.label}”</div>
             <div style={s.hint}>On the tablet open <b>{window.location.host}/device</b> and type this code within 10 minutes:</div>
@@ -80,8 +80,8 @@ export default function Tablets({ show }) {
 }
 
 const s = {
-  code: { display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap', background: t.bgActive, border: `1px solid ${t.accent}55`, borderRadius: 10, padding: '12px 14px', marginBottom: 16 },
+  code: { display: 'flex', gap: 14, alignItems: 'center', flexWrap: 'wrap', background: t.bgActive, border: `1px solid ${t.lime}`, borderRadius: 10, padding: '12px 14px', marginBottom: 16 },
   hint: { color: t.textSecondary, fontSize: 13.5, marginTop: 2 },
-  digits: { fontFamily: 'ui-monospace, Consolas, monospace', fontSize: 30, fontWeight: 800, letterSpacing: 6, color: t.accent },
+  digits: { fontFamily: 'ui-monospace, Consolas, monospace', fontSize: 30, fontWeight: 800, letterSpacing: 6, color: t.text, background: '#FFFFFF', borderRadius: 8, padding: '2px 12px', border: `2px solid ${t.gold}` },
   add: { display: 'flex', gap: 8, flexWrap: 'wrap', marginBottom: 16 },
 };

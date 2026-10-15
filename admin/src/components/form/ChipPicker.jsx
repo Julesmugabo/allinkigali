@@ -29,5 +29,5 @@ const s = {
   label: { color: t.textSecondary, fontSize: 13, fontWeight: 500 },
   row: { display: 'flex', flexWrap: 'wrap', gap: 6 },
   chip: { padding: '5px 11px', borderRadius: 20, fontSize: 12, background: 'transparent', color: t.textSecondary, border: `1px solid ${t.borderLight}` },
-  on: { background: t.accent, color: t.bg, borderColor: t.accent, fontWeight: 600 },
+  on: { background: t.accent, color: t.onAccent, borderColor: t.accent, fontWeight: 600 },
 };

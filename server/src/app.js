@@ -57,7 +57,8 @@ app.use(cors({
     'https://www.allinkigali.rw',
     'https://admin.allinkigali.com',
     'https://admin.allinkigali.rw',
-    'https://allinclients.allinkigali.rw',
+    'https://business.allinkigali.rw',
+    'https://allinclients.allinkigali.rw', // old address, forwards to business.
     /\.vercel\.app$/,
     /^http:\/\/localhost:\d+$/,
   ],

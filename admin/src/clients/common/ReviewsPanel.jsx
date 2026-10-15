@@ -28,7 +28,7 @@ export default function ReviewsPanel({ reviews, onReply }) {
   return (
     <>
       <KpiGrid>
-        <Kpi label="Average rating" value={avg === '—' ? avg : `★ ${avg}`} color="#FBBF24" />
+        <Kpi label="Average rating" value={avg === '—' ? avg : `★ ${avg}`} color={t.gold} />
         <Kpi label="Reviews" value={reviews.length} />
         <Kpi label="Waiting for a reply" value={unanswered} color={unanswered ? t.warning : t.success} />
       </KpiGrid>
@@ -38,7 +38,7 @@ export default function ReviewsPanel({ reviews, onReply }) {
           <div key={r.id} style={s.review}>
             <div style={s.head}>
               <b>{r.guestName || 'Guest'}</b>
-              <span style={{ color: '#FBBF24' }}>{'★'.repeat(Math.round(r.rating || 0))}<span style={{ color: t.border }}>{'★'.repeat(5 - Math.round(r.rating || 0))}</span></span>
+              <span style={{ color: t.gold }}>{'★'.repeat(Math.round(r.rating || 0))}<span style={{ color: t.border }}>{'★'.repeat(5 - Math.round(r.rating || 0))}</span></span>
               <span style={{ color: t.textMuted, fontSize: 12 }}>{when(r.date)}</span>
             </div>
             {r.text && <p style={s.text}>{r.text}</p>}

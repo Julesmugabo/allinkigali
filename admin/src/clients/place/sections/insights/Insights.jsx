@@ -36,7 +36,7 @@ export default function Insights() {
       <KpiGrid>
         <Kpi label="Booking requests" value={total} />
         <Kpi label="Accepted" value={pct(confirmed, total)} hint={`${confirmed} of ${total}`} color={t.success} />
-        <Kpi label="Guests who came" value={pct(completed, completed + noshow)} hint={`${noshow} no-show(s)`} color="#60A5FA" />
+        <Kpi label="Guests who came" value={pct(completed, completed + noshow)} hint={`${noshow} no-show(s)`} color={t.lime} />
         <Kpi label="Answered within 2 h" value={pct(fast, total)} hint={avgMin != null ? `average ${avgMin < 120 ? `${avgMin} min` : `${Math.round(avgMin / 60)} h`}` : 'no answers recorded yet'} color={fast / (total || 1) >= 0.8 ? t.success : t.warning} />
       </KpiGrid>
       <div style={s.two}>
@@ -46,7 +46,7 @@ export default function Insights() {
         </Panel>
       </div>
       <Panel title="Most ordered (delivery)" style={{ marginTop: 20 }}>
-        <BarList rows={Object.entries(dishes).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, n]) => ({ key: name, label: name, value: n }))} empty="No delivery orders yet." color="#A78BFA" />
+        <BarList rows={Object.entries(dishes).sort((a, b) => b[1] - a[1]).slice(0, 10).map(([name, n]) => ({ key: name, label: name, value: n }))} empty="No delivery orders yet." color={t.gold} />
       </Panel>
     </>
   );

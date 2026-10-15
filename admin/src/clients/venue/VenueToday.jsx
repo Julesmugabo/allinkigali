@@ -33,7 +33,7 @@ export default function VenueToday({ venue }) {
       <KpiGrid>
         <Kpi label="Visit requests waiting" value={waiting.length} color={waiting.length ? t.warning : t.textSecondary} onClick={() => navigate('/venue/visits')} />
         <Kpi label="Upcoming visits" value={next.length} color={t.success} onClick={() => navigate('/venue/visits')} />
-        <Kpi label="Rating" value={avg ? `★ ${avg}` : '—'} color="#FBBF24" hint={`${reviews.length} review${reviews.length === 1 ? '' : 's'}`} onClick={() => navigate('/venue/reviews')} />
+        <Kpi label="Rating" value={avg ? `★ ${avg}` : '—'} color={t.gold} hint={`${reviews.length} review${reviews.length === 1 ? '' : 's'}`} onClick={() => navigate('/venue/reviews')} />
         <Kpi label="Photos in the app" value={(venue.photos || []).length} color={(venue.photos || []).length ? t.accent : t.warning} hint="Couples look at photos first" onClick={() => navigate('/venue/profile')} />
       </KpiGrid>
       <Panel title="Next visits">
