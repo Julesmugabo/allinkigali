@@ -22,6 +22,7 @@ import { apiFetch } from '../../../services/apiClient';
 import { colors, typography, spacing, radius, gutter } from '../../../theme';
 import { restaurantColors as rc } from '../../../theme/colors';
 import AppTopBar from '../../../components/common/AppTopBar';
+import MenuRail from '../../../components/shop/place/MenuRail';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
@@ -196,11 +197,6 @@ export default function RestaurantDetailScreen({ route, navigation }) {
 
         {/* Menu first, right under the booking buttons: picked dishes go with the booking */}
         {menuItems.length > 0 && (() => {
-          const grouped = {};
-          menuItems.filter(i => i.available !== false).forEach((item) => {
-            if (!grouped[item.category]) grouped[item.category] = [];
-            grouped[item.category].push(item);
-          });
           const selectedCount = Object.values(selectedItems).reduce((s, v) => s + v.qty, 0);
           return (
             <>
@@ -214,44 +210,18 @@ export default function RestaurantDetailScreen({ route, navigation }) {
                   )}
                 </View>
               </View>
-              {Object.entries(grouped).map(([cat, items]) => (
-                <View key={cat} style={{ marginBottom: spacing.md }}>
-                  <Text style={[styles.menuCatTitle, { paddingHorizontal: gutter }]}>{cat}</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: gutter, paddingRight: gutter * 2 }}>
-                    {items.map(item => {
-                      const qty = selectedItems[item.id]?.qty || 0;
-                      return (
-                        <Pressable
-                          key={item.id}
-                          style={[styles.menuCard, qty > 0 && styles.menuCardSelected]}
-                          onPress={() => setSelectedItems(prev => {
-                            const cur = prev[item.id]?.qty || 0;
-                            if (cur === 0) return { ...prev, [item.id]: { name: item.name, price: item.price, qty: 1 } };
-                            const next = { ...prev };
-                            delete next[item.id];
-                            return next;
-                          })}
-                        >
-                          <View style={styles.menuCardImg}>
-                            {item.photo_url
-                              ? <Image source={{ uri: item.photo_url }} style={styles.menuCardImage} resizeMode="cover" />
-                              : <MaterialCommunityIcons name="food-outline" size={28} color={colors.blue300} />}
-                          </View>
-                          {qty > 0 && (
-                            <View style={styles.menuCardBadge}>
-                              <MaterialCommunityIcons name="check" size={11} color={colors.white} />
-                            </View>
-                          )}
-                          <View style={styles.menuCardBody}>
-                            <Text style={styles.menuCardName} numberOfLines={2}>{item.name}</Text>
-                            <Text style={styles.menuCardPrice}>{Number(item.price).toLocaleString()} RWF</Text>
-                          </View>
-                        </Pressable>
-                      );
-                    })}
-                  </ScrollView>
-                </View>
-              ))}
+              {/* The whole menu in three rows: swipe left to explore, categories on top */}
+              <MenuRail
+                items={menuItems.filter((i) => i.available !== false)}
+                selected={selectedItems}
+                onToggle={(item) => setSelectedItems((prev) => {
+                  if (prev[item.id]) { const next = { ...prev }; delete next[item.id]; return next; }
+                  return { ...prev, [item.id]: { name: item.name, price: item.price, qty: 1 } };
+                })}
+                palette={{ card: 'rgba(255,255,255,0.06)', border: 'rgba(133,183,235,0.18)', accent: colors.blue500, onAccent: colors.white, text: colors.white, textSoft: colors.textOnNavyFaint, price: '#60C080', chipBg: 'rgba(255,255,255,0.06)', thumbBg: 'rgba(55,138,221,0.12)', icon: colors.blue300 }}
+                fallbackIcon="food-outline"
+              />
+              <View style={{ height: spacing.lg }} />
               <View style={styles.divider} />
             </>
           );

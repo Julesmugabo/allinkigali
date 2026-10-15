@@ -18,6 +18,7 @@ import BookingForm from '../../../components/booking/BookingForm';
 import { typography, spacing, radius, gutter } from '../../../theme';
 import { coffeeColors as cc } from '../../../theme/colors';
 import AppTopBar from '../../../components/common/AppTopBar';
+import MenuRail from '../../../components/shop/place/MenuRail';
 
 const PRICE_LABELS = { 1: '$', 2: '$$', 3: '$$$' };
 const { width: SW, height: SH } = Dimensions.get('window');
@@ -213,11 +214,6 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
 
         {/* Menu first, right under the booking buttons: picked dishes go with the booking */}
         {menuItems.length > 0 && (() => {
-          const grouped = {};
-          menuItems.forEach((item) => {
-            if (!grouped[item.category]) grouped[item.category] = [];
-            grouped[item.category].push(item);
-          });
           const selectedCount = Object.values(selectedItems).reduce((s, v) => s + v.qty, 0);
           return (
             <>
@@ -231,41 +227,18 @@ export default function CoffeeShopDetailScreen({ route, navigation }) {
                   )}
                 </View>
               </View>
-              {Object.entries(grouped).map(([cat, items]) => (
-                <View key={cat} style={{ marginBottom: spacing.md }}>
-                  <Text style={[styles.menuCatTitle, { paddingHorizontal: gutter }]}>{cat}</Text>
-                  <ScrollView horizontal showsHorizontalScrollIndicator={false} contentContainerStyle={{ paddingHorizontal: gutter, paddingRight: gutter * 2 }}>
-                    {items.map(item => {
-                      const sel = !!selectedItems[item.id];
-                      return (
-                        <Pressable
-                          key={item.id}
-                          style={[styles.menuCard, sel && styles.menuCardSelected]}
-                          onPress={() => setSelectedItems(prev => {
-                            if (!prev[item.id]) return { ...prev, [item.id]: { name: item.name, price: item.price, qty: 1 } };
-                            const next = { ...prev }; delete next[item.id]; return next;
-                          })}
-                        >
-                          <View style={styles.menuCardImg}>
-                            {item.photo_url
-                              ? <Image source={{ uri: item.photo_url }} style={styles.menuCardImage} resizeMode="cover" />
-                              : <MaterialCommunityIcons name="coffee-outline" size={28} color={cc.accentText} />}
-                          </View>
-                          {sel && (
-                            <View style={styles.menuCardBadge}>
-                              <MaterialCommunityIcons name="check" size={11} color={cc.text} />
-                            </View>
-                          )}
-                          <View style={styles.menuCardBody}>
-                            <Text style={styles.menuCardName} numberOfLines={2}>{item.name}</Text>
-                            <Text style={styles.menuCardPrice}>{Number(item.price).toLocaleString()} RWF</Text>
-                          </View>
-                        </Pressable>
-                      );
-                    })}
-                  </ScrollView>
-                </View>
-              ))}
+              {/* The whole menu in three rows: swipe left to explore, categories on top */}
+              <MenuRail
+                items={menuItems}
+                selected={selectedItems}
+                onToggle={(item) => setSelectedItems((prev) => {
+                  if (prev[item.id]) { const next = { ...prev }; delete next[item.id]; return next; }
+                  return { ...prev, [item.id]: { name: item.name, price: item.price, qty: 1 } };
+                })}
+                palette={{ card: cc.surface, border: cc.border, accent: cc.accent, onAccent: cc.text, text: cc.text, textSoft: cc.textMuted, price: cc.accentText, chipBg: cc.surfaceAlt, thumbBg: cc.surfaceAlt, icon: cc.accentText }}
+                fallbackIcon="coffee-outline"
+              />
+              <View style={{ height: spacing.lg }} />
               <View style={styles.divider} />
             </>
           );
