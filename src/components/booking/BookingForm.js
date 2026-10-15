@@ -13,7 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { apiFetch } from '../../services/apiClient';
 import { withPreorder } from '../../utils/preorder';
 import { useUser } from '../../context/UserContext';
-import { promptGoogleSignIn } from '../../services/googleAuth';
+import BookingAuthGate from './BookingAuthGate';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
 
 const CAL_MONTHS = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -99,9 +99,9 @@ function dateChips() {
 
 export default function BookingForm({ visible, onClose, placeId, placeName, type, navigation, selectedItems = {} }) {
   const insets = useSafeAreaInsets();
-  const { user, signInWithGoogle } = useUser();
+  const { user } = useUser();
 
-  const [name, setName]         = useState(user?.name || '');
+  const [name, setName]         = useState([user?.firstName, user?.lastName].filter(Boolean).join(' '));
   const [phone, setPhone]       = useState(user?.phone || '');
   const [date, setDate]         = useState(todayString());
   const [time, setTime]         = useState('19:00');
@@ -117,7 +117,7 @@ export default function BookingForm({ visible, onClose, placeId, placeName, type
   const itemList = Object.values(selectedItems);
 
   const reset = () => {
-    setName(user?.name || '');
+    setName([user?.firstName, user?.lastName].filter(Boolean).join(' '));
     setPhone(user?.phone || '');
     setDate(todayString());
     setTime('19:00');
@@ -134,18 +134,23 @@ export default function BookingForm({ visible, onClose, placeId, placeName, type
   // Picked dishes go in the notes with quantities and a total (same wording as the website).
   const buildNotes = () => withPreorder(notes, itemList);
 
-  const submit = async () => {
-    if (!user) { setShowAuth(true); return; }
-    if (!name.trim() || !phone.trim()) {
+  // Sends the booking. `who` is the signed-in person (right after signing in
+  // the context hasn't re-rendered yet, so it's passed in).
+  const send = async (who) => {
+    const guestName = name.trim() || [who?.firstName, who?.lastName].filter(Boolean).join(' ');
+    const guestPhone = phone.trim() || who?.phone || '';
+    if (!guestName || !guestPhone) {
+      setShowAuth(false);
       setError('Please enter your name and phone number.');
       return;
     }
     setError('');
+    setShowAuth(false);
     setLoading(true);
     try {
       await apiFetch('/resto-bookings', {
         method: 'POST',
-        body: { type, placeId, placeName, guestName: name.trim(), guestPhone: phone.trim(), date, time, partySize, notes: buildNotes() },
+        body: { type, placeId, placeName, guestName, guestPhone, date, time, partySize, notes: buildNotes() },
       });
       setDone(true);
     } catch (e) {
@@ -155,77 +160,15 @@ export default function BookingForm({ visible, onClose, placeId, placeName, type
     }
   };
 
+  const submit = () => {
+    if (!user) { setShowAuth(true); return; }
+    send(user);
+  };
+
   const chips = dateChips();
 
-  // ── Auth gate (shown after pressing submit while logged out) ──────────────
-  const authGate = (
-    <View style={styles.authGate}>
-      <MaterialCommunityIcons name="account-circle-outline" size={52} color={colors.blue300} style={{ marginBottom: spacing.md }} />
-      <Text style={styles.authTitle}>Almost there!</Text>
-      <Text style={styles.authDesc}>
-        Sign in or create a free account to confirm your reservation at {placeName}.
-        Your booking details are saved.
-      </Text>
-
-      {/* Google One Tap — placeholder, activated when GOOGLE_CLIENT_ID is set */}
-      <Pressable
-        style={styles.googleBtn}
-        onPress={async () => {
-          try {
-            const credential = await promptGoogleSignIn();
-            if (!credential) return;
-            await signInWithGoogle(credential);
-            // Submit directly — user state hasn't re-rendered yet so bypass the check
-            setShowAuth(false);
-            setError('');
-            setLoading(true);
-            try {
-              await apiFetch('/resto-bookings', {
-                method: 'POST',
-                body: { type, placeId, placeName, guestName: name.trim() || 'Guest', guestPhone: phone.trim() || '', date, time, partySize, notes: buildNotes() },
-              });
-              setDone(true);
-            } catch (e2) {
-              setError(e2?.message || 'Booking failed. Please try again.');
-            } finally {
-              setLoading(false);
-            }
-          } catch (e) {
-            setError('Google sign-in failed. Try email instead.');
-          }
-        }}
-      >
-        <View style={styles.googleIcon}>
-          <Text style={styles.googleG}>G</Text>
-        </View>
-        <Text style={styles.googleLabel}>Continue with Google</Text>
-      </Pressable>
-
-      <View style={styles.authDivider}>
-        <View style={styles.authDividerLine} />
-        <Text style={styles.authDividerText}>or</Text>
-        <View style={styles.authDividerLine} />
-      </View>
-
-      <Pressable
-        style={styles.authPrimaryBtn}
-        onPress={() => { handleClose(); navigation?.navigate('SignUp', { returnTo: { screen: placeName, placeId, type } }); }}
-      >
-        <Text style={styles.authPrimaryLabel}>Create free account</Text>
-      </Pressable>
-      <Pressable
-        style={styles.authSecondaryBtn}
-        onPress={() => { handleClose(); navigation?.navigate('Login', { returnTo: { screen: placeName, placeId, type } }); }}
-      >
-        <Text style={styles.authSecondaryLabel}>Sign in</Text>
-      </Pressable>
-
-      <Pressable onPress={() => setShowAuth(false)} style={styles.backLink}>
-        <MaterialCommunityIcons name="arrow-left" size={14} color={colors.textOnNavyFaint} />
-        <Text style={styles.backLinkLabel}>Back to booking form</Text>
-      </Pressable>
-    </View>
-  );
+  // ── Sign in right here when needed, then the booking is sent ───────────────
+  const authGate = <BookingAuthGate placeName={placeName} onSignedIn={send} onBack={() => setShowAuth(false)} />;
 
   return (
     <Modal visible={visible} animationType="slide" transparent onRequestClose={handleClose}>
@@ -241,7 +184,9 @@ export default function BookingForm({ visible, onClose, placeId, placeName, type
         </View>
         <Text style={styles.placeName}>{placeName}</Text>
 
-        {showAuth ? authGate : done ? (
+        {showAuth ? (
+          <ScrollView showsVerticalScrollIndicator={false} keyboardShouldPersistTaps="handled">{authGate}</ScrollView>
+        ) : done ? (
           <View style={styles.successBox}>
             <MaterialCommunityIcons name="calendar-check" size={52} color="#60C080" style={{ marginBottom: spacing.md }} />
             <Text style={styles.successTitle}>Booking requested!</Text>
@@ -416,26 +361,10 @@ const styles = StyleSheet.create({
   submitLabel: { ...typography.bodyStrong, color: colors.white, fontSize: 15 },
 
   // ── Auth gate ──
-  authGate: { paddingVertical: spacing.lg, alignItems: 'center' },
-  authTitle: { fontSize: 20, fontWeight: '800', color: colors.white, marginBottom: spacing.sm },
-  authDesc: { fontSize: 13.5, color: colors.textOnNavy, textAlign: 'center', lineHeight: 21, marginBottom: spacing.xl, paddingHorizontal: spacing.sm },
 
-  googleBtn: { flexDirection: 'row', alignItems: 'center', width: '100%', backgroundColor: colors.white, borderRadius: radius.md, paddingVertical: spacing.md, paddingHorizontal: spacing.lg, gap: spacing.md, marginBottom: spacing.md },
-  googleIcon: { width: 22, height: 22, borderRadius: 11, backgroundColor: '#4285F4', alignItems: 'center', justifyContent: 'center' },
-  googleG: { color: colors.white, fontWeight: '800', fontSize: 13 },
-  googleLabel: { fontSize: 15, fontWeight: '700', color: '#1a1a1a' },
 
-  authDivider: { flexDirection: 'row', alignItems: 'center', width: '100%', marginVertical: spacing.md, gap: spacing.sm },
-  authDividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(133,183,235,0.25)' },
-  authDividerText: { fontSize: 12, color: colors.textOnNavyFaint },
 
-  authPrimaryBtn: { width: '100%', backgroundColor: colors.blue500, borderRadius: radius.md, paddingVertical: spacing.md, alignItems: 'center', marginBottom: spacing.sm },
-  authPrimaryLabel: { fontSize: 15, fontWeight: '700', color: colors.white },
-  authSecondaryBtn: { width: '100%', borderWidth: 1, borderColor: 'rgba(133,183,235,0.35)', borderRadius: radius.md, paddingVertical: spacing.md, alignItems: 'center' },
-  authSecondaryLabel: { fontSize: 15, fontWeight: '600', color: colors.textOnNavy },
 
-  backLink: { flexDirection: 'row', alignItems: 'center', gap: 4, marginTop: spacing.xl },
-  backLinkLabel: { fontSize: 13, color: colors.textOnNavyFaint },
 
   preItemsBox: { borderWidth: 1, borderColor: 'rgba(133,183,235,0.2)', borderRadius: radius.md, paddingHorizontal: spacing.md, paddingVertical: spacing.xs, gap: spacing.xs },
   preItem: { flexDirection: 'row', alignItems: 'center', gap: spacing.sm, paddingVertical: 3 },

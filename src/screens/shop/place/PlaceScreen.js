@@ -43,7 +43,8 @@ export default function PlaceScreen({ kind, navigation, route }) {
   const [preview, setPreview] = useState(null); // dish shown in the quick look
   const [copied, setCopied] = useState(false);
 
-  const login = useCallback(() => navigation.navigate('AccountTab', { screen: 'Login' }), [navigation]);
+  // Log in, then come straight back to this place (the booking box keeps what was filled in).
+  const login = useCallback(() => navigation.navigate('AccountTab', { screen: 'Login', params: { returnTo: { tab: 'ShopTab', screen: route.name, params: route.params } } }), [navigation, route]);
   // The menu in the same shape the Order Food menu uses.
   const dishes = useMemo(() => menu.map((m) => ({
     id: String(m.id), category: m.category || 'Menu', name: m.name, description: m.description || '',

@@ -17,6 +17,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import WebContainer from '../layout/WebContainer';
 import useUnreadNotifications from '../../hooks/useUnreadNotifications';
 import { useUser } from '../../context/UserContext';
+import ProfileChip from '../../components/account/ProfileChip';
 import { colors, typography, spacing, radius } from '../../theme';
 
 export const TOP_NAV_HEIGHT = 60;
@@ -101,13 +102,7 @@ export default function TopNavBar({ state, descriptors, navigation }) {
 
           {user ? (
             <View>
-              <Pressable
-                onPress={() => setMenuOpen((v) => !v)}
-                accessibilityRole="button"
-                style={styles.avatarButton}
-              >
-                <Text style={styles.avatarInitial}>{(user.firstName || '?').charAt(0).toUpperCase()}</Text>
-              </Pressable>
+              <ProfileChip user={user} onPress={() => setMenuOpen((v) => !v)} />
 
               {menuOpen ? (
                 <>
@@ -117,19 +112,17 @@ export default function TopNavBar({ state, descriptors, navigation }) {
                       {user.firstName} {user.lastName}
                     </Text>
                     <Pressable onPress={() => goToAccountScreen('Account')} style={styles.menuItem}>
-                      <Text style={styles.menuItemText}>Konti yanjye</Text>
+                      <Text style={styles.menuItemText}>My profile</Text>
                     </Pressable>
                     <Pressable onPress={handleSignOut} style={styles.menuItem}>
-                      <Text style={[styles.menuItemText, styles.menuItemDanger]}>Sohoka</Text>
+                      <Text style={[styles.menuItemText, styles.menuItemDanger]}>Log out</Text>
                     </Pressable>
                   </View>
                 </>
               ) : null}
             </View>
           ) : (
-            <Pressable onPress={() => goToAccountScreen('Login')} style={styles.signInButton}>
-              <Text style={styles.signInText}>Injira</Text>
-            </Pressable>
+            <ProfileChip user={null} onPress={() => goToAccountScreen('Login')} />
           )}
         </View>
       </WebContainer>

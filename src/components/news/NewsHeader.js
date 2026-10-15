@@ -8,6 +8,8 @@ import { View, Text, Pressable, Image, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import { useNavigation } from '@react-navigation/native';
+import { useUser } from '../../context/UserContext';
+import ProfileChip from '../account/ProfileChip';
 
 import CategoryTabs from './CategoryTabs';
 import NewsTagline from './NewsTagline';
@@ -22,6 +24,8 @@ export default function NewsHeader({
 }) {
   const insets = useSafeAreaInsets();
   const navigation = useNavigation();
+  const { user } = useUser();
+  const openMe = () => navigation.navigate('AccountTab', { screen: user ? 'Account' : 'Login' });
   // The logo always leads home: the news tab's first screen.
   const goHome = () => navigation.navigate('NewsTab', { screen: 'News' });
 
@@ -46,6 +50,7 @@ export default function NewsHeader({
             <MaterialCommunityIcons name="bell-outline" size={23} color={colors.blue300} />
             {unreadCount > 0 ? <View style={styles.bellDot} /> : null}
           </Pressable>
+          <ProfileChip user={user} onPress={openMe} style={{ marginLeft: spacing.md }} />
         </View>
       </View>
 

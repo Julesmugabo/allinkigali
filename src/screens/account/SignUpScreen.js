@@ -1,72 +1,40 @@
 /**
- * SignUpScreen.js — Create an account.
- *
- * Step 1 asks how you want to start: just an account, or an account plus
- * registering a business (which sends you straight into business
- * registration afterwards). Step 2 is the form.
+ * SignUpScreen.js — Create an account: Google first (one tap, where
+ * available), or name, email and password. One account does everything;
+ * listing a business is done later from the Me tab ("Register your spot").
  */
-import React, { useCallback, useEffect, useState } from 'react';
-import { View, Text, Pressable, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import React, { useCallback, useEffect } from 'react';
+import { Text, Pressable, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GradientBackground from '../../components/common/GradientBackground';
 import SettingsHeader from '../../components/account/SettingsHeader';
-import RoleChoice from '../../components/account/RoleChoice';
 import AuthForm from '../../components/account/AuthForm';
 import GoogleButton from '../../components/account/GoogleButton';
+import OrDivider from '../../components/account/OrDivider';
 
 import { useUser } from '../../context/UserContext';
-import { promptGoogleSignIn } from '../../services/googleAuth';
-import { showAlert } from '../../utils/showAlert';
+import { isGoogleAvailable } from '../../services/googleAuth';
 import { colors, typography, spacing, gutter } from '../../theme';
-
-const INTRO = {
-  customer: 'Create your account. It takes a minute.',
-  seller: 'Create your account first, then you will register your business.',
-};
 
 export default function SignUpScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
-  const { signUp, signInWithGoogle, isLoading, error, clearError } = useUser();
-  const [choice, setChoice] = useState(null); // 'customer' | 'seller'
-  const returnTo = route?.params?.returnTo || null;
+  const { signUp, isLoading, error, clearError } = useUser();
 
-  useEffect(() => {
-    clearError();
-  }, [clearError]);
+  useEffect(() => { clearError(); }, [clearError]);
 
-  const handleSignUp = useCallback(
-    async (values) => {
-      try {
-        await signUp(values);
-        if (choice === 'seller') {
-          navigation.replace('SalesPartner');
-        } else if (returnTo) {
-          navigation.popToTop();
-        } else {
-          navigation.popToTop();
-        }
-      } catch {
-        // The message is already shown under the form via `error`.
-      }
-    },
-    [signUp, choice, navigation]
-  );
+  // Back to where they were: the page that sent them here (returnTo), else
+  // the previous screen, else the Me tab.
+  const returnTo = route?.params?.returnTo;
+  const done = useCallback(() => {
+    if (returnTo) navigation.navigate(returnTo.tab, { screen: returnTo.screen, params: returnTo.params });
+    else if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate('Account');
+  }, [navigation, returnTo]);
 
-  const handleGoogle = useCallback(async () => {
-    try {
-      const credential = await promptGoogleSignIn();
-      if (!credential) return;
-      await signInWithGoogle(credential);
-      if (choice === 'seller') {
-        navigation.replace('SalesPartner');
-      } else {
-        navigation.popToTop();
-      }
-    } catch (e) {
-      showAlert('Google sign-up failed', e.message || 'Please try again.');
-    }
-  }, [signInWithGoogle, choice, navigation]);
+  const handleSignUp = useCallback(async (values) => {
+    try { await signUp(values); done(); } catch { /* shown under the form via `error` */ }
+  }, [signUp, done]);
 
   return (
     <GradientBackground>
@@ -76,38 +44,26 @@ export default function SignUpScreen({ navigation, route }) {
           keyboardShouldPersistTaps="handled"
           showsVerticalScrollIndicator={false}
         >
-          <SettingsHeader
-            title="Create an account"
-            onBack={() => (choice ? setChoice(null) : navigation.goBack())}
-          />
+          <SettingsHeader title="Create an account" onBack={() => navigation.goBack()} />
+          <Text style={styles.intro}>Free, and it takes a minute. Book tables, order food and keep track of your requests.</Text>
 
-          {!choice ? (
+          {isGoogleAvailable() ? (
             <>
-              <Text style={styles.intro}>How do you want to start?</Text>
-              <RoleChoice onChoose={setChoice} />
+              <GoogleButton text="signup_with" onSignedIn={done} />
+              <OrDivider />
             </>
-          ) : (
-            <>
-              <Text style={styles.intro}>{INTRO[choice]}</Text>
-              <AuthForm onSubmit={handleSignUp} isLoading={isLoading} serverError={error} />
+          ) : null}
 
-              <View style={styles.dividerRow}>
-                <View style={styles.dividerLine} />
-                <Text style={styles.dividerLabel}>or</Text>
-                <View style={styles.dividerLine} />
-              </View>
-              <GoogleButton label="Sign up with Google" onPress={handleGoogle} />
-            </>
-          )}
+          <AuthForm onSubmit={handleSignUp} isLoading={isLoading} serverError={error} />
 
           <Pressable
-            onPress={() => navigation.replace('Login')}
+            onPress={() => navigation.replace('Login', { returnTo })}
             style={styles.link}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="Already have an account? Log in"
           >
-            <Text style={styles.linkText}>Already have an account? Log in</Text>
+            <Text style={styles.linkText}>Already have an account? <Text style={styles.linkStrong}>Log in</Text></Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -117,11 +73,9 @@ export default function SignUpScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { paddingHorizontal: gutter },
-  intro: { ...typography.body, color: colors.textOnNavyFaint, marginBottom: spacing.lg, lineHeight: 20 },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: spacing.xl },
-  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(133,183,235,0.3)' },
-  dividerLabel: { ...typography.caption, color: colors.textOnNavyFaint, marginHorizontal: spacing.md },
+  content: { paddingHorizontal: gutter, width: '100%', maxWidth: 480, alignSelf: 'center' },
+  intro: { ...typography.body, color: colors.textOnNavyFaint, marginBottom: spacing.xl, lineHeight: 20 },
   link: { alignSelf: 'center', marginTop: spacing.xl },
-  linkText: { ...typography.caption, color: colors.blue300, fontWeight: '600' },
+  linkText: { ...typography.caption, color: colors.textOnNavyFaint },
+  linkStrong: { color: colors.blue300, fontWeight: '700' },
 });

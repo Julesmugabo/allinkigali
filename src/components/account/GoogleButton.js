@@ -1,69 +1,52 @@
 /**
- * GoogleButton.js — "Continue with Google".
- *
- * Only how it looks. Real Google sign-in isn't set up yet (it needs a Google
- * Cloud client ID), so the screens using this show a clear "coming soon"
- * message instead of pretending to sign anyone in.
+ * GoogleButton.js — "Continue with Google" (web). Google draws the button
+ * itself; after the person picks their account we sign them in through
+ * UserContext and call onSignedIn(user). Shows nothing where Google sign-in
+ * isn't available (the phone app for now), so nobody taps a dead button.
  */
-import React from 'react';
-import { Pressable, Text, View, StyleSheet } from 'react-native';
-import Svg, { Path } from 'react-native-svg';
-import { colors, typography, spacing, radius } from '../../theme';
+import React, { useEffect, useRef, useState } from 'react';
+import { View, Text, StyleSheet } from 'react-native';
+import { useUser } from '../../context/UserContext';
+import { isGoogleAvailable, renderGoogleButton } from '../../services/googleAuth';
+import { colors, typography, spacing } from '../../theme';
 
-/** Google's four-colour "G", drawn inline so no image asset is needed. */
-function GoogleMark({ size = 18 }) {
-  return (
-    <Svg width={size} height={size} viewBox="0 0 48 48">
-      <Path
-        fill="#EA4335"
-        d="M24 9.5c3.54 0 6.71 1.22 9.21 3.6l6.85-6.85C35.9 2.38 30.47 0 24 0 14.62 0 6.51 5.38 2.56 13.22l7.98 6.19C12.43 13.72 17.74 9.5 24 9.5z"
-      />
-      <Path
-        fill="#4285F4"
-        d="M46.98 24.55c0-1.57-.15-3.09-.38-4.55H24v9.02h12.94c-.58 2.96-2.26 5.48-4.78 7.18l7.73 6c4.51-4.18 7.09-10.36 7.09-17.65z"
-      />
-      <Path
-        fill="#FBBC05"
-        d="M10.53 28.59c-.48-1.45-.76-2.99-.76-4.59s.27-3.14.76-4.59l-7.98-6.19C.92 16.46 0 20.12 0 24s.92 7.54 2.56 10.78l7.97-6.19z"
-      />
-      <Path
-        fill="#34A853"
-        d="M24 48c6.48 0 11.93-2.13 15.89-5.81l-7.73-6c-2.15 1.45-4.92 2.3-8.16 2.3-6.26 0-11.57-4.22-13.47-9.91l-7.98 6.19C6.51 42.62 14.62 48 24 48z"
-      />
-    </Svg>
-  );
-}
+export default function GoogleButton({ onSignedIn, text = 'continue_with', style }) {
+  const { signInWithGoogle } = useUser();
+  const box = useRef(null);
+  const [width, setWidth] = useState(0);
+  const [error, setError] = useState('');
+  const [busy, setBusy] = useState(false);
+  const handler = useRef(null);
+  handler.current = async (credential) => {
+    setBusy(true); setError('');
+    try {
+      const user = await signInWithGoogle(credential);
+      onSignedIn?.(user);
+    } catch (e) {
+      setError(e?.message || 'Google sign-in failed. Try again or use your email.');
+    }
+    setBusy(false);
+  };
 
-export default function GoogleButton({ onPress, label = 'Continue with Google', style }) {
+  useEffect(() => {
+    if (!width || !box.current) return;
+    renderGoogleButton(box.current, { text, width, onCredential: (c) => handler.current(c) })
+      .catch((e) => setError(e.message));
+  }, [width, text]);
+
+  if (!isGoogleAvailable()) return null;
   return (
-    <Pressable
-      onPress={onPress}
-      accessibilityRole="button"
-      accessibilityLabel={label}
-      style={({ pressed }) => [styles.button, pressed && styles.pressed, style]}
-    >
-      <View style={styles.row}>
-        <GoogleMark size={19} />
-        <Text style={styles.label}>{label}</Text>
-      </View>
-    </Pressable>
+    <View style={[styles.wrap, style]} onLayout={(e) => setWidth(e.nativeEvent.layout.width)}>
+      <View ref={box} style={styles.box} />
+      {busy ? <Text style={styles.note}>Signing you in…</Text> : null}
+      {error ? <Text style={styles.error}>{error}</Text> : null}
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
-  button: {
-    height: 52,
-    borderRadius: radius.md,
-    backgroundColor: colors.white,
-    alignItems: 'center',
-    justifyContent: 'center',
-    alignSelf: 'stretch',
-  },
-  pressed: { opacity: 0.9 },
-  row: { flexDirection: 'row', alignItems: 'center' },
-  label: {
-    ...typography.button,
-    color: '#3C4043',
-    marginLeft: spacing.md,
-  },
+  wrap: { alignSelf: 'stretch', alignItems: 'center' },
+  box: { minHeight: 44, alignItems: 'center', justifyContent: 'center' },
+  note: { ...typography.caption, color: colors.textOnNavyFaint, marginTop: spacing.sm },
+  error: { ...typography.caption, color: '#FCA5A5', marginTop: spacing.sm, textAlign: 'center' },
 });

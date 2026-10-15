@@ -97,7 +97,7 @@ export default function SupplierScreen({ navigation, route }) {
               {tab === 'menu' ? <SupplierMenu supplier={supplier} dishes={dishes} closed={!open} onOpenDish={openDish} /> : null}
               {tab === 'reviews' ? (
                 <ReviewsSection kind={supplier.kind} place={supplier} reviews={reviews} user={user}
-                  onLogin={() => navigation.navigate('AccountTab', { screen: 'Login' })} onPosted={reloadReviews} />
+                  onLogin={() => navigation.navigate('AccountTab', { screen: 'Login', params: { returnTo: { tab: 'ShopTab', screen: route.name, params: route.params } } })} onPosted={reloadReviews} />
               ) : null}
               {tab === 'info' ? <SupplierInfo supplier={supplier} /> : null}
             </View>

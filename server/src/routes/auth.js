@@ -145,8 +145,11 @@ router.post('/google', async (req, res) => {
   if (!verifyRes.ok) return res.status(401).json({ error: 'Invalid Google token.' });
   const payload = await verifyRes.json();
 
+  // Only tokens Google issued for allinkigali's own client: a token from any
+  // other site could otherwise be replayed here to sign in as its owner.
   const clientId = process.env.GOOGLE_CLIENT_ID;
-  if (clientId && payload.aud !== clientId) {
+  if (!clientId) return res.status(503).json({ error: "Google sign-in isn't set up yet. Use your email." });
+  if (payload.aud !== clientId) {
     return res.status(401).json({ error: 'Token audience mismatch.' });
   }
   if (!payload.email_verified || payload.email_verified === 'false') {

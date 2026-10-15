@@ -23,7 +23,7 @@ import useFoodCatalog from './useFoodCatalog';
 
 const ADDRESS_KEY = 'allinkigali-delivery-address';
 
-export default function FoodCheckoutScreen({ navigation }) {
+export default function FoodCheckoutScreen({ navigation, route }) {
   const c = useShopTheme();
   const styles = useShopStyles(makeStyles);
   const { bySupplierKey } = useFoodCatalog();
@@ -43,7 +43,7 @@ export default function FoodCheckoutScreen({ navigation }) {
   const total = ready.reduce((n, { g, s }) => n + g.subtotal + s.fee, 0);
 
   const placeOrder = async () => {
-    if (!user) { navigation.navigate('AccountTab', { screen: 'Login' }); return; }
+    if (!user) { navigation.navigate('AccountTab', { screen: 'Login', params: { returnTo: { tab: 'ShopTab', screen: route.name, params: route.params } } }); return; }
     if (!form.address.trim() || !form.phone.trim()) { setStatus({ error: 'Add your delivery address and phone number.' }); return; }
     setStatus({ busy: true, error: '' });
     AsyncStorage.setItem(ADDRESS_KEY, JSON.stringify({ address: form.address, landmark: form.landmark })).catch(() => {});

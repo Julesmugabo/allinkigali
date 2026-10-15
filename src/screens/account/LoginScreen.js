@@ -1,52 +1,40 @@
 /**
- * LoginScreen.js — Log in with email and password (or, later, Google).
- * Reached from the "Log in" row at the top of Settings.
+ * LoginScreen.js — Log in: Google first (one tap, where available), then
+ * email and password. Afterwards you go back to where you were.
  */
 import React, { useCallback, useEffect } from 'react';
-import { View, Text, Pressable, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
+import { Text, Pressable, ScrollView, KeyboardAvoidingView, Platform, StyleSheet } from 'react-native';
 import { useSafeAreaInsets } from 'react-native-safe-area-context';
 
 import GradientBackground from '../../components/common/GradientBackground';
 import SettingsHeader from '../../components/account/SettingsHeader';
 import SignInForm from '../../components/account/SignInForm';
 import GoogleButton from '../../components/account/GoogleButton';
+import OrDivider from '../../components/account/OrDivider';
 
 import { useUser } from '../../context/UserContext';
-import { promptGoogleSignIn } from '../../services/googleAuth';
-import { showAlert } from '../../utils/showAlert';
+import { isGoogleAvailable } from '../../services/googleAuth';
 import { colors, typography, spacing, gutter } from '../../theme';
 
 export default function LoginScreen({ navigation, route }) {
   const insets = useSafeAreaInsets();
-  const { signIn, signInWithGoogle, isLoading, error, clearError } = useUser();
+  const { signIn, isLoading, error, clearError } = useUser();
 
   // Don't show an error left over from a previous attempt on another screen.
-  useEffect(() => {
-    clearError();
-  }, [clearError]);
+  useEffect(() => { clearError(); }, [clearError]);
 
-  const handleSignIn = useCallback(
-    async (values) => {
-      try {
-        await signIn(values);
-        navigation.popToTop();
-      } catch {
-        // The message is already shown under the form via `error`.
-      }
-    },
-    [signIn, navigation]
-  );
+  // Back to where they were: the page that sent them here (returnTo), else
+  // the previous screen, else the Me tab.
+  const returnTo = route?.params?.returnTo;
+  const done = useCallback(() => {
+    if (returnTo) navigation.navigate(returnTo.tab, { screen: returnTo.screen, params: returnTo.params });
+    else if (navigation.canGoBack()) navigation.goBack();
+    else navigation.navigate('Account');
+  }, [navigation, returnTo]);
 
-  const handleGoogle = useCallback(async () => {
-    try {
-      const credential = await promptGoogleSignIn();
-      if (!credential) return;
-      await signInWithGoogle(credential);
-      navigation.popToTop();
-    } catch (e) {
-      showAlert('Google sign-in failed', e.message || 'Please try again.');
-    }
-  }, [signInWithGoogle, navigation]);
+  const handleSignIn = useCallback(async (values) => {
+    try { await signIn(values); done(); } catch { /* shown under the form via `error` */ }
+  }, [signIn, done]);
 
   return (
     <GradientBackground>
@@ -57,25 +45,25 @@ export default function LoginScreen({ navigation, route }) {
           showsVerticalScrollIndicator={false}
         >
           <SettingsHeader title="Log in" onBack={() => navigation.goBack()} />
+          <Text style={styles.intro}>Welcome back. Log in to book tables, order food and follow your requests.</Text>
+
+          {isGoogleAvailable() ? (
+            <>
+              <GoogleButton text="signin_with" onSignedIn={done} />
+              <OrDivider />
+            </>
+          ) : null}
 
           <SignInForm onSubmit={handleSignIn} isLoading={isLoading} serverError={error} />
 
-          <View style={styles.dividerRow}>
-            <View style={styles.dividerLine} />
-            <Text style={styles.dividerLabel}>or</Text>
-            <View style={styles.dividerLine} />
-          </View>
-
-          <GoogleButton onPress={handleGoogle} />
-
           <Pressable
-            onPress={() => navigation.replace('SignUp')}
+            onPress={() => navigation.replace('SignUp', { returnTo })}
             style={styles.link}
             hitSlop={8}
             accessibilityRole="button"
             accessibilityLabel="New here? Create an account"
           >
-            <Text style={styles.linkText}>New here? Create an account</Text>
+            <Text style={styles.linkText}>New here? <Text style={styles.linkStrong}>Create an account</Text></Text>
           </Pressable>
         </ScrollView>
       </KeyboardAvoidingView>
@@ -85,10 +73,9 @@ export default function LoginScreen({ navigation, route }) {
 
 const styles = StyleSheet.create({
   flex: { flex: 1 },
-  content: { paddingHorizontal: gutter },
-  dividerRow: { flexDirection: 'row', alignItems: 'center', marginVertical: spacing.xl },
-  dividerLine: { flex: 1, height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(133,183,235,0.3)' },
-  dividerLabel: { ...typography.caption, color: colors.textOnNavyFaint, marginHorizontal: spacing.md },
+  content: { paddingHorizontal: gutter, width: '100%', maxWidth: 480, alignSelf: 'center' },
+  intro: { ...typography.body, color: colors.textOnNavyFaint, marginBottom: spacing.xl, lineHeight: 20 },
   link: { alignSelf: 'center', marginTop: spacing.xl },
-  linkText: { ...typography.caption, color: colors.blue300, fontWeight: '600' },
+  linkText: { ...typography.caption, color: colors.textOnNavyFaint },
+  linkStrong: { color: colors.blue300, fontWeight: '700' },
 });
