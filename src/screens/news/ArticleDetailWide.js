@@ -13,6 +13,7 @@ import GradientBackground from '../../components/common/GradientBackground';
 import WebContainer from '../../web/layout/WebContainer';
 import ArticleLabels from '../../components/news/ArticleLabels';
 import MarkdownBody from '../../components/news/MarkdownBody';
+import ShareArticleButton from '../../components/news/ShareArticleButton';
 import SideAd from '../../components/news/ads/SideAd';
 import { useNews } from '../../context/NewsContext';
 import { useAds, nthAd } from '../../context/AdsContext';
@@ -74,6 +75,7 @@ export default function ArticleDetailWide({ route, navigation }) {
                   <Text style={styles.sourceText}>{article.source}</Text>
                 </View>
                 <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
+                <ShareArticleButton article={article} style={styles.share} />
               </View>
 
               <View style={styles.imageWell}>
@@ -170,6 +172,7 @@ const styles = StyleSheet.create({
   },
   sourceText: { ...typography.meta, color: colors.blue300, marginLeft: 4, fontWeight: '500' },
   time: { ...typography.meta, color: colors.textOnNavyFaint, marginRight: spacing.sm },
+  share: { marginLeft: 'auto' },
 
   imageWell: {
     width: '100%',

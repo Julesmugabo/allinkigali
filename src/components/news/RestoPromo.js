@@ -21,7 +21,7 @@ export default function RestoPromo({ style }) {
       </View>
       <View style={{ flex: 1 }}>
         <Text style={styles.title}>Hungry? Book a table or order food</Text>
-        <Text style={styles.sub}>Restaurants, cafés and wedding venues in Kigali</Text>
+        <Text style={styles.sub}>Restaurants and cafés in Kigali</Text>
       </View>
       <MaterialCommunityIcons name="arrow-right" size={22} color={colors.blue500} />
     </Pressable>

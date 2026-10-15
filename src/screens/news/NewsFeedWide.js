@@ -128,7 +128,6 @@ export default function NewsFeedWide({
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scrollContent}>
         <WebContainer>
           <NewsTagline style={styles.tagline} />
-          <RestoPromo />
           <View style={styles.columns}>
             {/* Left: timestamped headline stream */}
             <View style={styles.leftCol}>
@@ -160,6 +159,7 @@ export default function NewsFeedWide({
             {/* Center: hero + top stories + grid */}
             <View style={styles.centerCol}>
               <HeroCard article={feed.hero} onPress={handleArticlePress} onStoryPress={handleStoryPress} />
+              <RestoPromo />
 
               {(topStory1 || topStory2) && (
                 <View style={styles.topStoriesRow}>

@@ -13,6 +13,7 @@ import { useSafeAreaInsets } from 'react-native-safe-area-context';
 import GradientBackground from '../../components/common/GradientBackground';
 import ArticleLabels from '../../components/news/ArticleLabels';
 import MarkdownBody from '../../components/news/MarkdownBody';
+import ShareArticleButton from '../../components/news/ShareArticleButton';
 import { useNews } from '../../context/NewsContext';
 import { timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
@@ -66,6 +67,7 @@ export default function ArticleDetailNarrow({ route, navigation }) {
               <Text style={styles.sourceText}>{article.source}</Text>
             </View>
             <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
+            <ShareArticleButton article={article} style={styles.share} />
           </View>
 
           {article.body?.trim() ? (
@@ -156,6 +158,7 @@ const styles = StyleSheet.create({
   },
   sourceText: { ...typography.meta, color: colors.blue300, marginLeft: 4, fontWeight: '500' },
   time: { ...typography.meta, color: colors.textOnNavyFaint, marginRight: spacing.sm },
+  share: { marginLeft: 'auto' },
   body: {
     ...typography.body,
     fontSize: 14.5,
