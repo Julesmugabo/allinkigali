@@ -1,6 +1,7 @@
 import React, { useState } from 'react';
 import { login } from '../api';
 import { t } from '../theme';
+import PasswordInput from '../components/common/PasswordInput';
 
 export default function Login({ onLogin }) {
   const [email, setEmail] = useState('');
@@ -26,7 +27,7 @@ export default function Login({ onLogin }) {
     <div style={styles.wrapper}>
       <form onSubmit={handleSubmit} style={styles.card}>
         <div style={styles.logo}>
-          <img src="/logo-icon.png" alt="AllInKigali" style={styles.logoIcon} />
+          <img src="/logo-wordmark-dark.png" alt="AllInKigali" style={styles.logoIcon} />
           <p style={styles.subtitle}>Staff Portal</p>
         </div>
 
@@ -43,8 +44,7 @@ export default function Login({ onLogin }) {
         />
 
         <label style={styles.label}>Password</label>
-        <input
-          type="password"
+        <PasswordInput
           value={password}
           onChange={(e) => setPassword(e.target.value)}
           placeholder="Enter your password"
@@ -74,9 +74,8 @@ const styles = {
     textAlign: 'center', marginBottom: 12,
   },
   logoIcon: {
-    width: 88, height: 88, borderRadius: 20,
-    objectFit: 'contain', marginBottom: 12,
-    display: 'block', margin: '0 auto 12px',
+    height: 32, objectFit: 'contain',
+    display: 'block', margin: '4px auto 10px',
   },
   subtitle: { color: t.textSecondary, fontSize: 14, marginTop: 4 },
   label: { color: t.textSecondary, fontSize: 13, fontWeight: 500 },

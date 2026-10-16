@@ -4,7 +4,7 @@
  * screens. Shows its own error text so forms stay simple.
  */
 import React, { useState } from 'react';
-import { View, Text, TextInput, StyleSheet } from 'react-native';
+import { View, Text, TextInput, Pressable, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 import { colors, typography, spacing, radius } from '../../theme';
 
@@ -29,6 +29,7 @@ const TextField = React.forwardRef(function TextField(
   ref
 ) {
   const [focused, setFocused] = useState(false);
+  const [shown, setShown] = useState(false); // the eye: show what was typed in a password box
 
   return (
     <View style={[styles.container, style]}>
@@ -66,13 +67,25 @@ const TextField = React.forwardRef(function TextField(
           returnKeyType={returnKeyType}
           onSubmitEditing={onSubmitEditing}
           editable={editable}
-          secureTextEntry={secureTextEntry}
+          secureTextEntry={secureTextEntry && !shown}
           onFocus={() => setFocused(true)}
           onBlur={() => setFocused(false)}
           selectionColor={colors.blue300}
           accessibilityLabel={label}
           style={[styles.input, multiline && styles.inputMultiline]}
         />
+
+        {secureTextEntry ? (
+          <Pressable
+            onPress={() => setShown((v) => !v)}
+            accessibilityRole="button"
+            accessibilityLabel={shown ? 'Hide password' : 'Show password'}
+            hitSlop={8}
+            style={styles.eye}
+          >
+            <MaterialCommunityIcons name={shown ? 'eye-off-outline' : 'eye-outline'} size={20} color={colors.blue300} />
+          </Pressable>
+        ) : null}
       </View>
 
       {error ? (
@@ -116,6 +129,7 @@ const styles = StyleSheet.create({
   fieldError: { borderColor: colors.breaking },
   fieldDisabled: { opacity: 0.6 },
   icon: { marginRight: spacing.sm },
+  eye: { marginLeft: spacing.sm, padding: 4 },
   input: {
     flex: 1,
     ...typography.input,

@@ -8,6 +8,7 @@ import React, { useState } from 'react';
 import { Link } from 'react-router-dom';
 import { t } from '../../theme';
 import { session, ROLE_LABEL } from '../session';
+import PasswordInput from '../../components/common/PasswordInput';
 
 export default function Login({ onSignedIn }) {
   const [tab, setTab] = useState('owner');
@@ -50,12 +51,12 @@ export default function Login({ onSignedIn }) {
         ) : tab === 'owner' ? (
           <>
             <label style={s.label}>Email<input type="email" value={form.email} onChange={set('email')} style={s.input} autoComplete="username" required /></label>
-            <label style={s.label}>Password<input type="password" value={form.password} onChange={set('password')} style={s.input} autoComplete="current-password" required /></label>
+            <label style={s.label}>Password<PasswordInput value={form.password} onChange={set('password')} style={s.input} autoComplete="current-password" required /></label>
           </>
         ) : (
           <>
             <label style={s.label}>Phone number<input type="tel" value={form.phone} onChange={set('phone')} placeholder="07…" style={s.input} required /></label>
-            <label style={s.label}>PIN<input type="password" inputMode="numeric" maxLength={6} value={form.pin} onChange={set('pin')} style={{ ...s.input, letterSpacing: 6 }} required /></label>
+            <label style={s.label}>PIN<PasswordInput inputMode="numeric" maxLength={6} value={form.pin} onChange={set('pin')} style={{ ...s.input, letterSpacing: 6 }} required /></label>
           </>
         )}
         {error ? <div style={s.error}>{error}</div> : null}
