@@ -1,0 +1,11 @@
+# allinkigali.rw — search engines may read the whole public site.
+User-agent: *
+Allow: /
+# Personal pages and the in-restaurant table pages are not for search results.
+Disallow: /me/
+Disallow: /shop/order-food/checkout
+Disallow: /shop/order-food/status/
+Disallow: /t/
+Disallow: /table
+
+Sitemap: https://allinkigali.rw/sitemap.xml

@@ -18,6 +18,7 @@ import { timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius, gutter } from '../../theme';
 import { reading } from '../../theme/reading';
 import AppTopBar from '../../components/common/AppTopBar';
+import usePageTitle from '../../hooks/usePageTitle';
 
 // ── Screen ─────────────────────────────────────────────────────────────────
 
@@ -25,6 +26,7 @@ export default function ArticleDetailNarrow({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const { getArticleById, categories, getStoryById } = useNews();
   const article = getArticleById(route.params?.id);
+  usePageTitle(article?.title); // the browser tab and Google show its name
 
   const categoryLabel = article ? categories.find((c) => c.key === article.category)?.label || '' : '';
   const story = article?.storyId ? getStoryById(article.storyId) : null;

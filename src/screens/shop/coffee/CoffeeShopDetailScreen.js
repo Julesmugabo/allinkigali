@@ -19,6 +19,7 @@ import { typography, spacing, radius, gutter } from '../../../theme';
 import { coffeeColors as cc } from '../../../theme/colors';
 import AppTopBar from '../../../components/common/AppTopBar';
 import MenuRail from '../../../components/shop/place/MenuRail';
+import usePageTitle from '../../../hooks/usePageTitle';
 
 const PRICE_LABELS = { 1: '$', 2: '$$', 3: '$$$' };
 const { width: SW, height: SH } = Dimensions.get('window');
@@ -111,6 +112,7 @@ function PhotoLightbox({ photos, startIndex, onClose }) {
 export default function CoffeeShopDetailScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const [shop, setShop] = useState(() => COFFEE_SHOPS.find((s) => s.id === route.params?.id) || null);
+  usePageTitle(shop?.name); // the browser tab and Google show its name
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [menuItems, setMenuItems] = useState([]);

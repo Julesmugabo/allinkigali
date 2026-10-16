@@ -30,12 +30,14 @@ import { spacing } from '../../../theme';
 import { isOpen } from '../home/useDiscoverData';
 import usePlaceDetail from './usePlaceDetail';
 import { useShopTheme, useShopStyles } from '../../../theme/shopThemes';
+import usePageTitle from '../../../hooks/usePageTitle';
 
 export default function PlaceScreen({ kind, navigation, route }) {
   const c = useShopTheme(); // eslint-disable-line no-unused-vars
   const styles = useShopStyles(makeStyles);
   const id = route.params?.id;
   const { place, photos, menu, reviews, reloadReviews, similar, missing } = usePlaceDetail(kind, id);
+  usePageTitle(place?.name); // the browser tab and Google show its name
   const { user } = useUser();
   const { isSaved, toggle } = useSavedPlaces();
   const [viewer, setViewer] = useState(null);

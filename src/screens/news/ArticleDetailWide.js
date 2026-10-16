@@ -19,6 +19,7 @@ import { useAds, nthAd } from '../../context/AdsContext';
 import { timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius } from '../../theme';
 import { reading } from '../../theme/reading';
+import usePageTitle from '../../hooks/usePageTitle';
 
 // A stable number from an article id, so an article always gets the same rotating ad.
 const idTurn = (id) => [...String(id)].reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 9973, 0);
@@ -27,6 +28,7 @@ export default function ArticleDetailWide({ route, navigation }) {
   const { getArticleById, categories, getStoryById, incrementArticleView, getFeed } = useNews();
   const { webAds } = useAds();
   const article = getArticleById(route.params?.id);
+  usePageTitle(article?.title); // the browser tab and Google show its name
 
   const categoryLabel = article ? categories.find((c) => c.key === article.category)?.label || '' : '';
   const story = article?.storyId ? getStoryById(article.storyId) : null;

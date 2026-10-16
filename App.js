@@ -11,6 +11,7 @@ import { View, Platform } from 'react-native';
 import { StatusBar } from 'expo-status-bar';
 import { SafeAreaProvider } from 'react-native-safe-area-context';
 import { NavigationContainer, createNavigationContainerRef } from '@react-navigation/native';
+import { pageTitle } from './src/navigation/pageTitles';
 
 import AppNavigator from './src/navigation/AppNavigator';
 import InstallAppBanner from './src/components/common/InstallAppBanner';
@@ -150,7 +151,7 @@ export default function App() {
                         <StatusBar style="light" />
                         <InstallAppBanner />
                         <PushNotificationSetup />
-                        <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking}>
+                        <NavigationContainer ref={navigationRef} theme={navTheme} linking={linking} documentTitle={{ formatter: pageTitle }}>
                           <AppNavigator />
                         </NavigationContainer>
                       </View>

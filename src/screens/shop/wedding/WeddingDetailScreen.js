@@ -16,6 +16,7 @@ import { useUser } from '../../../context/UserContext';
 import { colors, typography, spacing, radius, gutter } from '../../../theme';
 import { weddingColors as wc } from '../../../theme/colors';
 import AppTopBar from '../../../components/common/AppTopBar';
+import usePageTitle from '../../../hooks/usePageTitle';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 const PRICE_LABELS = { 1: 'Budget-friendly', 2: 'Mid-range', 3: 'Luxury' };
@@ -154,6 +155,7 @@ function AppointmentModal({ visible, venue, onClose, navigation }) {
 export default function WeddingDetailScreen({ route, navigation }) {
   const insets = useSafeAreaInsets();
   const [venue, setVenue] = useState(() => WEDDING_VENUES.find(v => v.id === route.params?.id) || null);
+  usePageTitle(venue?.name); // the browser tab and Google show its name
 
   useEffect(() => {
     const id = route.params?.id;

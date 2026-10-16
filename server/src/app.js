@@ -21,6 +21,7 @@ const cors = require('cors');
 const authRoutes = require('./routes/auth');
 const newsRoutes = require('./routes/news');
 const sharePagesRoutes = require('./routes/sharePages');
+const sitemapRoutes = require('./routes/sitemap');
 const businessesRoutes = require('./routes/businesses');
 const bookingsRoutes = require('./routes/bookings');
 const ordersRoutes = require('./routes/orders');
@@ -103,6 +104,7 @@ app.use('/staff',          staffPortalRoutes);
 app.use('/clients',        clientsRoutes);
 app.use('/kumeza',         kumezaPublicRoutes); // customers ordering from their table
 app.use('/share',          sharePagesRoutes); // website pages with link previews (nginx sends shared links here)
+app.use('/',               sitemapRoutes);    // /sitemap.xml for Google (nginx sends it here)
 
 // Last-resort handler so a route bug returns JSON, not an HTML stack trace,
 // to a client that only ever expects JSON.

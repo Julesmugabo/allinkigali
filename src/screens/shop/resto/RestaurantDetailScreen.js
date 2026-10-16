@@ -23,6 +23,7 @@ import { colors, typography, spacing, radius, gutter } from '../../../theme';
 import { restaurantColors as rc } from '../../../theme/colors';
 import AppTopBar from '../../../components/common/AppTopBar';
 import MenuRail from '../../../components/shop/place/MenuRail';
+import usePageTitle from '../../../hooks/usePageTitle';
 
 const { width: SW, height: SH } = Dimensions.get('window');
 
@@ -107,6 +108,7 @@ export default function RestaurantDetailScreen({ route, navigation }) {
   const [restaurant, setRestaurant] = useState(
     () => RESTAURANTS.find((r) => r.id === route.params?.id) || null
   );
+  usePageTitle(restaurant?.name); // the browser tab and Google show its name
   const [lightboxIndex, setLightboxIndex] = useState(null);
   const [bookingOpen, setBookingOpen] = useState(false);
   const [menuItems, setMenuItems] = useState([]);
