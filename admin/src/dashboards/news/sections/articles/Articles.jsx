@@ -15,6 +15,7 @@ import { Panel, Loading, ErrorText, RowActions } from '../../../../components/ui
 import { useNews } from '../../NewsContext';
 import { ARTICLE_FILTERS, displayStatus, fmtDate } from '../../constants';
 import StatusBadge from '../../components/StatusBadge';
+import ReadCountsSwitch from '../../components/ReadCountsSwitch';
 import { articleActions } from './articleActions';
 import DayPicker from './DayPicker';
 import { articleDay, articleTime, clock, dayLabel, isDayKey, todayKey } from './articleDays';
@@ -127,6 +128,7 @@ export default function Articles() {
 
   return (
     <Panel title="Articles" actions={<Button icon={Plus} onClick={() => navigate('/news/write')}>New article</Button>}>
+      <ReadCountsSwitch />
       <DayPicker day={day} onChange={(k) => setParam('day', k)} counts={dayCounts} total={articles.filter(match[filter]).length} />
       <Tabs tabs={tabs} active={filter} onChange={(k) => setParam('tab', k)} />
       <div style={s.tools}>

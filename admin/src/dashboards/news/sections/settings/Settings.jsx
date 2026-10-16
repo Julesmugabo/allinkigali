@@ -1,26 +1,26 @@
 /**
  * Settings.jsx — newsroom settings: breaking-flag lifetime, scheduled
  * publishing interval, default status, ad frequency, and whether readers
- * see view counts. Plus "run now" buttons for the automatic jobs.
+ * see read counts (the same switch as on Articles). Plus "run now" buttons for the automatic jobs.
  */
 import React, { useEffect, useState } from 'react';
 import { t } from '../../../../theme';
 import Button from '../../../../components/common/Button';
 import { FormGrid, Field, SelectField, CheckboxField } from '../../../../components/form/Fields';
-import { Panel, Loading, ErrorText, Muted } from '../../../../components/ui';
+import { Panel, Loading, ErrorText } from '../../../../components/ui';
 import { useNews } from '../../NewsContext';
 import { newsApi } from '../../newsApi';
+import ReadCountsSwitch from '../../components/ReadCountsSwitch';
 
 export default function Settings() {
   const { changed, notify } = useNews();
   const [form, setForm] = useState(null);
-  const [showCounts, setShowCounts] = useState(null);
   const [dirty, setDirty] = useState(false);
   const [error, setError] = useState('');
 
   useEffect(() => {
-    Promise.all([newsApi.workflowSettings(), newsApi.readerSettings()])
-      .then(([w, r]) => { setForm(w); setShowCounts(r.showViewCounts); })
+    newsApi.workflowSettings()
+      .then(setForm)
       .catch((e) => setError(e.message));
   }, []);
 
@@ -37,11 +37,6 @@ export default function Settings() {
       }));
       setDirty(false); notify('Settings saved');
     } catch (e) { setError(e.message); }
-  };
-
-  const toggleCounts = async (v) => {
-    try { await newsApi.setShowViewCounts(v); setShowCounts(v); notify(v ? 'Readers now see view counts' : 'View counts hidden from readers'); }
-    catch (e) { setError(e.message); }
   };
 
   const runJob = async (job) => {
@@ -71,8 +66,7 @@ export default function Settings() {
       </Panel>
 
       <Panel title="What readers see">
-        <CheckboxField label="Show how many people read each article" checked={!!showCounts} onChange={toggleCounts} />
-        <div style={{ marginTop: 6 }}><Muted>Applies immediately in the app.</Muted></div>
+        <ReadCountsSwitch />
       </Panel>
 
       <Panel title="Run the automatic jobs now">
