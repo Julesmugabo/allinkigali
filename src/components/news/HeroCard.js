@@ -9,6 +9,7 @@ import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import ArticleLabels from './ArticleLabels';
 import ViewCount from './ViewCount';
+import ShareIcon from './ShareIcon';
 import { useNews } from '../../context/NewsContext';
 import { timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius } from '../../theme';
@@ -49,6 +50,7 @@ export default function HeroCard({ article, onPress, onStoryPress }) {
           <View style={styles.timeViews}>
             <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
             <ViewCount count={article.views || 0} light style={styles.views} />
+            <ShareIcon article={article} light style={styles.share} />
           </View>
           <View style={styles.tags}>
             {categoryLabel ? (
@@ -161,6 +163,7 @@ const styles = StyleSheet.create({
     color: colors.blue300,
   },
   views: { marginLeft: spacing.sm },
+  share: { marginLeft: spacing.xs + 2 },
   time: {
     ...typography.meta,
     color: 'rgba(133,183,235,0.5)',

@@ -1,40 +1,17 @@
 /**
- * ShareArticleButton.js — "Sangiza": shares a news article's link.
- *
- * Phones (app): the phone's own share sheet (WhatsApp, SMS, …).
- * Web: the share sheet on phone browsers; on computers the link is copied and the button says so for a moment.
- * Every article gets it automatically: it only needs the article.
+ * ShareArticleButton.js — "Sangiza": the share button on the article page.
+ * Every article gets it automatically: it only needs the article. The news
+ * cards use the icon-only ShareIcon instead; both share the same way
+ * (see useShareArticle).
  */
-import React, { useState } from 'react';
-import { Text, Pressable, Share, Platform, StyleSheet } from 'react-native';
+import React from 'react';
+import { Text, Pressable, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
+import useShareArticle from '../../hooks/useShareArticle';
 import { colors, spacing, radius } from '../../theme';
 
-const SITE = (process.env.EXPO_PUBLIC_SITE_URL || 'https://allinkigali.rw').replace(/\/$/, '');
-export const articleLink = (article) => `${SITE}/news/article/${article.id}`;
-
 export default function ShareArticleButton({ article, style }) {
-  const [copied, setCopied] = useState(false);
-
-  const share = async () => {
-    const url = articleLink(article);
-    try {
-      if (Platform.OS !== 'web') {
-        await Share.share({ message: `${article.title}\n${url}`, url, title: article.title });
-        return;
-      }
-      // Phone browsers get their share sheet; computers just copy the link.
-      if (navigator.share && window.matchMedia?.('(pointer: coarse)').matches) {
-        await navigator.share({ title: article.title, url });
-        return;
-      }
-      await navigator.clipboard.writeText(url);
-      setCopied(true);
-      setTimeout(() => setCopied(false), 2000);
-    } catch {
-      // The person closed the share sheet: nothing to do.
-    }
-  };
+  const { share, copied } = useShareArticle(article);
 
   return (
     <Pressable

@@ -7,6 +7,7 @@ import { View, Text, Pressable, Image, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
 import ViewCount from './ViewCount';
+import ShareIcon from './ShareIcon';
 import ArticleLabels from './ArticleLabels';
 import { useNews } from '../../context/NewsContext';
 import { timeAgo } from '../../utils/date';
@@ -43,6 +44,7 @@ export default function NewsListItem({ article, onPress }) {
           <View style={styles.timeViews}>
             <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
             <ViewCount count={article.views || 0} style={styles.views} />
+            <ShareIcon article={article} style={styles.share} />
           </View>
           <View style={styles.tags}>
             {categoryLabel ? (
@@ -114,6 +116,7 @@ const styles = StyleSheet.create({
   },
   timeViews: { flexDirection: 'row', alignItems: 'center' },
   views: { marginLeft: spacing.sm },
+  share: { marginLeft: spacing.xs + 2 },
   time: {
     ...typography.meta,
     color: colors.textMuted,

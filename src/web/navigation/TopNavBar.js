@@ -22,6 +22,9 @@ import { colors, typography, spacing, radius } from '../../theme';
 
 export const TOP_NAV_HEIGHT = 60;
 
+// Each section's start page: pressing the section you are already in goes back to it.
+const SECTION_HOME = { NewsTab: 'News', ShopTab: 'Shop' };
+
 export default function TopNavBar({ state, descriptors, navigation }) {
   const [menuOpen, setMenuOpen] = useState(false);
   const { user, signOut } = useUser();
@@ -46,8 +49,10 @@ export default function TopNavBar({ state, descriptors, navigation }) {
     <View style={styles.bar}>
       <WebContainer style={styles.row}>
         <Pressable
-          onPress={() => navigation.navigate('NewsTab')}
+          // Always the news home, even when the News tab was left on an article.
+          onPress={() => navigation.navigate('NewsTab', { screen: 'News' })}
           accessibilityRole="link"
+          accessibilityLabel="Home"
           style={styles.brand}
         >
           <Image
@@ -67,7 +72,9 @@ export default function TopNavBar({ state, descriptors, navigation }) {
 
             const onPress = () => {
               const event = navigation.emit({ type: 'tabPress', target: route.key, canPreventDefault: true });
-              if (!isFocused && !event.defaultPrevented) navigation.navigate(route.name);
+              if (event.defaultPrevented) return;
+              if (!isFocused) navigation.navigate(route.name);
+              else if (SECTION_HOME[route.name]) navigation.navigate(route.name, { screen: SECTION_HOME[route.name] });
             };
 
             return (
