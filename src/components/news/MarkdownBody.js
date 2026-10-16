@@ -2,12 +2,14 @@
  * MarkdownBody.js — renders the small markdown subset the News editor
  * produces (# / ## headings, > quotes, - bullets, ---, **bold**, _italic_).
  * Shared by the phone article screen and the wide desktop one; `large`
- * bumps the type up for comfortable desktop reading.
+ * bumps the type up for comfortable desktop reading. Drawn in the reading
+ * page's colours (theme/reading.js): dark text on a light, paper-like page.
  */
 import React, { useMemo } from 'react';
 import { View, Text, StyleSheet } from 'react-native';
 
-import { colors, spacing } from '../../theme';
+import { spacing } from '../../theme';
+import { reading } from '../../theme/reading';
 
 function renderInline(text, baseStyle) {
   const parts = [];
@@ -27,7 +29,7 @@ function renderInline(text, baseStyle) {
       {parts.map((p, i) => (
         <Text
           key={i}
-          style={[p.bold && { fontWeight: '700', color: colors.white }, p.italic && { fontStyle: 'italic' }]}
+          style={[p.bold && { fontWeight: '700', color: reading.heading }, p.italic && { fontStyle: 'italic' }]}
         >
           {p.text}
         </Text>
@@ -82,13 +84,13 @@ export default function MarkdownBody({ text, large = false }) {
 }
 
 const shared = {
-  hr: { height: StyleSheet.hairlineWidth, backgroundColor: 'rgba(133,183,235,0.25)', marginVertical: 14 },
+  hr: { height: StyleSheet.hairlineWidth, backgroundColor: reading.rule, marginVertical: 14 },
   quoteBlock: {
     borderLeftWidth: 3,
-    borderLeftColor: colors.blue300,
+    borderLeftColor: reading.accent,
     paddingLeft: spacing.md,
     marginVertical: 8,
-    backgroundColor: 'rgba(55,138,221,0.08)',
+    backgroundColor: reading.accentSoft,
     borderRadius: 2,
     paddingVertical: 6,
   },
@@ -98,23 +100,23 @@ const shared = {
 const mdBase = StyleSheet.create({
   ...shared,
   wrap: { marginBottom: spacing.xl },
-  para: { fontSize: 15, lineHeight: 24, color: 'rgba(210,228,248,0.88)', marginBottom: 8 },
-  h1: { fontSize: 20, fontWeight: '800', color: colors.white, lineHeight: 26, marginTop: 16, marginBottom: 6 },
-  h2: { fontSize: 17, fontWeight: '700', color: colors.white, lineHeight: 23, marginTop: 14, marginBottom: 5 },
-  quoteText: { fontSize: 14.5, lineHeight: 22, fontStyle: 'italic', color: colors.textOnNavy },
+  para: { fontSize: 15, lineHeight: 24, color: reading.text, marginBottom: 8 },
+  h1: { fontSize: 20, fontWeight: '800', color: reading.heading, lineHeight: 26, marginTop: 16, marginBottom: 6 },
+  h2: { fontSize: 17, fontWeight: '700', color: reading.heading, lineHeight: 23, marginTop: 14, marginBottom: 5 },
+  quoteText: { fontSize: 14.5, lineHeight: 22, fontStyle: 'italic', color: reading.text },
   bulletRow: { ...shared.bulletRow, marginBottom: 5 },
-  bulletDot: { fontSize: 16, color: colors.blue300, marginRight: 8, lineHeight: 24 },
-  bulletText: { flex: 1, fontSize: 14.5, lineHeight: 23, color: 'rgba(210,228,248,0.88)' },
+  bulletDot: { fontSize: 16, color: reading.accent, marginRight: 8, lineHeight: 24 },
+  bulletText: { flex: 1, fontSize: 14.5, lineHeight: 23, color: reading.text },
 });
 
 const mdLarge = StyleSheet.create({
   ...shared,
   wrap: { marginBottom: spacing.xl },
-  para: { fontSize: 18, lineHeight: 30, color: 'rgba(210,228,248,0.92)', marginBottom: 12 },
-  h1: { fontSize: 26, fontWeight: '800', color: colors.white, lineHeight: 34, marginTop: 24, marginBottom: 8 },
-  h2: { fontSize: 22, fontWeight: '700', color: colors.white, lineHeight: 30, marginTop: 20, marginBottom: 6 },
-  quoteText: { fontSize: 18, lineHeight: 28, fontStyle: 'italic', color: colors.textOnNavy },
+  para: { fontSize: 18, lineHeight: 30, color: reading.text, marginBottom: 12 },
+  h1: { fontSize: 26, fontWeight: '800', color: reading.heading, lineHeight: 34, marginTop: 24, marginBottom: 8 },
+  h2: { fontSize: 22, fontWeight: '700', color: reading.heading, lineHeight: 30, marginTop: 20, marginBottom: 6 },
+  quoteText: { fontSize: 18, lineHeight: 28, fontStyle: 'italic', color: reading.text },
   bulletRow: { ...shared.bulletRow, marginBottom: 8 },
-  bulletDot: { fontSize: 18, color: colors.blue300, marginRight: 10, lineHeight: 30 },
-  bulletText: { flex: 1, fontSize: 18, lineHeight: 29, color: 'rgba(210,228,248,0.92)' },
+  bulletDot: { fontSize: 18, color: reading.accent, marginRight: 10, lineHeight: 30 },
+  bulletText: { flex: 1, fontSize: 18, lineHeight: 29, color: reading.text },
 });

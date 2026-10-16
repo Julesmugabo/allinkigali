@@ -9,7 +9,6 @@ import React, { useMemo } from 'react';
 import { View, Text, Image, ScrollView, Pressable, Linking, StyleSheet } from 'react-native';
 import MaterialCommunityIcons from '@expo/vector-icons/MaterialCommunityIcons';
 
-import GradientBackground from '../../components/common/GradientBackground';
 import WebContainer from '../../web/layout/WebContainer';
 import ArticleLabels from '../../components/news/ArticleLabels';
 import MarkdownBody from '../../components/news/MarkdownBody';
@@ -19,6 +18,7 @@ import { useNews } from '../../context/NewsContext';
 import { useAds, nthAd } from '../../context/AdsContext';
 import { timeAgo } from '../../utils/date';
 import { colors, typography, spacing, radius } from '../../theme';
+import { reading } from '../../theme/reading';
 
 // A stable number from an article id, so an article always gets the same rotating ad.
 const idTurn = (id) => [...String(id)].reduce((n, c) => (n * 31 + c.charCodeAt(0)) % 9973, 0);
@@ -47,20 +47,20 @@ export default function ArticleDetailWide({ route, navigation }) {
 
   if (!article) {
     return (
-      <GradientBackground>
+      <View style={styles.page}>
         <View style={styles.notFound}>
           <Text style={styles.notFoundText}>Iyi nkuru ntibonetse.</Text>
         </View>
-      </GradientBackground>
+      </View>
     );
   }
 
   return (
-    <GradientBackground>
+    <View style={styles.page}>
       <ScrollView showsVerticalScrollIndicator={false} contentContainerStyle={styles.scroll}>
         <WebContainer>
           <Pressable onPress={() => navigation.goBack()} accessibilityRole="button" style={styles.back}>
-            <MaterialCommunityIcons name="arrow-left" size={18} color={colors.blue300} />
+            <MaterialCommunityIcons name="arrow-left" size={18} color={reading.accent} />
             <Text style={styles.backText}>Subira inyuma</Text>
           </Pressable>
 
@@ -71,7 +71,7 @@ export default function ArticleDetailWide({ route, navigation }) {
 
               <View style={styles.metaRow}>
                 <View style={styles.sourceChip}>
-                  <MaterialCommunityIcons name="open-in-new" size={12} color={colors.blue300} />
+                  <MaterialCommunityIcons name="open-in-new" size={12} color={reading.accent} />
                   <Text style={styles.sourceText}>{article.source}</Text>
                 </View>
                 <Text style={styles.time}>{timeAgo(article.publishedAt)}</Text>
@@ -84,7 +84,7 @@ export default function ArticleDetailWide({ route, navigation }) {
                   // instead of ever growing taller than 420px.
                   <Image source={{ uri: article.imageUrl }} style={styles.image} resizeMode="cover" />
                 ) : (
-                  <MaterialCommunityIcons name="newspaper-variant-outline" size={64} color="rgba(133,183,235,0.2)" />
+                  <MaterialCommunityIcons name="newspaper-variant-outline" size={64} color="rgba(32,32,30,0.15)" />
                 )}
                 <ArticleLabels article={article} style={styles.labels} />
               </View>
@@ -101,11 +101,11 @@ export default function ArticleDetailWide({ route, navigation }) {
                   accessibilityRole="button"
                   style={styles.storyLink}
                 >
-                  <MaterialCommunityIcons name="update" size={16} color={colors.blue300} />
+                  <MaterialCommunityIcons name="update" size={16} color={colors.breaking} />
                   <Text style={styles.linkText}>
                     {story.isLive ? 'Amakuru akurikiranwa' : 'Amakuru yarangiye'}: {story.title} — reba ayabanje
                   </Text>
-                  <MaterialCommunityIcons name="chevron-right" size={16} color={colors.blue300} />
+                  <MaterialCommunityIcons name="chevron-right" size={16} color={reading.muted} />
                 </Pressable>
               ) : null}
 
@@ -115,7 +115,7 @@ export default function ArticleDetailWide({ route, navigation }) {
                   accessibilityRole="link"
                   style={styles.sourceLink}
                 >
-                  <MaterialCommunityIcons name="link-variant" size={16} color={colors.blue300} />
+                  <MaterialCommunityIcons name="link-variant" size={16} color={reading.accent} />
                   <Text style={styles.linkText}>Soma inkuru yuzuye kuri {article.source}</Text>
                 </Pressable>
               ) : null}
@@ -140,38 +140,40 @@ export default function ArticleDetailWide({ route, navigation }) {
           </View>
         </WebContainer>
       </ScrollView>
-    </GradientBackground>
+    </View>
   );
 }
 
 const styles = StyleSheet.create({
+  // The reading page: light and paper-like, easy on the eyes (theme/reading.js).
+  page: { flex: 1, backgroundColor: reading.page },
   notFound: { flex: 1, alignItems: 'center', justifyContent: 'center' },
-  notFoundText: { ...typography.body, color: colors.textOnNavy },
+  notFoundText: { ...typography.body, color: reading.text },
   scroll: { paddingTop: spacing.xl, paddingBottom: spacing.huge },
 
   back: { flexDirection: 'row', alignItems: 'center', alignSelf: 'flex-start', marginBottom: spacing.lg },
-  backText: { ...typography.body, fontSize: 14, fontWeight: '600', color: colors.blue300, marginLeft: 6 },
+  backText: { ...typography.body, fontSize: 14, fontWeight: '600', color: reading.accent, marginLeft: 6 },
 
   columns: { flexDirection: 'row', alignItems: 'flex-start', justifyContent: 'center', gap: 48 },
   main: { width: '100%', maxWidth: 700, flexShrink: 1 },
   rail: { width: 300 },
 
-  category: { ...typography.caption, fontWeight: '700', letterSpacing: 0.6, color: colors.blue500, marginBottom: spacing.sm },
-  title: { ...typography.screenTitle, fontSize: 38, lineHeight: 46, color: colors.white, marginBottom: spacing.md },
+  category: { ...typography.caption, fontWeight: '700', letterSpacing: 0.6, color: reading.accent, marginBottom: spacing.sm },
+  title: { ...typography.screenTitle, fontSize: 38, lineHeight: 46, color: reading.heading, marginBottom: spacing.md },
   metaRow: { flexDirection: 'row', alignItems: 'center', marginBottom: spacing.xl },
   sourceChip: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(24,95,165,0.35)',
+    backgroundColor: reading.accentSoft,
     borderWidth: StyleSheet.hairlineWidth,
-    borderColor: 'rgba(55,138,221,0.35)',
+    borderColor: reading.accentBorder,
     borderRadius: radius.xs,
     paddingHorizontal: spacing.sm,
     paddingVertical: 3,
     marginRight: spacing.sm,
   },
-  sourceText: { ...typography.meta, color: colors.blue300, marginLeft: 4, fontWeight: '500' },
-  time: { ...typography.meta, color: colors.textOnNavyFaint, marginRight: spacing.sm },
+  sourceText: { ...typography.meta, color: reading.accent, marginLeft: 4, fontWeight: '500' },
+  time: { ...typography.meta, color: reading.muted, marginRight: spacing.sm },
   share: { marginLeft: 'auto' },
 
   imageWell: {
@@ -179,7 +181,7 @@ const styles = StyleSheet.create({
     height: 420,
     borderRadius: radius.md,
     overflow: 'hidden',
-    backgroundColor: 'rgba(2,28,54,0.45)',
+    backgroundColor: reading.placeholder,
     alignItems: 'center',
     justifyContent: 'center',
     marginBottom: spacing.xl,
@@ -187,11 +189,11 @@ const styles = StyleSheet.create({
   image: { width: '100%', height: '100%' },
   labels: { position: 'absolute', bottom: spacing.sm, left: spacing.md, right: spacing.md },
 
-  bodyMissing: { ...typography.body, fontSize: 15, fontStyle: 'italic', color: colors.textOnNavyFaint, marginBottom: spacing.xl },
+  bodyMissing: { ...typography.body, fontSize: 15, fontStyle: 'italic', color: reading.muted, marginBottom: spacing.xl },
   storyLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(208,52,44,0.12)',
+    backgroundColor: 'rgba(208,52,44,0.06)',
     borderWidth: StyleSheet.hairlineWidth,
     borderColor: 'rgba(208,52,44,0.3)',
     borderRadius: radius.md,
@@ -201,22 +203,22 @@ const styles = StyleSheet.create({
   sourceLink: {
     flexDirection: 'row',
     alignItems: 'center',
-    backgroundColor: 'rgba(55,138,221,0.16)',
+    backgroundColor: reading.accentSoft,
     borderRadius: radius.md,
     padding: spacing.md,
     marginBottom: spacing.xl,
   },
-  linkText: { flex: 1, ...typography.caption, color: colors.blue300, marginLeft: spacing.sm, fontWeight: '600' },
+  linkText: { flex: 1, ...typography.caption, color: reading.accent, marginLeft: spacing.sm, fontWeight: '600' },
 
-  railTitle: { ...typography.sectionTitle, color: colors.textOnNavyFaint, marginBottom: spacing.md },
+  railTitle: { ...typography.sectionTitle, color: reading.muted, marginBottom: spacing.md },
   trendingRow: {
     flexDirection: 'row',
     alignItems: 'flex-start',
     paddingVertical: spacing.sm,
     borderBottomWidth: StyleSheet.hairlineWidth,
-    borderBottomColor: 'rgba(133,183,235,0.2)',
+    borderBottomColor: reading.rule,
   },
-  trendingRank: { ...typography.sectionTitle, width: 22, color: colors.blue500, fontSize: 15 },
-  trendingTitle: { flex: 1, ...typography.body, fontSize: 14, lineHeight: 19, color: colors.textOnNavy },
+  trendingRank: { ...typography.sectionTitle, width: 22, color: reading.accent, fontSize: 15 },
+  trendingTitle: { flex: 1, ...typography.body, fontSize: 14, lineHeight: 19, color: reading.heading },
   adSpacing: { marginTop: spacing.lg },
 });
