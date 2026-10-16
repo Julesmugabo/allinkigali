@@ -45,6 +45,7 @@ function articleToJson(row) {
     isArchived: row.is_archived,
     views: row.views,
     publishedAt: row.published_at,
+    createdAt: row.created_at,
     storyId: row.story_id,
     webAdId: row.web_ad_id || null,
     labels: row.labels || [],

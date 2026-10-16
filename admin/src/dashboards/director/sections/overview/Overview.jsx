@@ -1,26 +1,31 @@
 /**
- * Overview.jsx — the whole platform at a glance, and a list of everything
- * waiting on someone (with a link straight to it).
+ * Overview.jsx — the whole platform at a glance, today's news (see
+ * NewsToday.jsx), and a list of everything waiting on someone (with a link
+ * straight to it).
  */
-import React, { useEffect, useState } from 'react';
+import React, { useCallback, useEffect, useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { AlertCircle, CheckCircle2 } from 'lucide-react';
 import { t } from '../../../../theme';
 import { Panel, Kpi, KpiGrid, Loading, fmtNum } from '../../../../components/ui';
 import { directorApi } from '../../directorApi';
+import NewsToday from './NewsToday';
 
 const safe = (p, fallback) => p.catch(() => fallback);
 
-export default function Overview() {
+export default function Overview({ notify }) {
   const navigate = useNavigate();
   const [d, setD] = useState(null);
-  useEffect(() => {
+  const load = useCallback(() => {
     Promise.all([
       safe(directorApi.articles(), []), safe(directorApi.places(), []), safe(directorApi.applications(), []),
       safe(directorApi.shops(), []), safe(directorApi.shopRequests(), []), safe(directorApi.team(), []), safe(directorApi.finance(), null),
-    ]).then(([articles, places, applications, shops, requests, team, finance]) => setD({ articles, places, applications, shops, requests, team, finance }));
+      safe(directorApi.categories(), []),
+    ]).then(([articles, places, applications, shops, requests, team, finance, categories]) => setD({ articles, places, applications, shops, requests, team, finance, categories }));
   }, []);
+  useEffect(load, [load]);
   if (!d) return <Loading />;
+  const categoryLabel = (key) => d.categories.find((c) => c.key === key)?.label || key;
 
   const pendingArticles = d.articles.filter((a) => a.status === 'pending' && !a.isArchived).length;
   const waitingApps = d.applications.filter((a) => a.status === 'pending').length;
@@ -28,7 +33,7 @@ export default function Overview() {
   const newRequests = d.requests.filter((r) => r.status === 'new').length;
   const cards = d.finance?.cards || {};
   const attention = [
-    pendingArticles && { text: `${pendingArticles} article(s) waiting for approval`, to: '/news/articles' },
+    pendingArticles && { text: `${pendingArticles} article(s) waiting for approval`, to: '/news/articles?tab=pending&day=all' },
     waitingApps && { text: `${waitingApps} business application(s) to review`, to: '/sellers/applications' },
     unverified && { text: `${unverified} marketplace shop(s) not verified yet`, to: '/overview/marketplace' },
     newRequests && { text: `${newRequests} new customer request(s) to shops`, to: '/overview/marketplace' },
@@ -51,6 +56,7 @@ export default function Overview() {
           <Kpi label="Owed to us" value={`RWF ${fmtNum(cards.receivables)}`} color={t.warning} />
         </KpiGrid>
       )}
+      <NewsToday articles={d.articles} categoryLabel={categoryLabel} onChanged={load} notify={notify} />
       <Panel title="Needs attention">
         {attention.length ? attention.map((a) => (
           <button key={a.text} onClick={() => navigate(a.to)} style={s.row}><AlertCircle size={15} color={t.warning} /> {a.text}</button>

@@ -1,9 +1,12 @@
 /**
- * Articles.jsx — every article: status tabs, search, sort by reads,
- * select-to-archive, and per-row actions.
+ * Articles.jsx — articles one day at a time (today first; any day, or all
+ * days, from the day picker), with status tabs, search, sort by reads,
+ * select-to-archive, and per-row actions. The day and tab live in the
+ * address (?day=2026-10-16&tab=pending, or day=all) so other pages can
+ * link straight to a list.
  */
 import React, { useMemo, useState } from 'react';
-import { useNavigate } from 'react-router-dom';
+import { useNavigate, useSearchParams } from 'react-router-dom';
 import { Plus, Pencil, Star, Zap, Archive, RotateCcw, Trash2, Check, X } from 'lucide-react';
 import { t } from '../../../../theme';
 import { DataTable, Tabs } from '../../../../components/PageShell';
@@ -13,6 +16,8 @@ import { useNews } from '../../NewsContext';
 import { ARTICLE_FILTERS, displayStatus, fmtDate } from '../../constants';
 import StatusBadge from '../../components/StatusBadge';
 import { articleActions } from './articleActions';
+import DayPicker from './DayPicker';
+import { articleDay, articleTime, clock, dayLabel, isDayKey, todayKey } from './articleDays';
 
 const match = {
   all: (a) => !a.isArchived,
@@ -27,18 +32,35 @@ const match = {
 export default function Articles() {
   const navigate = useNavigate();
   const { articles, loading, error, categoryLabel, changed, notify } = useNews();
-  const [filter, setFilter] = useState('all');
+  const [params, setParams] = useSearchParams();
+  const day = params.get('day') === 'all' ? 'all' : isDayKey(params.get('day')) ? params.get('day') : todayKey();
+  const filter = match[params.get('tab')] ? params.get('tab') : 'all';
   const [search, setSearch] = useState('');
   const [byReads, setByReads] = useState(false);
   const [selected, setSelected] = useState(new Set());
   const [busy, setBusy] = useState(null);
 
+  const setParam = (key, value) => {
+    setParams((cur) => { const next = new URLSearchParams(cur); next.set(key, value); return next; }, { replace: true });
+    setSelected(new Set());
+  };
+
+  const inDay = (a) => day === 'all' || articleDay(a) === day;
+
   const rows = useMemo(() => {
     const q = search.trim().toLowerCase();
-    let list = articles.filter(match[filter]);
+    let list = articles.filter((a) => match[filter](a) && inDay(a));
     if (q) list = list.filter((a) => `${a.title} ${a.source} ${categoryLabel(a.category)}`.toLowerCase().includes(q));
-    return byReads ? [...list].sort((a, b) => (b.views || 0) - (a.views || 0)) : list;
-  }, [articles, filter, search, byReads, categoryLabel]);
+    const newest = (a, b) => new Date(articleTime(b)) - new Date(articleTime(a));
+    return [...list].sort(byReads ? (a, b) => (b.views || 0) - (a.views || 0) : newest);
+  }, [articles, filter, day, search, byReads, categoryLabel]);
+
+  // How many articles of the open tab each day has, for the day picker.
+  const dayCounts = useMemo(() => {
+    const counts = new Map();
+    articles.filter(match[filter]).forEach((a) => { const k = articleDay(a); if (k) counts.set(k, (counts.get(k) || 0) + 1); });
+    return counts;
+  }, [articles, filter]);
 
   const run = async (name, a) => {
     if (name === 'remove' && !window.confirm(`Delete "${a.title}" permanently?`)) return;
@@ -56,7 +78,13 @@ export default function Articles() {
   };
 
   const toggle = (id) => setSelected((cur) => { const n = new Set(cur); n.has(id) ? n.delete(id) : n.add(id); return n; });
-  const tabs = ARTICLE_FILTERS.map((f) => ({ ...f, count: articles.filter(match[f.key]).length }));
+  const tabs = ARTICLE_FILTERS.map((f) => ({ ...f, count: articles.filter((a) => match[f.key](a) && inDay(a)).length }));
+  const when = (a) => {
+    if (displayStatus(a) === 'scheduled') return `goes live ${day === 'all' ? new Date(a.publishAt).toLocaleString('en-GB') : clock(a.publishAt)}`;
+    const at = articleTime(a);
+    const word = a.status === 'published' ? '' : 'written ';
+    return day === 'all' ? `${word}${fmtDate(at)}` : `${word}${clock(at)}`;
+  };
 
   const columns = [
     { key: 'sel', label: '', width: 30, render: (a) => (a.isArchived ? null : <input type="checkbox" checked={selected.has(a.id)} onChange={() => toggle(a.id)} />) },
@@ -69,7 +97,7 @@ export default function Articles() {
             {a.title}
           </div>
           <div style={{ color: t.textMuted, fontSize: 12 }}>
-            {categoryLabel(a.category)} · {a.source || '—'} · {displayStatus(a) === 'scheduled' ? `goes live ${new Date(a.publishAt).toLocaleString('en-GB')}` : fmtDate(a.publishedAt)}
+            {categoryLabel(a.category)} · {a.source || '—'} · {when(a)}
           </div>
         </div>
       ),
@@ -99,14 +127,15 @@ export default function Articles() {
 
   return (
     <Panel title="Articles" actions={<Button icon={Plus} onClick={() => navigate('/news/write')}>New article</Button>}>
-      <Tabs tabs={tabs} active={filter} onChange={(k) => { setFilter(k); setSelected(new Set()); }} />
+      <DayPicker day={day} onChange={(k) => setParam('day', k)} counts={dayCounts} total={articles.filter(match[filter]).length} />
+      <Tabs tabs={tabs} active={filter} onChange={(k) => setParam('tab', k)} />
       <div style={s.tools}>
-        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder="Search headline, source or category" style={{ flex: 1, minWidth: 200, maxWidth: 380 }} />
+        <input value={search} onChange={(e) => setSearch(e.target.value)} placeholder={day === 'all' ? 'Search all articles' : 'Search this day'} style={{ flex: 1, minWidth: 200, maxWidth: 380 }} />
         <label style={s.check}><input type="checkbox" checked={byReads} onChange={(e) => setByReads(e.target.checked)} /> Most read first</label>
         {selected.size > 0 && <Button variant="warning" icon={Archive} onClick={archiveSelected}>Archive {selected.size} selected</Button>}
       </div>
       <ErrorText>{error}</ErrorText>
-      {loading ? <Loading /> : <DataTable columns={columns} rows={rows} emptyText="No articles here." />}
+      {loading ? <Loading /> : <DataTable columns={columns} rows={rows} emptyText={day === 'all' ? 'No articles here.' : `Nothing here for ${dayLabel(day)}. Pick another day above.`} />}
     </Panel>
   );
 }

@@ -12,6 +12,7 @@ export const directorApi = {
   places: () => apiFetch('/admin/restaurants-list'),
   applications: () => apiFetch('/pending-listings'),
   articles: () => apiFetch('/news/articles'),
+  categories: () => apiFetch('/news/categories'),
   shops: () => apiFetch('/businesses'),
   verifyShop: (id) => apiFetch(`/businesses/${id}/approve`, { method: 'POST' }),
   unverifyShop: (id) => apiFetch(`/businesses/${id}`, { method: 'PATCH', body: { verified: false } }),

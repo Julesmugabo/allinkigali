@@ -49,8 +49,8 @@ export default function Newsroom() {
       <ErrorText>{error}</ErrorText>
       <KpiGrid>
         <Kpi label="Total reads" value={fmtNum(view.reads)} />
-        <Kpi label="Published today" value={view.publishedToday} color={t.success} />
-        <Kpi label="Waiting for approval" value={view.pending} color={t.warning} onClick={() => go('articles')} />
+        <Kpi label="Published today" value={view.publishedToday} color={t.success} onClick={() => go('articles?tab=published')} />
+        <Kpi label="Waiting for approval" value={view.pending} color={t.warning} onClick={() => go('articles?tab=pending&day=all')} />
         <Kpi label="Trending now" value={view.trending} color="#F5C518" />
       </KpiGrid>
 
@@ -63,7 +63,7 @@ export default function Newsroom() {
         <Panel title="Quick actions" style={{ marginBottom: 0 }}>
           <div style={s.quick}>
             <Button icon={Plus} onClick={() => go('write')}>New article</Button>
-            <Button variant="warning" onClick={() => go('articles')}>Review pending</Button>
+            <Button variant="warning" onClick={() => go('articles?tab=pending&day=all')}>Review pending</Button>
             <Button variant="info" onClick={() => go('stories')}>Live stories</Button>
             <Button variant="info" onClick={() => go('app-ads')}>Ads</Button>
           </div>
