@@ -9,16 +9,30 @@ import { colors, typography, spacing, radius, gutter } from '../../theme';
 import AppTopBar from '../../components/common/AppTopBar';
 
 const TYPE_ICON = {
+  booking_sent:      { icon: 'calendar-clock', color: '#2563eb' },
   booking_confirmed: { icon: 'calendar-check', color: '#16a34a' },
   booking_rejected:  { icon: 'calendar-remove', color: '#dc2626' },
   booking_cancelled: { icon: 'calendar-minus', color: '#f59e0b' },
   new_booking:       { icon: 'calendar-plus', color: '#2563eb' },
   new_order:         { icon: 'moped', color: '#7c3aed' },
+  order_placed:      { icon: 'clipboard-check-outline', color: '#7c3aed' },
   order_update:      { icon: 'package-variant', color: '#0891b2' },
+  listing_received:  { icon: 'storefront-outline', color: '#2563eb' },
   listing_approved:  { icon: 'check-decagram', color: '#16a34a' },
   listing_declined:  { icon: 'close-circle', color: '#dc2626' },
   general:           { icon: 'bell', color: '#6b7280' },
 };
+
+const BOOKING_TYPES = ['booking_sent', 'booking_confirmed', 'booking_rejected', 'booking_cancelled', 'new_booking'];
+const ORDER_TYPES = ['order_placed', 'order_update', 'new_order'];
+const LISTING_TYPES = ['listing_received', 'listing_approved', 'listing_declined'];
+
+// The server stores extra details (which booking, which order) as JSON.
+function readData(data) {
+  if (!data) return {};
+  if (typeof data === 'object') return data;
+  try { return JSON.parse(data); } catch { return {}; }
+}
 
 function NotifIcon({ type }) {
   const meta = TYPE_ICON[type] || TYPE_ICON.general;
@@ -69,14 +83,17 @@ export default function NotificationsScreen({ navigation }) {
     // mark read
     setItems(prev => prev.map(n => n.id === item.id ? { ...n, is_read: true } : n));
     try { await apiFetch(`/notifications/${item.id}/read`, { method: 'PUT' }); } catch {}
-    // deep-link based on type
-    const { type, ref_id } = item;
-    if (type === 'booking_confirmed' || type === 'booking_rejected' || type === 'booking_cancelled' || type === 'new_booking') {
+    // Open what the notification is about.
+    const { type } = item;
+    const data = readData(item.data);
+    if (BOOKING_TYPES.includes(type)) {
       navigation.navigate('MyBookings');
-    } else if (type === 'new_order' || type === 'order_update') {
-      navigation.navigate('Orders');
-    } else if (type === 'listing_approved' || type === 'listing_declined') {
-      navigation.navigate('Me');
+    } else if (ORDER_TYPES.includes(type)) {
+      // Food orders: their tracking page; older orders without one: the orders list.
+      if (data.checkoutId) navigation.navigate('ShopTab', { screen: 'FoodOrderStatus', params: { checkoutId: data.checkoutId } });
+      else navigation.navigate('Orders');
+    } else if (LISTING_TYPES.includes(type)) {
+      navigation.navigate('Account');
     }
   }, [navigation]);
 

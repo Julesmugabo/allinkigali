@@ -55,8 +55,14 @@ async function removeInvalidTokens(tokens) {
 async function notifyUser(userId, { title, body, data = {} }) {
   // Always keep the in-app notification — previously it was only saved when
   // the user had a push token, so web users (and anyone who declined push)
-  // never saw booking/order/approval notifications at all.
+  // never saw booking/order/approval notifications at all. It is saved before
+  // this returns, so the bell can show it straight away; the phone push goes
+  // out in the background.
   await saveNotification(userId, title, body, data);
+  pushToUser(userId, { title, body, data }).catch((err) => console.error('Push error:', err.message));
+}
+
+async function pushToUser(userId, { title, body, data }) {
   const tokens = await getTokensForUser(userId);
   if (!tokens.length) return;
   const messages = tokens.map(token => ({

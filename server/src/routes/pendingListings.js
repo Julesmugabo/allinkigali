@@ -7,6 +7,7 @@ const { query } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { notifyUser } = require('../pushNotifications');
+const { listingNotices } = require('../services/customerNotices');
 const { linkOwner } = require('../clients/placeOwners');
 
 const router = express.Router();
@@ -33,6 +34,7 @@ router.post('/', requireAuth, async (req, res) => {
      VALUES ($1,$2,$3,$4,$5,$6,$7,$8) RETURNING *`,
     [type, businessName.trim(), location.trim(), district?.trim() || '', phone.trim(), email.trim().toLowerCase(), notes?.trim() || '', req.user.sub]
   );
+  await listingNotices.received(rows[0]);
   res.status(201).json(rows[0]);
 });
 
@@ -104,7 +106,7 @@ router.post('/:id/approve', ...staffGuard, async (req, res) => {
   );
 
   // Notify the owner (in-app + push)
-  notifyUser(p.user_id, {
+  await notifyUser(p.user_id, {
     title: '🎉 Your listing has been approved!',
     body: `${p.business_name} is now live on allinkigali. Sign in at business.allinkigali.rw with this account to add photos, your menu and more.`,
     data: { type: 'listing_approved', listingId },
@@ -126,7 +128,7 @@ router.post('/:id/decline', ...staffGuard, async (req, res) => {
     [reason || '', p.id]
   );
 
-  notifyUser(p.user_id, {
+  await notifyUser(p.user_id, {
     title: 'Your listing application was not approved',
     body: reason || 'Thank you for applying. Unfortunately we could not approve your listing at this time. Please contact us for more information.',
     data: { type: 'listing_declined' },

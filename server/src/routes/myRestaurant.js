@@ -9,7 +9,7 @@ const { requireAuth } = require('../middleware/auth');
 const requireRole = require('../middleware/requireRole');
 const { hasRole } = require('../middleware/requireRole');
 const { clientOwnersOnly } = require('../middleware/clientAuth');
-const { notifyUser } = require('../pushNotifications');
+const { bookingNotices, orderNotices, ORDER_STEPS } = require('../services/customerNotices');
 
 const router = express.Router();
 const guard = [requireAuth, requireRole('restaurant', 'coffeeshop', 'sellers'), clientOwnersOnly];
@@ -151,23 +151,10 @@ router.put('/bookings/:id/status', ...guard, async (req, res) => {
     [...params, booking.id]
   );
 
-  // Notify the customer
-  if (booking.user_id) {
-    const msgMap = {
-      confirmed: `Your reservation at ${booking.place_name} on ${booking.date} at ${booking.time} is confirmed. See you there!`,
-      rejected: `Your reservation at ${booking.place_name} on ${booking.date} at ${booking.time} could not be accommodated${reason ? ` (${reason})` : ''}.`,
-      cancelled: `Your reservation at ${booking.place_name} on ${booking.date} at ${booking.time} was cancelled.`,
-    };
-    const titleMap = {
-      confirmed: `Booking confirmed — ${booking.place_name}`,
-      rejected: `Booking declined — ${booking.place_name}`,
-      cancelled: `Booking cancelled — ${booking.place_name}`,
-    };
-    if (msgMap[status]) {
-      const type = status === 'confirmed' ? 'booking_confirmed' : status === 'rejected' ? 'booking_rejected' : 'booking_cancelled';
-      notifyUser(booking.user_id, { title: titleMap[status], body: msgMap[status], data: { type, bookingId: booking.id } }).catch(() => {});
-    }
-  }
+  // Tell the customer the place's answer.
+  if (status === 'confirmed') await bookingNotices.confirmed(booking);
+  else if (status === 'rejected') await bookingNotices.declined(booking, reason && String(reason).slice(0, 200));
+  else if (status === 'cancelled') await bookingNotices.cancelledByPlace(booking);
 
   res.json({ ok: true });
 });
@@ -277,13 +264,6 @@ router.post('/reviews/:id/reply', ...guard, async (req, res) => {
 // Customer delivery orders live in food_orders (written by routes/foodOrders.js).
 // This used to read a resto_orders table nothing ever writes to, so owners
 // always saw an empty board.
-const ORDER_MESSAGES = {
-  confirmed: 'Your order has been confirmed and will be prepared shortly.',
-  preparing: 'Your order is being prepared!',
-  ready: 'Your order is ready and on the way!',
-  delivered: 'Your order has been delivered. Enjoy!',
-  cancelled: 'Your order was cancelled by the restaurant. Please contact them for details.',
-};
 
 router.get('/orders', ...guard, async (req, res) => {
   const ctx = getContext(req);
@@ -307,15 +287,13 @@ router.put('/orders/:id/status', ...guard, async (req, res) => {
   if (!ctx.placeId) return res.status(404).json({ error: 'No listing linked.' });
   // The mobile owner app's board says "accepted"; the orders table says "confirmed".
   const status = req.body.status === 'accepted' ? 'confirmed' : req.body.status;
-  if (!ORDER_MESSAGES[status]) return res.status(400).json({ error: 'Invalid status.' });
+  if (!ORDER_STEPS[status]) return res.status(400).json({ error: 'Invalid status.' });
   const { rows } = await query(
     'UPDATE food_orders SET status=$1, updated_at=NOW() WHERE id=$2 AND place_id=$3 RETURNING *',
     [status, req.params.id, ctx.placeId]
   );
   if (!rows.length) return res.status(404).json({ error: 'Order not found.' });
-  if (rows[0].user_id) {
-    notifyUser(rows[0].user_id, { title: `Order ${status}`, body: ORDER_MESSAGES[status], data: { type: 'order_update', orderId: rows[0].id } }).catch(() => {});
-  }
+  await orderNotices.update(rows[0], status);
   res.json({ ok: true });
 });
 

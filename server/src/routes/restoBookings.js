@@ -8,6 +8,7 @@ const { hasRole } = require('../middleware/requireRole');
 
 const { notifyUser } = require('../pushNotifications');
 const { placeOwnerIds } = require('../clients/placeOwners');
+const { bookingNotices } = require('../services/customerNotices');
 
 const router = express.Router();
 
@@ -15,7 +16,7 @@ const router = express.Router();
 
 async function pushNotification(userId, title, body, type, data = {}) {
   if (!userId) return;
-  notifyUser(userId, { title, body, data: { ...data, type } }).catch(() => {});
+  await notifyUser(userId, { title, body, data: { ...data, type } }).catch(() => {});
 }
 
 // Find the user_id of any admin who has the given role assigned to them.
@@ -80,6 +81,7 @@ router.post('/', requireAuth, requireVerified, async (req, res) => {
     await pushNotification(id, `New booking — ${placeName}`, `${guestName} · ${partySize || 2} people · ${date} at ${time}`,
       'new_booking', { bookingId: booking.id, placeId, type });
   }
+  await bookingNotices.sent(booking); // the customer's proof it went through
 
   res.status(201).json(toJson(booking));
 });
@@ -107,6 +109,7 @@ router.delete('/:id', requireAuth, async (req, res) => {
       await pushNotification(id, `Booking cancelled — ${booking.place_name}`,
         `${booking.guest_name} cancelled their reservation for ${booking.date} at ${booking.time}.`, 'booking_cancelled', { bookingId: booking.id });
     }
+    await bookingNotices.cancelledByYou(booking);
   }
   res.json({ ok: true });
 });
@@ -172,26 +175,9 @@ router.put('/:id/status', requireAuth, clientOwnersOnly, async (req, res) => {
     [...params, booking.id]
   );
 
-  // Notify the customer
-  if (booking.user_id) {
-    if (status === 'confirmed') {
-      await pushNotification(
-        booking.user_id,
-        `Booking confirmed — ${booking.place_name}`,
-        `${booking.date} at ${booking.time} · ${booking.party_size} people. See you there!`,
-        'booking_confirmed',
-        { bookingId: booking.id }
-      );
-    } else if (status === 'rejected') {
-      await pushNotification(
-        booking.user_id,
-        `Booking declined — ${booking.place_name}`,
-        `Your reservation for ${booking.date} at ${booking.time} could not be accommodated.`,
-        'booking_rejected',
-        { bookingId: booking.id }
-      );
-    }
-  }
+  // Tell the customer the place's answer.
+  if (status === 'confirmed') await bookingNotices.confirmed(booking);
+  else if (status === 'rejected') await bookingNotices.declined(booking, reason && String(reason).slice(0, 200));
 
   res.json(toJson(updated[0]));
 });

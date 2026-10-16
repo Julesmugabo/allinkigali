@@ -68,7 +68,7 @@ export default function BookBox({ kind, place, user, closedNow, onLogin, onVerif
       <View style={box.card}>
         <MaterialCommunityIcons name="check-circle-outline" size={40} color="#60C080" />
         <Text style={box.title}>Request sent</Text>
-        <Text style={box.muted}>{place.name} will confirm your {cfg.type === 'wedding' ? 'visit' : 'booking'} for {days.find((d) => d.value === date)?.label} at {time}. {status.sentDishes ? ` Your ${status.sentDishes} dish${status.sentDishes > 1 ? 'es are' : ' is'} on the booking too.` : ''} You'll get a notification, and it's listed under Me → My Bookings.</Text>
+        <Text style={box.muted}>{place.name} will confirm your {cfg.type === 'wedding' ? 'visit' : 'booking'} for {days.find((d) => d.value === date)?.label} at {time}. {status.sentDishes ? ` Your ${status.sentDishes} dish${status.sentDishes > 1 ? 'es are' : ' is'} on the booking too.` : ''} It's in your notifications (the bell) and under Me → My Bookings, and you'll get another notification when they answer.</Text>
       </View>
     );
   }

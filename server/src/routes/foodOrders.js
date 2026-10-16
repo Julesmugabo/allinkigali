@@ -5,6 +5,7 @@ const requireVerified = require('../middleware/requireVerified');
 const requireRole = require('../middleware/requireRole');
 const { clientOwnersOnly } = require('../middleware/clientAuth');
 const { notifyUser } = require('../pushNotifications');
+const { orderNotices } = require('../services/customerNotices');
 const { placeOwnerIds } = require('../clients/placeOwners');
 
 const router = express.Router();
@@ -57,6 +58,7 @@ router.post('/', requireAuth, requireVerified, async (req, res) => {
       data: { type: 'new_order', orderId: order.id },
     }).catch(() => {});
   }
+  await orderNotices.sent(order); // the customer's proof it went through
 
   res.status(201).json(order);
 });
@@ -79,7 +81,16 @@ router.put('/:id/cancel', requireAuth, async (req, res) => {
     [req.params.id, req.user.sub]
   );
   if (!rows[0]) return res.status(404).json({ error: 'Order not found or cannot be cancelled.' });
-  res.json(rows[0]);
+  const o = rows[0];
+  for (const ownerId of await placeOwnerIds(o.place_type, o.place_id)) {
+    notifyUser(ownerId, {
+      title: 'Order cancelled by the customer',
+      body: `Order ${'#' + o.id.slice(-6).toUpperCase()} was cancelled — no need to prepare it.`,
+      data: { type: 'order_update', orderId: o.id },
+    }).catch(() => {});
+  }
+  await orderNotices.cancelledByYou(o);
+  res.json(o);
 });
 
 // Restaurant owner views their orders
@@ -109,17 +120,7 @@ router.put('/:id/status', requireAuth, requireRole('restaurant', 'coffeeshop', '
   );
   if (!rows[0]) return res.status(404).json({ error: 'Order not found.' });
 
-  // Notify customer
-  const msgMap = {
-    confirmed: 'Your order has been confirmed and will be prepared shortly.',
-    preparing: 'Your order is being prepared!',
-    ready: 'Your order is ready and on the way!',
-    delivered: 'Your order has been delivered. Enjoy!',
-    cancelled: 'Your order was cancelled by the restaurant. Please contact them for details.',
-  };
-  const title = `Order ${status}`;
-  const body = msgMap[status] || `Your order status: ${status}`;
-  notifyUser(rows[0].user_id, { title, body, data: { type: 'order_update', orderId: rows[0].id } }).catch(() => {});
+  await orderNotices.update(rows[0], status); // tell the customer
 
   res.json(rows[0]);
 });

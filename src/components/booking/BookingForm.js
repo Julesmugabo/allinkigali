@@ -200,7 +200,7 @@ export default function BookingForm({ visible, onClose, placeId, placeName, type
             <MaterialCommunityIcons name="calendar-check" size={52} color="#60C080" style={{ marginBottom: spacing.md }} />
             <Text style={styles.successTitle}>Booking requested!</Text>
             <Text style={styles.successDesc}>
-              You'll get a notification once {placeName} confirms your reservation for {partySize} {partySize === 1 ? 'person' : 'people'} on {date} at {time}.
+              Your request for {partySize} {partySize === 1 ? 'person' : 'people'} on {date} at {time} is in your notifications (the bell). You'll get another one when {placeName} answers.
             </Text>
             <Pressable onPress={handleClose} style={styles.doneBtn}>
               <Text style={styles.doneBtnLabel}>Done</Text>

@@ -16,6 +16,7 @@ const { query, getClient } = require('../db');
 const { requireAuth } = require('../middleware/auth');
 const requireVerified = require('../middleware/requireVerified');
 const { notifyUser } = require('../pushNotifications');
+const { orderNotices } = require('../services/customerNotices');
 const { placeOwnerIds } = require('../clients/placeOwners');
 
 const router = express.Router();
@@ -126,6 +127,7 @@ router.post('/checkout', requireAuth, requireVerified, async (req, res) => {
       }).catch(() => {});
     }
   }
+  await orderNotices.sent(orders); // the customer's proof it went through
   res.status(201).json({ checkoutId: orders[0].checkout_id, orders: orders.map(toJson) });
 });
 

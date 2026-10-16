@@ -6,6 +6,7 @@
  * raw data source directly.
  */
 import AsyncStorage from '@react-native-async-storage/async-storage';
+import { notificationsChanged } from './notificationsBus';
 
 const API_URL = process.env.EXPO_PUBLIC_API_URL;
 const TOKEN_KEY = 'allinkigali-auth-token';
@@ -44,14 +45,17 @@ export async function apiFetch(path, { method = 'GET', body } = {}) {
     body: body !== undefined ? JSON.stringify(body) : undefined,
   });
 
-  if (response.status === 204) return null;
-
-  const data = await response.json().catch(() => null);
+  const data = response.status === 204 ? null : await response.json().catch(() => null);
   if (!response.ok) {
     const err = new Error(data?.error || `Request failed (${response.status})`);
     err.code = data?.code;
     err.status = response.status;
     throw err;
   }
+  // Anything the person sent may have added a notification for them (booking
+  // sent, order sent…): the bells re-check. Article view counts don't.
+  if (method !== 'GET' && !NO_NOTICE.test(path)) notificationsChanged();
   return data;
 }
+
+const NO_NOTICE = /\/view$|push-token/;
