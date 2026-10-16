@@ -7,7 +7,7 @@ import { newsApi } from '../../newsApi';
 export const articleActions = {
   approve: async (a) => { await newsApi.updateArticle(a.id, { status: 'published', publishedAt: new Date().toISOString() }); return 'Approved and published'; },
   reject: async (a) => { await newsApi.updateArticle(a.id, { status: 'rejected' }); return 'Rejected'; },
-  feature: async (a) => { await newsApi.updateArticle(a.id, { isFeatured: !a.isFeatured }); return a.isFeatured ? 'No longer the hero story' : 'Now the hero story'; },
+  feature: async (a) => { await newsApi.updateArticle(a.id, { isFeatured: !a.isFeatured }); return a.isFeatured ? 'No longer the main story — your previous choice is back on top' : 'Now the main story at the top of the news'; },
   breaking: async (a) => { await newsApi.updateArticle(a.id, { isBreaking: !a.isBreaking }); return a.isBreaking ? 'Breaking flag removed' : 'Marked as breaking'; },
   archive: async (a) => { await newsApi.updateArticle(a.id, { isArchived: true }); return 'Archived'; },
   restore: async (a) => { await newsApi.updateArticle(a.id, { isArchived: false }); return 'Restored'; },

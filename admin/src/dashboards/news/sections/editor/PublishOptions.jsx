@@ -60,7 +60,7 @@ export default function PublishOptions({ form, set, stories, authors, webAds = [
       <div style={s.group}>
         <div style={s.h}>Flags</div>
         <CheckboxField label="Breaking (expires automatically)" checked={form.isBreaking} onChange={set('isBreaking')} />
-        <CheckboxField label="Featured — the hero story" checked={form.isFeatured} onChange={set('isFeatured')} />
+        <CheckboxField label="Main story — top of the news page until you choose another" checked={form.isFeatured} onChange={set('isFeatured')} />
         <CheckboxField label="Trending" checked={form.isTrending} onChange={set('isTrending')} />
       </div>
 

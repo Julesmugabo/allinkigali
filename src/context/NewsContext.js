@@ -28,6 +28,17 @@ function slugify(label) {
     .replace(/(^-|-$)/g, '');
 }
 
+// The main story is always a writer's choice: the one marked Featured, or if
+// that is gone (archived, un-featured), the writer's most recent earlier
+// choice. Only when nobody has ever chosen does the newest article lead.
+function pickHero(list) {
+  const chosen = list.find((a) => a.isFeatured);
+  if (chosen) return chosen;
+  const earlier = list.filter((a) => a.featuredAt)
+    .sort((x, y) => new Date(y.featuredAt) - new Date(x.featuredAt))[0];
+  return earlier || list[0] || null;
+}
+
 function computeFeed(articles, categoryKey = 'all') {
   // Archived is separate from status on purpose: archiving must never lose
   // what the article's real status was, so an unarchive can restore it
@@ -36,7 +47,7 @@ function computeFeed(articles, categoryKey = 'all') {
   const published = articles.filter((a) => a.status === 'published' && !a.isArchived);
 
   if (categoryKey === 'all') {
-    const hero = published.find((a) => a.isFeatured) || published[0] || null;
+    const hero = pickHero(published);
     return {
       hero,
       trending: published.filter((a) => a.isTrending),
@@ -45,11 +56,11 @@ function computeFeed(articles, categoryKey = 'all') {
   }
 
   const matching = published.filter((a) => a.category === categoryKey);
-  const [first, ...rest] = matching;
+  const hero = pickHero(matching);
   return {
-    hero: first || null,
+    hero,
     trending: published.filter((a) => a.isTrending && a.category === categoryKey),
-    latest: rest,
+    latest: matching.filter((a) => a.id !== hero?.id),
   };
 }
 

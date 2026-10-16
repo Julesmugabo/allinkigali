@@ -40,6 +40,7 @@ function articleToJson(row) {
     isBreaking: row.is_breaking,
     status: row.status,
     isFeatured: row.is_featured,
+    featuredAt: row.featured_at,
     isTrending: row.is_trending,
     isArchived: row.is_archived,
     views: row.views,
@@ -71,6 +72,14 @@ function storyToJson(row) {
 // Only ever includes columns actually present in `data`, so a partial
 // patch like { isArchived: true } can't accidentally null out every other
 // column in a plain UPDATE ... SET.
+// Remembers when a writer chose the main story, so the previous choice can
+// come back if this one is archived. Un-featuring forgets the choice.
+function markFeatured(body, columns, values) {
+  if (!body || !('isFeatured' in body)) return;
+  columns.push('featured_at');
+  values.push(body.isFeatured ? new Date() : null);
+}
+
 function articleFields(data) {
   const map = {
     category: 'category',
@@ -184,6 +193,7 @@ router.post('/articles', requireAuth, requireRole('news', 'director'), async (re
   if (req.body?.isFeatured) {
     await query('update news_articles set is_featured = false where is_featured');
   }
+  markFeatured(req.body, columns, values);
   const placeholders = columns.map((_, i) => `$${i + 1}`).join(', ');
   const { rows } = await query(
     `insert into news_articles (${columns.join(', ')}) values (${placeholders}) returning *`,
@@ -200,6 +210,7 @@ router.patch('/articles/:id', requireAuth, requireRole('news', 'director'), asyn
   if (req.body?.isFeatured) {
     await query('update news_articles set is_featured = false where is_featured and id != $1', [req.params.id]);
   }
+  markFeatured(req.body, columns, values);
   const setClause = columns.map((c, i) => `${c} = $${i + 1}`).join(', ');
   const { rows } = await query(
     `update news_articles set ${setClause} where id = $${columns.length + 1} returning *`,
